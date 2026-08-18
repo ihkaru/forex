@@ -1,0 +1,61 @@
+# ==============================================================================
+# 📈 TRADERS FAMILY QUANT ANALYST ENGINE CONFIGURATION (2026)
+# ==============================================================================
+# File ini mengontrol seluruh parameter operasional, strategi, risiko, dan koneksi.
+# Nilai sensitif (token) dapat di-override otomatis melalui Environment Variables.
+# ==============================================================================
+
+environment = "development" # "development" | "production"
+default_timeframe = "H1"
+
+# 🎯 Daftar Pasangan Mata Uang Aktif yang Dimonitor
+# Diurutkan berdasarkan prioritas Valued Pips (Tier 1 & Tier 2)
+active_symbols = [
+    "NZDUSD", # Tier 1: Multiplier 2.0x (Min Pending 10p, Gap 50p)
+    "AUDUSD", # Tier 1: Multiplier 2.0x (Min Pending 10p, Gap 50p)
+    "EURGBP", # Tier 1: Multiplier 2.0x (Min Pending 10p, Gap 50p)
+    "USDCHF", # Tier 1: Multiplier 2.0x (Min Pending 10p, Gap 50p)
+    "EURUSD", # Tier 2: Multiplier 1.5x (Min Pending 15p, Gap 75p)
+    "GBPUSD", # Tier 2: Multiplier 1.5x (Min Pending 15p, Gap 75p)
+]
+
+# 📡 Pengaturan Publikasi ke Channel Aplikasi Traders Family
+[traders_family]
+api_base_url = "https://api.tradersfamily.id"
+channel_id = "tf_priority_quant_channel"
+auth_token = "mock_analyst_session_token_2026" # Atau set env: TF_AUTH_TOKEN
+user_agent = "TradersFamily-Android-App/3.0"
+
+# 🤖 Pengaturan Notifikasi Cadangan via Telegram
+[telegram]
+enabled = false
+bot_token = "" # Atau set env: TELEGRAM_BOT_TOKEN
+chat_id = ""   # Contoh: "-100123456789"
+
+# 🔌 Pengaturan Broker Connector (MetaTrader 5 Local Bridge Socket)
+[broker]
+mt5_socket_host = "127.0.0.1"
+mt5_socket_port = 5555
+reconnect_interval_ms = 3000
+
+# 📐 Parameter Strategi Pola N (Traders Family Signature)
+[strategy_pola_n]
+swing_left_bars = 2           # Jumlah bar kiri untuk konfirmasi swing pivot
+swing_right_bars = 2          # Jumlah bar kanan untuk konfirmasi swing pivot
+pip_buffer_pips = 2.0         # Buffer pengaman Stop Loss di luar swing level (pips)
+min_risk_reward = 2.0         # Target minimal Risk:Reward (1:2.0)
+max_risk_reward = 3.0         # Batas maksimal Risk:Reward legal TF (1:3.0)
+default_expiration_hours = 24 # Masa berlaku pending order (jam)
+
+# 🛡️ Parameter Manajemen Risiko Akun (RiskProfile)
+[risk_management]
+max_risk_per_trade_percent = 1.0 # Maksimal 1% risiko modal per trade
+min_risk_reward_ratio = 2.0      # Rasio minimal 1:2
+max_open_drawdown_percent = 5.0  # Maksimal 5% open drawdown harian
+max_spread_pips = 3.0            # Saring dan tolak tick jika spread > 3 pips
+
+# 📊 Parameter Simulasi Backtesting Lab
+[backtest]
+simulation_spread_pips = 1.2 # Simulasi markup spread riil broker ritel
+lookback_window_bars = 50    # Jumlah bar candle histori untuk pembacaan fraktal
+default_lot_size = 1.0       # Asumsi volume standar perhitungan portfolio TF

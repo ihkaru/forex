@@ -1,0 +1,2135 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Traders Family Analyst Mastery Hub</title>
+  <meta name="description" content="Aplikasi interaktif flashcard, quiz, dan kamus istilah resmi analis Traders Family dengan pelacakan progres pintar." />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --bg-primary: #0b1114;
+      --bg-surface: #121c20;
+      --bg-card: #18252a;
+      --bg-card-hover: #1f3037;
+      --border-subtle: rgba(255, 255, 255, 0.08);
+      --border-accent: rgba(0, 180, 81, 0.3);
+      
+      --tf-green: #00b451;
+      --tf-green-glow: rgba(0, 180, 81, 0.35);
+      --tf-green-dark: #004d43;
+      --tf-emerald: #10b981;
+      
+      --accent-gold: #f59e0b;
+      --accent-red: #ef4444;
+      --accent-blue: #3b82f6;
+      --accent-purple: #8b5cf6;
+      
+      --text-main: #f3f4f6;
+      --text-muted: #9ca3af;
+      --text-dim: #6b7280;
+      
+      --radius-sm: 8px;
+      --radius-md: 14px;
+      --radius-lg: 20px;
+      --radius-full: 9999px;
+      
+      --shadow-card: 0 10px 25px -5px rgba(0, 0, 0, 0.4), 0 8px 10px -6px rgba(0, 0, 0, 0.3);
+      --shadow-glow: 0 0 20px var(--tf-green-glow);
+      --font-main: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+    }
+
+    body {
+      background-color: var(--bg-primary);
+      color: var(--text-main);
+      font-family: var(--font-main);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow-x: hidden;
+      touch-action: manipulation;
+    }
+
+    /* Scrollbar */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: var(--bg-primary);
+    }
+    ::-webkit-scrollbar-thumb {
+      background: var(--bg-card-hover);
+      border-radius: var(--radius-full);
+    }
+
+    /* Header Bar */
+    .app-header {
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      background: rgba(18, 28, 32, 0.85);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border-subtle);
+      padding: 12px 16px;
+    }
+
+    .header-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      max-width: 900px;
+      margin: 0 auto;
+    }
+
+    .brand-group {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .brand-logo {
+      width: 32px;
+      height: 32px;
+      background: linear-gradient(135deg, var(--tf-green), #047857);
+      border-radius: var(--radius-sm);
+      display: grid;
+      place-items: center;
+      font-weight: 800;
+      font-size: 16px;
+      color: #fff;
+      box-shadow: var(--shadow-glow);
+    }
+
+    .brand-title {
+      font-size: 15px;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+    }
+    .brand-subtitle {
+      font-size: 11px;
+      color: var(--tf-green);
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .header-stats {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .stat-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 5px 10px;
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-full);
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--text-main);
+    }
+
+    .stat-badge.streak {
+      color: var(--accent-gold);
+      border-color: rgba(245, 158, 11, 0.3);
+    }
+
+    .stat-badge.level {
+      color: var(--tf-emerald);
+      border-color: var(--border-accent);
+    }
+
+    /* Overall Progress Bar */
+    .progress-bar-container {
+      max-width: 900px;
+      margin: 8px auto 0;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .progress-labels {
+      display: flex;
+      justify-content: space-between;
+      font-size: 11px;
+      color: var(--text-muted);
+      font-weight: 600;
+    }
+
+    .progress-track {
+      width: 100%;
+      height: 6px;
+      background: rgba(255, 255, 255, 0.08);
+      border-radius: var(--radius-full);
+      overflow: hidden;
+      position: relative;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--tf-green), #34d399);
+      width: 0%;
+      border-radius: var(--radius-full);
+      transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+      box-shadow: 0 0 10px var(--tf-green-glow);
+    }
+
+    /* Main Container */
+    .main-container {
+      flex: 1;
+      max-width: 900px;
+      width: 100%;
+      margin: 0 auto;
+      padding: 16px 16px 90px;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Tab Panels */
+    .tab-panel {
+      display: none;
+      flex-direction: column;
+      animation: fadeIn 0.25s ease forwards;
+    }
+    .tab-panel.active {
+      display: flex;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Category Filter Pills */
+    .filter-scroll {
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      padding: 4px 2px 14px;
+      margin-bottom: 8px;
+      scrollbar-width: none;
+    }
+    .filter-scroll::-webkit-scrollbar {
+      display: none;
+    }
+
+    .filter-pill {
+      flex-shrink: 0;
+      padding: 7px 14px;
+      font-size: 12px;
+      font-weight: 600;
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      color: var(--text-muted);
+      border-radius: var(--radius-full);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .filter-pill.active {
+      background: var(--tf-green-dark);
+      border-color: var(--tf-green);
+      color: #fff;
+      box-shadow: 0 0 12px rgba(0, 180, 81, 0.25);
+    }
+
+    /* =========================================
+       FLASHCARD VIEW
+       ========================================= */
+    .flashcard-section {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+      width: 100%;
+    }
+
+    .card-deck-status {
+      display: flex;
+      justify-content: space-between;
+      width: 100%;
+      font-size: 13px;
+      color: var(--text-muted);
+      font-weight: 600;
+    }
+
+    .flashcard-stage {
+      position: relative;
+      width: 100%;
+      max-width: 480px;
+      height: 340px;
+      perspective: 1200px;
+      cursor: pointer;
+    }
+
+    .flashcard-inner {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      transform-style: preserve-3d;
+      transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+      border-radius: var(--radius-lg);
+    }
+
+    .flashcard-inner.flipped {
+      transform: rotateY(180deg);
+    }
+
+    .card-face {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      backface-visibility: hidden;
+      -webkit-backface-visibility: hidden;
+      border-radius: var(--radius-lg);
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      box-shadow: var(--shadow-card);
+      border: 1px solid var(--border-subtle);
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    .card-face.front {
+      background: radial-gradient(circle at top right, #1f3037, var(--bg-card));
+      border-color: rgba(255, 255, 255, 0.1);
+    }
+
+    .card-face.back {
+      background: radial-gradient(circle at bottom left, #0d3832, var(--bg-card));
+      transform: rotateY(180deg);
+      border-color: var(--border-accent);
+    }
+
+    .card-badge-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      width: 100%;
+    }
+
+    .card-tag {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      padding: 4px 10px;
+      border-radius: var(--radius-full);
+      background: rgba(0, 180, 81, 0.15);
+      color: var(--tf-green);
+      border: 1px solid rgba(0, 180, 81, 0.3);
+    }
+
+    .card-state-indicator {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--text-dim);
+    }
+
+    .card-content-center {
+      text-align: center;
+      padding: 10px 0;
+      overflow-y: auto;
+    }
+
+    .card-term-title {
+      font-size: 26px;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      color: #fff;
+      line-height: 1.25;
+      margin-bottom: 8px;
+    }
+
+    .card-desc-text {
+      font-size: 16px;
+      line-height: 1.6;
+      color: #e5e7eb;
+      font-weight: 500;
+      text-align: left;
+    }
+
+    .card-hint {
+      font-size: 12px;
+      color: var(--text-dim);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      font-weight: 500;
+    }
+
+    /* Swipe & Action Controls */
+    .flashcard-actions {
+      display: flex;
+      gap: 16px;
+      width: 100%;
+      max-width: 480px;
+      justify-content: center;
+      margin-top: 4px;
+    }
+
+    .action-btn {
+      flex: 1;
+      padding: 14px;
+      border-radius: var(--radius-md);
+      border: none;
+      font-weight: 700;
+      font-size: 14px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .btn-review {
+      background: rgba(239, 68, 68, 0.15);
+      color: #f87171;
+      border: 1px solid rgba(239, 68, 68, 0.3);
+    }
+    .btn-review:active {
+      transform: scale(0.96);
+      background: rgba(239, 68, 68, 0.25);
+    }
+
+    .btn-mastered {
+      background: linear-gradient(135deg, var(--tf-green), #059669);
+      color: #fff;
+      box-shadow: 0 4px 15px var(--tf-green-glow);
+    }
+    .btn-mastered:active {
+      transform: scale(0.96);
+    }
+
+    .flashcard-shortcuts {
+      display: flex;
+      gap: 12px;
+      margin-top: 4px;
+    }
+    .btn-ghost-sm {
+      background: transparent;
+      border: 1px solid var(--border-subtle);
+      color: var(--text-muted);
+      padding: 6px 12px;
+      font-size: 12px;
+      border-radius: var(--radius-full);
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    /* =========================================
+       QUIZ LAB
+       ========================================= */
+    .quiz-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-lg);
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      box-shadow: var(--shadow-card);
+    }
+
+    .quiz-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-bottom: 12px;
+      border-bottom: 1px solid var(--border-subtle);
+    }
+
+    .quiz-question-num {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--tf-green);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .quiz-score-pill {
+      font-size: 12px;
+      font-weight: 700;
+      background: var(--bg-surface);
+      padding: 4px 10px;
+      border-radius: var(--radius-full);
+      color: var(--accent-gold);
+    }
+
+    .quiz-question-box {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      padding: 16px;
+    }
+
+    .quiz-question-title {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-muted);
+      margin-bottom: 6px;
+    }
+
+    .quiz-question-text {
+      font-size: 17px;
+      font-weight: 700;
+      color: #fff;
+      line-height: 1.45;
+    }
+
+    .quiz-options-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .quiz-option-btn {
+      width: 100%;
+      text-align: left;
+      padding: 14px 16px;
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      color: var(--text-main);
+      font-size: 14px;
+      font-weight: 600;
+      border-radius: var(--radius-md);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      transition: all 0.2s;
+    }
+
+    .quiz-option-btn:hover {
+      background: var(--bg-card-hover);
+    }
+    .quiz-option-btn:active {
+      transform: scale(0.98);
+    }
+
+    .opt-letter {
+      width: 26px;
+      height: 26px;
+      border-radius: var(--radius-sm);
+      background: rgba(255, 255, 255, 0.06);
+      display: grid;
+      place-items: center;
+      font-weight: 700;
+      font-size: 12px;
+      color: var(--text-muted);
+      flex-shrink: 0;
+    }
+
+    .quiz-option-btn.correct {
+      background: rgba(0, 180, 81, 0.2) !important;
+      border-color: var(--tf-green) !important;
+      color: #4ade80 !important;
+    }
+    .quiz-option-btn.correct .opt-letter {
+      background: var(--tf-green);
+      color: #fff;
+    }
+
+    .quiz-option-btn.wrong {
+      background: rgba(239, 68, 68, 0.2) !important;
+      border-color: var(--accent-red) !important;
+      color: #f87171 !important;
+    }
+    .quiz-option-btn.wrong .opt-letter {
+      background: var(--accent-red);
+      color: #fff;
+    }
+
+    .quiz-feedback-box {
+      display: none;
+      padding: 14px;
+      border-radius: var(--radius-md);
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+    /* =========================================
+       KAMUS / GLOSSARY EXPLORER
+       ========================================= */
+    .search-box-wrap {
+      position: relative;
+      margin-bottom: 12px;
+    }
+
+    .search-input {
+      width: 100%;
+      padding: 14px 16px 14px 44px;
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      color: #fff;
+      font-size: 15px;
+      font-weight: 500;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    .search-input:focus {
+      border-color: var(--tf-green);
+      box-shadow: 0 0 0 3px rgba(0, 180, 81, 0.2);
+    }
+
+    .search-icon {
+      position: absolute;
+      left: 16px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--text-dim);
+      font-size: 16px;
+    }
+
+    .glossary-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 10px;
+    }
+
+    .glossary-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      padding: 14px 16px;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .glossary-card:hover {
+      background: var(--bg-card-hover);
+      border-color: rgba(255, 255, 255, 0.15);
+      transform: translateY(-2px);
+    }
+    .glossary-card:active {
+      transform: scale(0.98);
+    }
+
+    .glossary-card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .glossary-term-name {
+      font-weight: 700;
+      font-size: 15px;
+      color: #fff;
+    }
+
+    .glossary-desc-preview {
+      font-size: 13px;
+      color: var(--text-muted);
+      line-height: 1.45;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    /* =========================================
+       POLA N & CHEATSHEET
+       ========================================= */
+    .pola-n-wrap {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .pola-n-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-lg);
+      padding: 20px;
+      box-shadow: var(--shadow-card);
+    }
+
+    .diagram-container {
+      background: #081013;
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      padding: 16px;
+      margin: 12px 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .scoring-table-wrap {
+      width: 100%;
+      overflow-x: auto;
+      margin-top: 12px;
+    }
+
+    .tf-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+    .tf-table th {
+      background: var(--tf-green-dark);
+      color: #fff;
+      padding: 10px 12px;
+      text-align: left;
+      font-weight: 700;
+    }
+    .tf-table td {
+      padding: 10px 12px;
+      border-bottom: 1px solid var(--border-subtle);
+      color: var(--text-muted);
+    }
+    .tf-table tr:hover td {
+      background: rgba(255, 255, 255, 0.02);
+    }
+
+    /* =========================================
+       CALCULATOR / SIMULATOR
+       ========================================= */
+    .calc-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-lg);
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .calc-input-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .calc-label {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-muted);
+    }
+
+    .calc-input, .calc-select {
+      width: 100%;
+      padding: 12px 14px;
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      color: #fff;
+      font-size: 15px;
+      outline: none;
+      font-family: var(--font-main);
+    }
+    .calc-input:focus, .calc-select:focus {
+      border-color: var(--tf-green);
+    }
+
+    .calc-result-box {
+      background: linear-gradient(135deg, var(--tf-green-dark), #064e3b);
+      border: 1px solid var(--border-accent);
+      border-radius: var(--radius-md);
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .calc-result-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 14px;
+    }
+
+    .calc-result-val {
+      font-weight: 800;
+      font-size: 18px;
+      color: #fff;
+      font-family: var(--font-mono);
+    }
+
+    /* =========================================
+       MODAL BOTTOM SHEET
+       ========================================= */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.75);
+      backdrop-filter: blur(4px);
+      z-index: 100;
+      align-items: flex-end;
+      justify-content: center;
+      opacity: 0;
+      transition: opacity 0.25s ease;
+    }
+
+    .modal-overlay.show {
+      display: flex;
+      opacity: 1;
+    }
+
+    .modal-sheet {
+      width: 100%;
+      max-width: 600px;
+      background: var(--bg-card);
+      border-top: 1px solid rgba(255, 255, 255, 0.15);
+      border-radius: 24px 24px 0 0;
+      padding: 24px;
+      max-height: 85vh;
+      overflow-y: auto;
+      transform: translateY(100%);
+      transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.6);
+    }
+
+    .modal-overlay.show .modal-sheet {
+      transform: translateY(0);
+    }
+
+    .sheet-handle {
+      width: 40px;
+      height: 4px;
+      background: rgba(255, 255, 255, 0.2);
+      border-radius: var(--radius-full);
+      margin: 0 auto 16px;
+    }
+
+    .modal-title {
+      font-size: 22px;
+      font-weight: 800;
+      color: #fff;
+      margin-bottom: 8px;
+    }
+
+    .modal-body {
+      font-size: 15px;
+      line-height: 1.6;
+      color: #e5e7eb;
+    }
+
+    .modal-close-btn {
+      margin-top: 20px;
+      width: 100%;
+      padding: 12px;
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      color: #fff;
+      font-weight: 700;
+      font-size: 14px;
+      cursor: pointer;
+    }
+
+    /* =========================================
+       BOTTOM NAVIGATION BAR (TOUCH FRIENDLY)
+       ========================================= */
+    .bottom-nav {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      z-index: 50;
+      background: rgba(18, 28, 32, 0.95);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border-top: 1px solid var(--border-subtle);
+      padding: 8px 12px;
+      display: flex;
+      justify-content: space-around;
+      max-width: 900px;
+      margin: 0 auto;
+    }
+
+    .nav-btn {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 6px 12px;
+      border-radius: var(--radius-md);
+      cursor: pointer;
+      transition: all 0.2s;
+      min-width: 58px;
+    }
+
+    .nav-btn svg {
+      width: 20px;
+      height: 20px;
+      stroke-width: 2;
+    }
+
+    .nav-btn.active {
+      color: var(--tf-green);
+    }
+    .nav-btn.active svg {
+      stroke: var(--tf-green);
+    }
+
+    /* Responsive */
+    @media (min-width: 768px) {
+      .modal-overlay {
+        align-items: center;
+      }
+      .modal-sheet {
+        border-radius: var(--radius-lg);
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- TOP HEADER -->
+  <header class="app-header">
+    <div class="header-top">
+      <div class="brand-group">
+        <div class="brand-logo">TF</div>
+        <div>
+          <div class="brand-title">Analyst Mastery Hub</div>
+          <div class="brand-subtitle">Traders Family Ecosystem</div>
+        </div>
+      </div>
+      <div class="header-stats">
+        <div class="stat-badge streak" id="stat-streak">🔥 1 Hari</div>
+        <div class="stat-badge level" id="stat-level">⭐ Pro</div>
+      </div>
+    </div>
+
+    <!-- Progress Track -->
+    <div class="progress-bar-container">
+      <div class="progress-labels">
+        <span>Penguasaan Materi</span>
+        <span id="mastery-text">0 / 64 Istilah (0%)</span>
+      </div>
+      <div class="progress-track">
+        <div class="progress-fill" id="mastery-progress-fill"></div>
+      </div>
+    </div>
+  </header>
+
+  <!-- MAIN VIEWPORT -->
+  <main class="main-container">
+
+    <!-- 1. TAB: FLASHCARDS -->
+    <section class="tab-panel active" id="tab-flashcard">
+      <div class="filter-scroll" id="flashcard-category-filters">
+        <button class="filter-pill active" data-cat="all">Semua Istilah (64)</button>
+        <button class="filter-pill" data-cat="kualifikasi">💰 Kualifikasi & Poin</button>
+        <button class="filter-pill" data-cat="channel">🏛️ Channel & Status</button>
+        <button class="filter-pill" data-cat="order">📈 Order & Sinyal</button>
+        <button class="filter-pill" data-cat="metrik">📊 Metrik & Scoring</button>
+        <button class="filter-pill" data-cat="analisis">🔍 Analisis & Pola N</button>
+        <button class="filter-pill" data-cat="review">⚠️ Perlu Diulang</button>
+      </div>
+
+      <div class="flashcard-section">
+        <div class="card-deck-status">
+          <span id="card-counter">Kartu 1 dari 64</span>
+          <span id="card-status-pill">Belum Dihafal</span>
+        </div>
+
+        <div class="flashcard-stage" id="flashcard-stage">
+          <div class="flashcard-inner" id="flashcard-inner">
+            <!-- Front Face -->
+            <div class="card-face front">
+              <div class="card-badge-row">
+                <span class="card-tag" id="card-front-tag">KUALIFIKASI</span>
+                <span class="card-state-indicator">Ketuk untuk Balik 🔄</span>
+              </div>
+              <div class="card-content-center">
+                <div class="card-term-title" id="card-front-term">Active Earnings</div>
+              </div>
+              <div class="card-hint">
+                <span>👈 Geser kiri (Ulangi)</span> • <span>Geser kanan (Hafal) 👉</span>
+              </div>
+            </div>
+
+            <!-- Back Face -->
+            <div class="card-face back">
+              <div class="card-badge-row">
+                <span class="card-tag" id="card-back-tag">DEFINISI RESMI</span>
+                <span class="card-state-indicator">Ketuk untuk Balik 🔄</span>
+              </div>
+              <div class="card-content-center">
+                <div class="card-desc-text" id="card-back-desc">
+                  Pendapatan yang diperoleh dari TF Point dan/atau dari Subscriber yang tersedia untuk ditarik/dicairkan menjadi uang tunai.
+                </div>
+              </div>
+              <div class="card-hint">
+                <span>Sudah paham istilah ini?</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="flashcard-actions">
+          <button class="action-btn btn-review" id="btn-card-review">
+            ❌ Belum Hafal
+          </button>
+          <button class="action-btn btn-mastered" id="btn-card-mastered">
+            ✅ Sudah Hafal!
+          </button>
+        </div>
+
+        <div class="flashcard-shortcuts">
+          <button class="btn-ghost-sm" id="btn-shuffle-cards">🔀 Acak Urutan</button>
+          <button class="btn-ghost-sm" id="btn-reset-flashcards">🔄 Reset Status</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- 2. TAB: QUIZ LAB -->
+    <section class="tab-panel" id="tab-quiz">
+      <div class="quiz-card">
+        <div class="quiz-header">
+          <span class="quiz-question-num" id="quiz-progress-text">Soal 1 / 10</span>
+          <span class="quiz-score-pill" id="quiz-score-display">Skor: 0 XP</span>
+        </div>
+
+        <div class="quiz-question-box">
+          <div class="quiz-question-title" id="quiz-question-category">KATEGORI: METRIK & SCORING</div>
+          <div class="quiz-question-text" id="quiz-question-prompt">
+            Manakah istilah yang berarti: "Perbandingan antara total keuntungan dari transaksi profit dengan total kerugian dari transaksi loss"?
+          </div>
+        </div>
+
+        <div class="quiz-options-list" id="quiz-options-container">
+          <!-- Dynamically populated options -->
+        </div>
+
+        <div class="quiz-feedback-box" id="quiz-feedback-box">
+          <strong id="quiz-feedback-title">Benar! 🎉</strong>
+          <p id="quiz-feedback-desc">Penjelasan tambahan...</p>
+          <button class="action-btn btn-mastered" id="quiz-next-btn" style="margin-top: 10px;">Lanjut Soal Berikutnya ➔</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- 3. TAB: KAMUS ISTILAH (GLOSSARY) -->
+    <section class="tab-panel" id="tab-glossary">
+      <div class="search-box-wrap">
+        <span class="search-icon">🔍</span>
+        <input type="text" class="search-input" id="glossary-search" placeholder="Cari istilah, rumus, atau definisi..." />
+      </div>
+
+      <div class="filter-scroll" id="glossary-category-filters">
+        <button class="filter-pill active" data-cat="all">Semua (64)</button>
+        <button class="filter-pill" data-cat="kualifikasi">💰 Kualifikasi</button>
+        <button class="filter-pill" data-cat="channel">🏛️ Channel</button>
+        <button class="filter-pill" data-cat="order">📈 Order</button>
+        <button class="filter-pill" data-cat="metrik">📊 Metrik</button>
+        <button class="filter-pill" data-cat="analisis">🔍 Analisis</button>
+      </div>
+
+      <div class="glossary-grid" id="glossary-grid">
+        <!-- Rendered items -->
+      </div>
+    </section>
+
+    <!-- 4. TAB: POLA N & RULES -->
+    <section class="tab-panel" id="tab-polan">
+      <div class="pola-n-wrap">
+        <!-- Pola N Bullish -->
+        <div class="pola-n-card">
+          <h3 style="color: var(--tf-green); font-size: 18px; margin-bottom: 6px;">📈 Pola N Bullish (Trend Continuation)</h3>
+          <p style="font-size: 13px; color: var(--text-muted); line-height: 1.5;">
+            Formasi penerusan tren naik: Swing Low awal (L1) ➔ Impulsive Peak (H1) ➔ Higher Low Retest Support (L2) ➔ Entry BUY.
+          </p>
+
+          <div class="diagram-container">
+            <svg viewBox="0 0 360 160" width="100%" height="160" style="overflow: visible;">
+              <!-- Grid lines -->
+              <line x1="20" y1="140" x2="340" y2="140" stroke="rgba(255,255,255,0.06)" stroke-dasharray="4"/>
+              <line x1="20" y1="80" x2="340" y2="80" stroke="rgba(255,255,255,0.06)" stroke-dasharray="4"/>
+              <line x1="20" y1="20" x2="340" y2="20" stroke="rgba(255,255,255,0.06)" stroke-dasharray="4"/>
+
+              <!-- Path N -->
+              <polyline points="40,130 140,30 220,100 320,20" fill="none" stroke="#00b451" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+
+              <!-- Point 1 (L1) -->
+              <circle cx="40" cy="130" r="5" fill="#3b82f6"/>
+              <text x="40" y="150" fill="#93c5fd" font-size="11" font-weight="700" text-anchor="middle">L1 (Start)</text>
+
+              <!-- Point 2 (H1) -->
+              <circle cx="140" cy="30" r="5" fill="#f59e0b"/>
+              <text x="140" y="20" fill="#fde68a" font-size="11" font-weight="700" text-anchor="middle">H1 (Peak)</text>
+
+              <!-- Point 3 (L2) -->
+              <circle cx="220" cy="100" r="6" fill="#00b451" stroke="#fff" stroke-width="2"/>
+              <text x="220" y="120" fill="#86efac" font-size="11" font-weight="700" text-anchor="middle">L2 (Retest/ENTRY)</text>
+
+              <!-- Target Line TP -->
+              <line x1="140" y1="30" x2="320" y2="30" stroke="#f59e0b" stroke-width="1.5" stroke-dasharray="4"/>
+              <text x="320" y="45" fill="#f59e0b" font-size="10" font-weight="700">TP1 (H1 Break)</text>
+            </svg>
+          </div>
+
+          <div style="font-size: 13px; color: var(--text-muted); display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+            <div>• <strong>Entry:</strong> Pantulan Support di L2</div>
+            <div>• <strong>Stop Loss:</strong> L2 - Pip Buffer (1.5-2.5 pips)</div>
+            <div>• <strong>Take Profit 1:</strong> Level Peak H1</div>
+            <div>• <strong>Take Profit 2:</strong> Target R:R ≥ 1:2.0</div>
+          </div>
+        </div>
+
+        <!-- 7 Scoring Factors -->
+        <div class="pola-n-card">
+          <h3 style="color: var(--accent-gold); font-size: 18px; margin-bottom: 6px;">🏆 7 Faktor Penentu Skor Channel</h3>
+          <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 10px;">
+            Mulai update 2026, harga dan ranking channel analis ditentukan oleh 7 pilar performa:
+          </p>
+
+          <div class="scoring-table-wrap">
+            <table class="tf-table">
+              <thead>
+                <tr>
+                  <th>Faktor Penilaian</th>
+                  <th>Syarat Skor Maksimal (4 Poin)</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><strong>1. Level Channel</strong></td>
+                  <td>Level <span style="color: #4ade80; font-weight:700;">Legend</span> (4 Poin) / Master (2 Poin)</td>
+                </tr>
+                <tr>
+                  <td><strong>2. Status Kemitraan</strong></td>
+                  <td><span style="color: #4ade80; font-weight:700;">Priority Channel</span> (4 Poin) / Prospect (2 Poin)</td>
+                </tr>
+                <tr>
+                  <td><strong>3. Jumlah Subscriber</strong></td>
+                  <td>≥ 501 Subscriber Berbayar (4 Poin)</td>
+                </tr>
+                <tr>
+                  <td><strong>4. Profit Factor (6 Bulan)</strong></td>
+                  <td>≥ 2.1 (Gross Profit : Gross Loss) (4 Poin)</td>
+                </tr>
+                <tr>
+                  <td><strong>5. Monthly Loss Ratio</strong></td>
+                  <td>0% – 10% dari rata-rata profit (4 Poin)</td>
+                </tr>
+                <tr>
+                  <td><strong>6. Profit Months</strong></td>
+                  <td>6 Bulan Berturut-turut Profit (4 Poin)</td>
+                </tr>
+                <tr>
+                  <td><strong>7. Recovery Rate</strong></td>
+                  <td>Pemulihan drawdown tercepat</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 5. TAB: INCOME & SCORE CALCULATOR -->
+    <section class="tab-panel" id="tab-calc">
+      <div class="calc-card">
+        <h3 style="color: #fff; font-size: 18px;">🧮 Simulator TF Point & Income Analis</h3>
+        
+        <div class="calc-input-group">
+          <label class="calc-label">Level Analis</label>
+          <select class="calc-select" id="calc-level">
+            <option value="1">Rookie (Medal 1-2)</option>
+            <option value="2" selected>Pro (Medal 3-4)</option>
+            <option value="3">Elite (Medal 5-7)</option>
+            <option value="4">Master (Medal 8-10)</option>
+            <option value="5">Legend (Medal 11+)</option>
+          </select>
+        </div>
+
+        <div class="calc-input-group">
+          <label class="calc-label">Perolehan Valued Pips (VP) Bulan Berjalan</label>
+          <input type="number" class="calc-input" id="calc-vp" value="450" min="0" step="10" />
+        </div>
+
+        <div class="calc-input-group">
+          <label class="calc-label">Rata-rata VP 6 Bulan Terakhir (Avg Monthly VP)</label>
+          <input type="number" class="calc-input" id="calc-avg-vp" value="380" min="300" step="10" />
+        </div>
+
+        <div class="calc-input-group">
+          <label class="calc-label">Jumlah Subscriber Berbayar</label>
+          <input type="number" class="calc-input" id="calc-subs" value="85" min="0" step="1" />
+        </div>
+
+        <div class="calc-result-box">
+          <div class="calc-result-row">
+            <span>Status Kualifikasi Bulanan:</span>
+            <span class="calc-result-val" id="calc-res-status" style="color: #4ade80;">LOLOS ✅</span>
+          </div>
+          <div class="calc-result-row">
+            <span>Estimasi Perolehan TF Point:</span>
+            <span class="calc-result-val" id="calc-res-point">1,188 Point</span>
+          </div>
+          <div class="calc-result-row">
+            <span>Estimasi Revenue Subs/Bulan:</span>
+            <span class="calc-result-val" id="calc-res-subs-income">Rp 17.000.000</span>
+          </div>
+          <div class="calc-result-row" style="border-top: 1px solid rgba(255,255,255,0.1); padding-top: 8px; margin-top: 4px;">
+            <span style="font-weight: 700;">Total Potensi Income:</span>
+            <span class="calc-result-val" id="calc-res-total" style="color: #fde68a;">Rp 28.880.000</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- MODAL BOTTOM SHEET -->
+  <div class="modal-overlay" id="modal-overlay">
+    <div class="modal-sheet">
+      <div class="sheet-handle"></div>
+      <div class="card-tag" id="modal-tag" style="margin-bottom: 8px; display: inline-block;">KATEGORI</div>
+      <h3 class="modal-title" id="modal-title">Nama Istilah</h3>
+      <div class="modal-body" id="modal-desc">Definisi lengkap istilah...</div>
+      <button class="modal-close-btn" id="modal-close-btn">Tutup</button>
+    </div>
+  </div>
+
+  <!-- BOTTOM NAVIGATION BAR (TOUCH FRIENDLY) -->
+  <nav class="bottom-nav">
+    <button class="nav-btn active" data-tab="tab-flashcard">
+      <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
+      <span>Kartu</span>
+    </button>
+    <button class="nav-btn" data-tab="tab-quiz">
+      <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+      <span>Kuis</span>
+    </button>
+    <button class="nav-btn" data-tab="tab-glossary">
+      <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
+      <span>Kamus</span>
+    </button>
+    <button class="nav-btn" data-tab="tab-polan">
+      <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/></svg>
+      <span>Pola N</span>
+    </button>
+    <button class="nav-btn" data-tab="tab-calc">
+      <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
+      <span>Hitung</span>
+    </button>
+  </nav>
+
+  <!-- JAVASCRIPT LOGIC -->
+  <script>
+    // ==========================================
+    // 1. DATA DICTIONARY (64 OFFICIAL TF TERMS)
+    // ==========================================
+    const TF_DICTIONARY = [
+      {
+        term: "Active Earnings",
+        category: "kualifikasi",
+        categoryLabel: "Kualifikasi & Poin",
+        desc: "Pendapatan yang diperoleh dari TF Point dan/atau dari Subscriber yang tersedia untuk ditarik/dicairkan menjadi uang tunai."
+      },
+      {
+        term: "Active Signal",
+        category: "order",
+        categoryLabel: "Order & Sinyal",
+        desc: "Signal di aplikasi Traders Family yang telah dibuat namun belum tereksekusi karena harga belum mencapai entry price. Masih dapat dicopy, dibatalkan, atau expired."
+      },
+      {
+        term: "Analyst",
+        category: "channel",
+        categoryLabel: "Channel & Status",
+        desc: "Orang yang melakukan analisa dengan membuat channel dan posting signal sesuai metodenya masing-masing di aplikasi Traders Family."
+      },
+      {
+        term: "Analisa Fundamental",
+        category: "analisis",
+        categoryLabel: "Analisis & Pasar",
+        desc: "Teknik analisa untuk mengetahui arah harga menggunakan data ekonomi negara (berita, suku bunga, NFP, CPI)."
+      },
+      {
+        term: "Analisa Teknikal",
+        category: "analisis",
+        categoryLabel: "Analisis & Pasar",
+        desc: "Teknik analisa arah pergerakan harga menggunakan history harga (chart grafik masa lalu)."
+      },
+      {
+        term: "Ask",
+        category: "analisis",
+        categoryLabel: "Analisis & Pasar",
+        desc: "Harga yang digunakan saat open transaksi Buy. Saat posisi buy ditutup, akan menggunakan harga Bid."
+      },
+      {
+        term: "Bid",
+        category: "analisis",
+        categoryLabel: "Analisis & Pasar",
+        desc: "Harga yang digunakan saat open transaksi Sell. Saat posisi sell ditutup, akan menggunakan harga Ask."
+      },
+      {
+        term: "Average monthly profit",
+        category: "metrik",
+        categoryLabel: "Metrik & Scoring",
+        desc: "Rata-rata profit yang dihasilkan oleh suatu channel dalam periode sebulan."
+      },
+      {
+        term: "Average monthly VP",
+        category: "metrik",
+        categoryLabel: "Metrik & Scoring",
+        desc: "Rata-rata Valued Pips (VP) bulanan dari 6 bulan terakhir yang mencapai minimal 300 VP."
+      },
+      {
+        term: "Average Pips",
+        category: "metrik",
+        categoryLabel: "Metrik & Scoring",
+        desc: "Rata-rata jumlah pips yang diperoleh oleh suatu channel dalam periode waktu tertentu."
+      },
+      {
+        term: "Average SL pips",
+        category: "metrik",
+        categoryLabel: "Metrik & Scoring",
+        desc: "Rata-rata jumlah pips stop loss yang digunakan pada signal yang sudah settled."
+      },
+      {
+        term: "Average TP pips",
+        category: "metrik",
+        categoryLabel: "Metrik & Scoring",
+        desc: "Rata-rata jumlah pips take profit yang digunakan pada signal yang sudah settled."
+      },
+      {
+        term: "Avg Holding Period",
+        category: "metrik",
+        categoryLabel: "Metrik & Scoring",
+        desc: "Rata-rata durasi waktu signal berjalan dalam posisi floating hingga akhirnya tertutup (settled)."
+      },
+      {
+        term: "Basic Channel",
+        category: "channel",
+        categoryLabel: "Channel & Status",
+        desc: "Tahap awal channel menuju Kemitraan Priority. Harus memenuhi minimal 3x kualifikasi bulanan dalam 5 bulan untuk naik ke Prospect Channel."
+      },
+      {
+        term: "Basic Point",
+        category: "kualifikasi",
+        categoryLabel: "Kualifikasi & Poin",
+        desc: "Poin dasar yang didapat berdasarkan perolehan Valued Pips (VP) pada channel."
+      },
+      {
+        term: "Banned Channel",
+        category: "channel",
+        categoryLabel: "Channel & Status",
+        desc: "Channel yang diblokir permanen karena melanggar kebijakan serta merugikan analis lain, subscriber, dan Traders Family."
+      },
+      {
+        term: "Backtest",
+        category: "analisis",
+        categoryLabel: "Analisis & Pasar",
+        desc: "Metode kuantitatif mengukur probabilitas dan performa suatu strategi pada data pasar historis."
+      },
+      {
+        term: "Bonus Point",
+        category: "kualifikasi",
+        categoryLabel: "Kualifikasi & Poin",
+        desc: "Poin reward tambahan yang diperoleh analis sebanyak 1x ketika channel pertama kali mencapai level tertentu."
+      },
+      {
+        term: "Buy Limit",
+        category: "order",
+        categoryLabel: "Order & Sinyal",
+        desc: "Pending order beli yang dipasang di bawah harga running saat ini (menunggu harga turun untuk memantul naik)."
+      },
+      {
+        term: "Buy Stop",
+        category: "order",
+        categoryLabel: "Order & Sinyal",
+        desc: "Pending order beli yang dipasang di atas harga running saat ini (menunggu breakout ke atas)."
+      },
+      {
+        term: "Cancelled",
+        category: "order",
+        categoryLabel: "Order & Sinyal",
+        desc: "Status sinyal yang dibatalkan oleh analis sebelum harga menjemput level pending order."
+      },
+      {
+        term: "Cash out",
+        category: "kualifikasi",
+        categoryLabel: "Kualifikasi & Poin",
+        desc: "Penarikan saldo Active Earnings dari aplikasi Traders Family ke rekening bank rupiah."
+      },
+      {
+        term: "Channel",
+        category: "channel",
+        categoryLabel: "Channel & Status",
+        desc: "Halaman profil publik analis di aplikasi Traders Family untuk memposting sinyal dan portofolio."
+      },
+      {
+        term: "Check Point",
+        category: "kualifikasi",
+        categoryLabel: "Kualifikasi & Poin",
+        desc: "Batas bawah perolehan pips bagi Priority Channel dari Avg Monthly Profit dengan kelipatan 25%."
+      },
+      {
+        term: "Client Protection",
+        category: "channel",
+        categoryLabel: "Channel & Status",
+        desc: "Jaminan proteksi 100% dari kecurangan broker partner Traders Family untuk seluruh klien."
+      },
+      {
+        term: "Consecutive Loss",
+        category: "metrik",
+        categoryLabel: "Metrik & Scoring",
+        desc: "Jumlah kekalahan transaksi yang terjadi secara berturut-turut."
+      },
+      {
+        term: "Consecutive Monthly Loss",
+        category: "metrik",
+        categoryLabel: "Metrik & Scoring",
+        desc: "Kerugian yang dialami berturut-turut dalam hitungan bulan, memicu evaluasi penurunan medal."
+      },
+      {
+        term: "Consecutive Profit",
+        category: "metrik",
+        categoryLabel: "Metrik & Scoring",
+        desc: "Kemenangan transaksi yang diraih secara berturut-turut."
+      },
+      {
+        term: "Consecutive Monthly Profit",
+        category: "metrik",
+        categoryLabel: "Metrik & Scoring",
+        desc: "Profit konsisten yang diraih berturut-turut setiap bulan."
+      },
+      {
+        term: "Copy Signal",
+        category: "order",
+        categoryLabel: "Order & Sinyal",
+        desc: "Fitur menyalin sinyal dari channel analis secara otomatis ke akun trading MetaTrader subscriber."
+      },
+      {
+        term: "Custom Symbols Subscribe",
+        category: "channel",
+        categoryLabel: "Channel & Status",
+        desc: "Paket langganan khusus yang memungkinkan subscriber memilih 1 atau 2 pair spesifik dari analis."
+      },
+      {
+        term: "Close Position Buy",
+        category: "order",
+        categoryLabel: "Order & Sinyal",
+        desc: "Menutup transaksi Buy dengan eksekusi pada harga Bid."
+      },
+      {
+        term: "Close Position Sell",
+        category: "order",
+        categoryLabel: "Order & Sinyal",
+        desc: "Menutup transaksi Sell dengan eksekusi pada harga Ask."
+      },
+      {
+        term: "Data Summary",
+        category: "metrik",
+        categoryLabel: "Metrik & Scoring",
+        desc: "Ringkasan performa menyeluruh channel berdasarkan rentang waktu tertentu."
+      },
+      {
+        term: "Earnings",
+        category: "kualifikasi",
+        categoryLabel: "Kualifikasi & Poin",
+        desc: "Total pendapatan dalam nominal rupiah dari penukaran TF Point dan bagi hasil subscriber."
+      },
+      {
+        term: "Entry Price",
+        category: "order",
+        categoryLabel: "Order & Sinyal",
+        desc: "Tingkat harga target tempat membuka transaksi Buy atau Sell pada pending order."
+      },
+      {
+        term: "Expired Signal",
+        category: "order",
+        categoryLabel: "Order & Sinyal",
+        desc: "Active Signal yang belum tereksekusi hingga batas waktu durasi kedaluwarsa habis."
+      },
+      {
+        term: "Gross Loss",
+        category: "metrik",
+        categoryLabel: "Metrik & Scoring",
+        desc: "Total kerugian kotor secara keseluruhan dalam USD dari seluruh transaksi yang loss."
+      },
+      {
+        term: "Gross Profit",
+        category: "metrik",
+        categoryLabel: "Metrik & Scoring",
+        desc: "Total keuntungan kotor secara keseluruhan dalam USD dari seluruh transaksi yang profit."
+      },
+      {
+        term: "Holding Period",
+        category: "metrik",
+        categoryLabel: "Metrik & Scoring",
+        desc: "Lama waktu posisi trading terbuka dari saat entry terjemput hingga ditutup (settled)."
+      },
+      {
+        term: "Investment Calculator",
+        category: "kualifikasi",
+        categoryLabel: "Kualifikasi & Poin",
+        desc: "Alat kalkulasi simulasi compounding hasil investasi dari performa channel analis."
+      },
+      {
+        term: "iSignal",
+        category: "order",
+        categoryLabel: "Order & Sinyal",
+        desc: "Sistem otomasi Traders Family yang menyalin sinyal langganan langsung ke terminal MT4/MT5."
+      },
+      {
+        term: "Kemitraan",
+        category: "channel",
+        categoryLabel: "Channel & Status",
+        desc: "Program kerja sama resmi antara Traders Family dan analis konsisten (Prospect & Priority)."
+      },
+      {
+        term: "Kualifikasi Bulanan",
+        category: "kualifikasi",
+        categoryLabel: "Kualifikasi & Poin",
+        desc: "Syarat mutlak bulanan: Minimal 300 Valued Pips (VP), 5 signal settled, dan pips bulanan ≥ 0."
+      },
+      {
+        term: "Limit Order",
+        category: "order",
+        categoryLabel: "Order & Sinyal",
+        desc: "Pending order pantulan: Buy Limit (di bawah harga running) atau Sell Limit (di atas harga running)."
+      },
+      {
+        term: "Loss",
+        category: "metrik",
+        categoryLabel: "Metrik & Scoring",
+        desc: "Kerugian nilai modal akibat pergerakan harga berlawanan dengan arah transaksi."
+      },
+      {
+        term: "Max Holding Period",
+        category: "metrik",
+        categoryLabel: "Metrik & Scoring",
+        desc: "Durasi terlama posisi floating sebelum tertutup yang tercatat dalam rekam jejak portofolio."
+      },
+      {
+        term: "Max SL Pips",
+        category: "order",
+        categoryLabel: "Order & Sinyal",
+        desc: "Batas maksimal Stop Loss yang diizinkan pada aplikasi TF (Maksimal 500 pips)."
+      },
+      {
+        term: "Max TP Pips",
+        category: "order",
+        categoryLabel: "Order & Sinyal",
+        desc: "Batas maksimal Take Profit yang diizinkan pada aplikasi TF (Maksimal 500 pips)."
+      },
+      {
+        term: "Metode",
+        category: "analisis",
+        categoryLabel: "Analisis & Pasar",
+        desc: "Teknik atau sistem analisa teknikal/fundamental yang digunakan analis untuk memproduksi sinyal."
+      },
+      {
+        term: "Monthly Loss",
+        category: "metrik",
+        categoryLabel: "Metrik & Scoring",
+        desc: "Total akumulasi kerugian channel dalam kurun waktu satu bulan kalender."
+      },
+      {
+        term: "New Earnings",
+        category: "kualifikasi",
+        categoryLabel: "Kualifikasi & Poin",
+        desc: "Pendapatan baru dari subscriber. Mengendap 30 hari sebelum pindah ke Active Earnings untuk dicairkan."
+      },
+      {
+        term: "Open Position",
+        category: "order",
+        categoryLabel: "Order & Sinyal",
+        desc: "Transaksi trading yang sedang aktif berjalan di pasar dan memiliki floating profit/loss."
+      },
+      {
+        term: "Pair",
+        category: "analisis",
+        categoryLabel: "Analisis & Pasar",
+        desc: "Pasangan dua mata uang yang ditransaksikan (contoh: EURUSD, GBPUSD, XAUUSD)."
+      },
+      {
+        term: "Pending Order",
+        category: "order",
+        categoryLabel: "Order & Sinyal",
+        desc: "Pesanan order yang menunggu di harga tertentu (Limit Order & Stop Order). Standar wajib sinyal TF."
+      },
+      {
+        term: "Pips",
+        category: "analisis",
+        categoryLabel: "Analisis & Pasar",
+        desc: "Satuan standar terkecil pergerakan harga dalam perdagangan forex (Price Interest Point)."
+      },
+      {
+        term: "Pola N",
+        category: "analisis",
+        categoryLabel: "Analisis & Pasar",
+        desc: "Strategi Price Action khas Traders Family: Impulsive Swing ➔ Pullback Retest Support/Resisten ➔ Continuation Entry."
+      },
+      {
+        term: "Portofolio Channel",
+        category: "channel",
+        categoryLabel: "Channel & Status",
+        desc: "Laporan transparansi rekam jejak, statistik, win rate, dan riwayat seluruh sinyal analis."
+      },
+      {
+        term: "Priority Channel",
+        category: "channel",
+        categoryLabel: "Channel & Status",
+        desc: "Level tertinggi kemitraan analis TF. Berhak atas revenue share maksimal dan skor 4 poin kemitraan."
+      },
+      {
+        term: "Profit Factor",
+        category: "metrik",
+        categoryLabel: "Metrik & Scoring",
+        desc: "Rasio Gross Profit dibagi Gross Loss (6 bulan terakhir). Target ≥ 2.1 untuk skor maksimal 4 poin."
+      },
+      {
+        term: "Prospect Channel",
+        category: "channel",
+        categoryLabel: "Channel & Status",
+        desc: "Tahap evaluasi selama 3 bulan setelah Basic Channel sebelum dipromosikan menjadi Priority Channel."
+      },
+      {
+        term: "Redeem",
+        category: "kualifikasi",
+        categoryLabel: "Kualifikasi & Poin",
+        desc: "Proses penukaran saldo TF Point menjadi dana rupiah (earnings) yang siap ditarik."
+      },
+      {
+        term: "Risk:Reward",
+        category: "metrik",
+        categoryLabel: "Metrik & Scoring",
+        desc: "Perbandingan rasio jarak risiko Stop Loss terhadap target keuntungan Take Profit (Wajib ≥ 1:2)."
+      },
+      {
+        term: "Running Signal",
+        category: "order",
+        categoryLabel: "Order & Sinyal",
+        desc: "Sinyal yang level entry-nya sudah terjemput harga dan sedang floating aktif di pasar."
+      },
+      {
+        term: "Settled Signal",
+        category: "order",
+        categoryLabel: "Order & Sinyal",
+        desc: "Sinyal yang transaksinya sudah selesai dan tertutup baik menyentuh TP ataupun SL."
+      },
+      {
+        term: "Stop Loss",
+        category: "order",
+        categoryLabel: "Order & Sinyal",
+        desc: "Level harga pembatas kerugian otomatis untuk memproteksi modal trading."
+      },
+      {
+        term: "Subscriber",
+        category: "channel",
+        categoryLabel: "Channel & Status",
+        desc: "Pengguna berbayar aplikasi Traders Family yang berlangganan sinyal channel analis."
+      },
+      {
+        term: "TF Level",
+        category: "channel",
+        categoryLabel: "Channel & Status",
+        desc: "Tingkatan peringkat analis: Newbie ➔ Rookie ➔ Pro ➔ Elite ➔ Master ➔ Legend."
+      },
+      {
+        term: "TF Medal",
+        category: "kualifikasi",
+        categoryLabel: "Kualifikasi & Poin",
+        desc: "Medali reward yang diperoleh saat lolos kualifikasi bulanan untuk menaikkan TF Level."
+      },
+      {
+        term: "TF Point",
+        category: "kualifikasi",
+        categoryLabel: "Kualifikasi & Poin",
+        desc: "Poin konversi reward dari perolehan Valued Pips (VP) yang dapat ditukarkan menjadi uang tunai rupiah."
+      },
+      {
+        term: "Valued Pips",
+        category: "kualifikasi",
+        categoryLabel: "Kualifikasi & Poin",
+        desc: "Satuan nilai pips terstandarisasi yang menjadi acuan mutlak reward di aplikasi Traders Family."
+      }
+    ];
+
+    // ==========================================
+    // 2. STATE PERSISTENCE ENGINE (LOCALSTORAGE)
+    // ==========================================
+    const STORAGE_KEY = "TF_MASTERY_PROGRESS_V1";
+
+    let state = {
+      masteredTerms: [], // array of term strings
+      reviewTerms: [],   // array of term strings
+      streakCount: 1,
+      lastActiveDate: new Date().toISOString().slice(0, 10),
+      quizXP: 0,
+      currentCardIndex: 0,
+      activeCategory: "all"
+    };
+
+    function loadState() {
+      try {
+        const saved = localStorage.getItem(STORAGE_KEY);
+        if (saved) {
+          state = { ...state, ...JSON.parse(saved) };
+          checkStreak();
+        }
+      } catch (e) {
+        console.error("Gagal memuat state:", e);
+      }
+      updateGlobalStatsUI();
+    }
+
+    function saveState() {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+      } catch (e) {
+        console.error("Gagal menyimpan state:", e);
+      }
+      updateGlobalStatsUI();
+    }
+
+    function checkStreak() {
+      const today = new Date().toISOString().slice(0, 10);
+      if (state.lastActiveDate !== today) {
+        const last = new Date(state.lastActiveDate);
+        const curr = new Date(today);
+        const diffDays = Math.round((curr - last) / (1000 * 60 * 60 * 24));
+        if (diffDays === 1) {
+          state.streakCount += 1;
+        } else if (diffDays > 1) {
+          state.streakCount = 1;
+        }
+        state.lastActiveDate = today;
+        saveState();
+      }
+    }
+
+    function updateGlobalStatsUI() {
+      const total = TF_DICTIONARY.length;
+      const mastered = state.masteredTerms.length;
+      const pct = Math.round((mastered / total) * 100);
+
+      document.getElementById("mastery-text").textContent = `${mastered} / ${total} Istilah (${pct}%)`;
+      document.getElementById("mastery-progress-fill").style.width = `${pct}%`;
+      document.getElementById("stat-streak").textContent = `🔥 ${state.streakCount} Hari`;
+
+      // Level determination
+      let lvl = "🔰 Newbie";
+      if (pct >= 85) lvl = "👑 Legend";
+      else if (pct >= 65) lvl = "⭐ Master";
+      else if (pct >= 45) lvl = "🏅 Elite";
+      else if (pct >= 25) lvl = "🎖️ Pro";
+      else if (pct >= 10) lvl = "🌱 Rookie";
+
+      document.getElementById("stat-level").textContent = lvl;
+    }
+
+    // Vibration Haptic Feedback for Mobile Touch
+    function triggerHaptic(type = "light") {
+      if ("vibrate" in navigator) {
+        if (type === "light") navigator.vibrate(12);
+        else if (type === "success") navigator.vibrate([15, 30, 20]);
+        else if (type === "error") navigator.vibrate([30, 50, 30]);
+      }
+    }
+
+    // ==========================================
+    // 3. FLASHCARD CONTROLLER (TOUCH & SWIPE)
+    // ==========================================
+    let filteredDeck = [...TF_DICTIONARY];
+    let currentDeckIndex = 0;
+
+    function getFilteredDeck() {
+      if (state.activeCategory === "all") {
+        return [...TF_DICTIONARY];
+      } else if (state.activeCategory === "review") {
+        const reviewSet = new Set(state.reviewTerms);
+        const filtered = TF_DICTIONARY.filter(t => reviewSet.has(t.term));
+        return filtered.length ? filtered : [...TF_DICTIONARY];
+      } else {
+        return TF_DICTIONARY.filter(t => t.category === state.activeCategory);
+      }
+    }
+
+    function renderCurrentFlashcard() {
+      filteredDeck = getFilteredDeck();
+      if (currentDeckIndex >= filteredDeck.length) {
+        currentDeckIndex = 0;
+      }
+
+      const item = filteredDeck[currentDeckIndex];
+      if (!item) return;
+
+      document.getElementById("card-counter").textContent = `Kartu ${currentDeckIndex + 1} dari ${filteredDeck.length}`;
+      
+      const isMastered = state.masteredTerms.includes(item.term);
+      const isReview = state.reviewTerms.includes(item.term);
+
+      const statusPill = document.getElementById("card-status-pill");
+      if (isMastered) {
+        statusPill.textContent = "Sudah Dihafal ✅";
+        statusPill.style.color = "#4ade80";
+      } else if (isReview) {
+        statusPill.textContent = "Perlu Diulang ⚠️";
+        statusPill.style.color = "#f87171";
+      } else {
+        statusPill.textContent = "Belum Dihafal ⏳";
+        statusPill.style.color = "var(--text-dim)";
+      }
+
+      document.getElementById("card-front-term").textContent = item.term;
+      document.getElementById("card-front-tag").textContent = item.categoryLabel.toUpperCase();
+      document.getElementById("card-back-tag").textContent = item.categoryLabel.toUpperCase();
+      document.getElementById("card-back-desc").textContent = item.desc;
+
+      // Reset flip
+      document.getElementById("flashcard-inner").classList.remove("flipped");
+    }
+
+    function nextFlashcard() {
+      currentDeckIndex = (currentDeckIndex + 1) % filteredDeck.length;
+      renderCurrentFlashcard();
+    }
+
+    function markCardMastered() {
+      triggerHaptic("success");
+      const item = filteredDeck[currentDeckIndex];
+      if (item) {
+        if (!state.masteredTerms.includes(item.term)) {
+          state.masteredTerms.push(item.term);
+        }
+        state.reviewTerms = state.reviewTerms.filter(t => t !== item.term);
+        state.quizXP += 10;
+        saveState();
+      }
+      nextFlashcard();
+    }
+
+    function markCardReview() {
+      triggerHaptic("error");
+      const item = filteredDeck[currentDeckIndex];
+      if (item) {
+        if (!state.reviewTerms.includes(item.term)) {
+          state.reviewTerms.push(item.term);
+        }
+        state.masteredTerms = state.masteredTerms.filter(t => t !== item.term);
+        saveState();
+      }
+      nextFlashcard();
+    }
+
+    // Touch Swipe Gestures
+    const stage = document.getElementById("flashcard-stage");
+    let touchStartX = 0;
+    let touchStartY = 0;
+
+    stage.addEventListener("touchstart", (e) => {
+      touchStartX = e.changedTouches[0].screenX;
+      touchStartY = e.changedTouches[0].screenY;
+    }, { passive: true });
+
+    stage.addEventListener("touchend", (e) => {
+      const touchEndX = e.changedTouches[0].screenX;
+      const touchEndY = e.changedTouches[0].screenY;
+      const dx = touchEndX - touchStartX;
+      const dy = touchEndY - touchStartY;
+
+      // Ensure horizontal swipe
+      if (Math.abs(dx) > 45 && Math.abs(dy) < 50) {
+        if (dx > 0) {
+          // Swipe Right -> Mastered
+          markCardMastered();
+        } else {
+          // Swipe Left -> Review
+          markCardReview();
+        }
+      }
+    });
+
+    stage.addEventListener("click", () => {
+      triggerHaptic("light");
+      document.getElementById("flashcard-inner").classList.toggle("flipped");
+    });
+
+    document.getElementById("btn-card-mastered").addEventListener("click", markCardMastered);
+    document.getElementById("btn-card-review").addEventListener("click", markCardReview);
+
+    document.getElementById("btn-shuffle-cards").addEventListener("click", () => {
+      triggerHaptic("light");
+      filteredDeck.sort(() => Math.random() - 0.5);
+      currentDeckIndex = 0;
+      renderCurrentFlashcard();
+    });
+
+    document.getElementById("btn-reset-flashcards").addEventListener("click", () => {
+      if (confirm("Reset seluruh status hafalan kartu?")) {
+        state.masteredTerms = [];
+        state.reviewTerms = [];
+        saveState();
+        renderCurrentFlashcard();
+      }
+    });
+
+    // Category Filter Buttons
+    document.getElementById("flashcard-category-filters").addEventListener("click", (e) => {
+      const btn = e.target.closest(".filter-pill");
+      if (!btn) return;
+      document.querySelectorAll("#flashcard-category-filters .filter-pill").forEach(p => p.classList.remove("active"));
+      btn.classList.add("active");
+      state.activeCategory = btn.dataset.cat;
+      currentDeckIndex = 0;
+      renderCurrentFlashcard();
+    });
+
+    // ==========================================
+    // 4. QUIZ ENGINE
+    // ==========================================
+    let currentQuizIndex = 0;
+    const QUIZ_LENGTH = 10;
+    let quizQuestions = [];
+
+    function generateQuiz() {
+      const shuffled = [...TF_DICTIONARY].sort(() => Math.random() - 0.5);
+      quizQuestions = shuffled.slice(0, QUIZ_LENGTH).map(item => {
+        // Pick 3 random wrong options
+        const wrongOpts = TF_DICTIONARY
+          .filter(t => t.term !== item.term)
+          .sort(() => Math.random() - 0.5)
+          .slice(0, 3);
+        
+        const allOpts = [item, ...wrongOpts].sort(() => Math.random() - 0.5);
+        return {
+          questionItem: item,
+          options: allOpts
+        };
+      });
+      currentQuizIndex = 0;
+      renderQuizQuestion();
+    }
+
+    function renderQuizQuestion() {
+      const q = quizQuestions[currentQuizIndex];
+      if (!q) return;
+
+      document.getElementById("quiz-progress-text").textContent = `Soal ${currentQuizIndex + 1} / ${QUIZ_LENGTH}`;
+      document.getElementById("quiz-score-display").textContent = `Skor: ${state.quizXP} XP`;
+      document.getElementById("quiz-question-category").textContent = `KATEGORI: ${q.questionItem.categoryLabel.toUpperCase()}`;
+      
+      // Question prompt
+      document.getElementById("quiz-question-prompt").textContent = `Manakah definisi yang tepat untuk istilah "${q.questionItem.term}"?`;
+
+      const optContainer = document.getElementById("quiz-options-container");
+      optContainer.innerHTML = "";
+
+      const letters = ["A", "B", "C", "D"];
+      q.options.forEach((opt, idx) => {
+        const btn = document.createElement("button");
+        btn.className = "quiz-option-btn";
+        btn.innerHTML = `
+          <div class="opt-letter">${letters[idx]}</div>
+          <div>${opt.desc}</div>
+        `;
+        btn.addEventListener("click", () => handleQuizAnswer(opt.term === q.questionItem.term, btn, q.questionItem));
+        optContainer.appendChild(btn);
+      });
+
+      document.getElementById("quiz-feedback-box").style.display = "none";
+    }
+
+    function handleQuizAnswer(isCorrect, selectedBtn, correctItem) {
+      const allBtns = document.querySelectorAll(".quiz-option-btn");
+      allBtns.forEach(btn => btn.style.pointerEvents = "none");
+
+      const feedbackBox = document.getElementById("quiz-feedback-box");
+      const title = document.getElementById("quiz-feedback-title");
+      const desc = document.getElementById("quiz-feedback-desc");
+
+      if (isCorrect) {
+        triggerHaptic("success");
+        selectedBtn.classList.add("correct");
+        title.textContent = "Jawaban Tepat! 🎉 (+20 XP)";
+        title.style.color = "#4ade80";
+        desc.textContent = `Hebat! "${correctItem.term}" memang berarti: ${correctItem.desc}`;
+        state.quizXP += 20;
+        if (!state.masteredTerms.includes(correctItem.term)) {
+          state.masteredTerms.push(correctItem.term);
+        }
+      } else {
+        triggerHaptic("error");
+        selectedBtn.classList.add("wrong");
+        title.textContent = "Belum Tepat ❌";
+        title.style.color = "#f87171";
+        desc.textContent = `Jawaban yang benar untuk "${correctItem.term}": ${correctItem.desc}`;
+        if (!state.reviewTerms.includes(correctItem.term)) {
+          state.reviewTerms.push(correctItem.term);
+        }
+      }
+
+      saveState();
+      feedbackBox.style.display = "block";
+    }
+
+    document.getElementById("quiz-next-btn").addEventListener("click", () => {
+      currentQuizIndex++;
+      if (currentQuizIndex < QUIZ_LENGTH) {
+        renderQuizQuestion();
+      } else {
+        alert(`Kuis Selesai! Skor akhir XP kamu: ${state.quizXP} XP. Terus pertahankan!`);
+        generateQuiz();
+      }
+    });
+
+    // ==========================================
+    // 5. GLOSSARY EXPLORER
+    // ==========================================
+    let glossaryCatFilter = "all";
+
+    function renderGlossary() {
+      const grid = document.getElementById("glossary-grid");
+      grid.innerHTML = "";
+
+      const query = document.getElementById("glossary-search").value.toLowerCase().trim();
+
+      const filtered = TF_DICTIONARY.filter(item => {
+        const matchesCat = glossaryCatFilter === "all" || item.category === glossaryCatFilter;
+        const matchesQuery = item.term.toLowerCase().includes(query) || item.desc.toLowerCase().includes(query);
+        return matchesCat && matchesQuery;
+      });
+
+      filtered.forEach(item => {
+        const card = document.createElement("div");
+        card.className = "glossary-card";
+        card.innerHTML = `
+          <div class="glossary-card-header">
+            <span class="glossary-term-name">${item.term}</span>
+            <span class="card-tag" style="font-size: 9px; padding: 2px 6px;">${item.categoryLabel}</span>
+          </div>
+          <div class="glossary-desc-preview">${item.desc}</div>
+        `;
+        card.addEventListener("click", () => openDetailModal(item));
+        grid.appendChild(card);
+      });
+    }
+
+    document.getElementById("glossary-search").addEventListener("input", renderGlossary);
+
+    document.getElementById("glossary-category-filters").addEventListener("click", (e) => {
+      const btn = e.target.closest(".filter-pill");
+      if (!btn) return;
+      document.querySelectorAll("#glossary-category-filters .filter-pill").forEach(p => p.classList.remove("active"));
+      btn.classList.add("active");
+      glossaryCatFilter = btn.dataset.cat;
+      renderGlossary();
+    });
+
+    // Modal Controller
+    function openDetailModal(item) {
+      triggerHaptic("light");
+      document.getElementById("modal-tag").textContent = item.categoryLabel.toUpperCase();
+      document.getElementById("modal-title").textContent = item.term;
+      document.getElementById("modal-desc").textContent = item.desc;
+      document.getElementById("modal-overlay").classList.add("show");
+    }
+
+    function closeModal() {
+      document.getElementById("modal-overlay").classList.remove("show");
+    }
+
+    document.getElementById("modal-close-btn").addEventListener("click", closeModal);
+    document.getElementById("modal-overlay").addEventListener("click", (e) => {
+      if (e.target.id === "modal-overlay") closeModal();
+    });
+
+    // ==========================================
+    // 6. CALCULATOR SIMULATOR
+    // ==========================================
+    function calculateIncome() {
+      const levelMultiplier = parseInt(document.getElementById("calc-level").value) || 2;
+      const vp = parseFloat(document.getElementById("calc-vp").value) || 0;
+      const avgVp = parseFloat(document.getElementById("calc-avg-vp").value) || 300;
+      const subs = parseInt(document.getElementById("calc-subs").value) || 0;
+
+      const isQualified = vp >= 300;
+      document.getElementById("calc-res-status").textContent = isQualified ? "LOLOS KUALIFIKASI ✅" : "BELUM LOLOS ❌";
+      document.getElementById("calc-res-status").style.color = isQualified ? "#4ade80" : "#f87171";
+
+      let points = 0;
+      if (isQualified) {
+        if (vp <= avgVp) {
+          points = vp * levelMultiplier;
+        } else {
+          const base = avgVp * levelMultiplier;
+          const excess = (vp - avgVp) * levelMultiplier * 0.20;
+          points = base + excess;
+        }
+      }
+
+      document.getElementById("calc-res-point").textContent = `${Math.round(points).toLocaleString("id-ID")} Point`;
+
+      // Subs revenue approx Rp 200.000 / sub
+      const subsRevenue = subs * 200000;
+      document.getElementById("calc-res-subs-income").textContent = `Rp ${subsRevenue.toLocaleString("id-ID")}`;
+
+      // Total earnings approx 1 Point = Rp 10.000
+      const total = (points * 10000) + subsRevenue;
+      document.getElementById("calc-res-total").textContent = `Rp ${Math.round(total).toLocaleString("id-ID")}`;
+    }
+
+    ["calc-level", "calc-vp", "calc-avg-vp", "calc-subs"].forEach(id => {
+      document.getElementById(id).addEventListener("input", calculateIncome);
+    });
+
+    // ==========================================
+    // 7. BOTTOM TAB NAVIGATION
+    // ==========================================
+    document.querySelectorAll(".nav-btn").forEach(btn => {
+      btn.addEventListener("click", () => {
+        triggerHaptic("light");
+        document.querySelectorAll(".nav-btn").forEach(b => b.classList.remove("active"));
+        document.querySelectorAll(".tab-panel").forEach(p => p.classList.remove("active"));
+
+        btn.classList.add("active");
+        const targetId = btn.dataset.tab;
+        const panel = document.getElementById(targetId);
+        if (panel) panel.classList.add("active");
+
+        if (targetId === "tab-quiz" && quizQuestions.length === 0) {
+          generateQuiz();
+        }
+      });
+    });
+
+    // ==========================================
+    // INITIALIZATION
+    // ==========================================
+    window.addEventListener("DOMContentLoaded", () => {
+      loadState();
+      renderCurrentFlashcard();
+      renderGlossary();
+      calculateIncome();
+    });
+  </script>
+</body>
+</html>

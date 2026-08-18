@@ -1,0 +1,17 @@
+[package]
+name = "scraper-worker"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+
+[dependencies]
+domain = { workspace = true }
+forexfactory-rs = { workspace = true }
+myfxbook-rs = { workspace = true }
+investing-rs = { workspace = true }
+tokio = { workspace = true }
+tracing = { workspace = true }
+tracing-subscriber = { workspace = true }
+anyhow = { workspace = true }
+chrono = { workspace = true }

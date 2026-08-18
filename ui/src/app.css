@@ -1,0 +1,49 @@
+@import "tailwindcss";
+
+@theme {
+  --color-tv-base: #131722;
+  --color-tv-surface: #1e222d;
+  --color-tv-elevation: #2a2e39;
+  --color-tv-border: #2a2e39;
+  --color-tv-border-subtle: #363a45;
+  
+  --color-tv-bull: #089981;
+  --color-tv-bear: #f23645;
+  --color-tv-blue: #2962ff;
+  --color-tv-gold: #f5c344;
+  --color-tv-purple: #ab47bc;
+
+  --color-tv-text-primary: #d1d4dc;
+  --color-tv-text-secondary: #787b86;
+
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  --font-sans: -apple-system, BlinkMacSystemFont, "Trebuchet MS", Roboto, Ubuntu, sans-serif;
+}
+
+:root {
+  color-scheme: dark;
+}
+
+body {
+  margin: 0;
+  background-color: #131722;
+  color: #d1d4dc;
+  font-family: -apple-system, BlinkMacSystemFont, "Trebuchet MS", Roboto, Ubuntu, sans-serif;
+  overflow-x: hidden;
+}
+
+/* TradingView Style Custom Scrollbars */
+::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+::-webkit-scrollbar-track {
+  background: #131722;
+}
+::-webkit-scrollbar-thumb {
+  background: #2a2e39;
+  border-radius: 2px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #2962ff;
+}

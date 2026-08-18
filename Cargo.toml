@@ -1,0 +1,66 @@
+[workspace]
+resolver = "2"
+members = [
+    "apps/*",
+    "crates/core/*",
+    "crates/adapters/*",
+    "crates/scrapers/*",
+]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+authors = ["Forex Quant Research Team"]
+license = "MIT OR Apache-2.0"
+
+[workspace.dependencies]
+# Async runtime & networking
+tokio = { version = "1.38", features = ["full"] }
+reqwest = { version = "0.12", default-features = false, features = ["json", "rustls-tls", "cookies"] }
+async-trait = "0.1"
+futures = "0.3"
+
+# Serialization & Data types
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+rust_decimal = { version = "1.35", features = ["serde-float"] }
+rust_decimal_macros = "1.35"
+chrono = { version = "0.4", features = ["serde"] }
+uuid = { version = "1.8", features = ["v4", "serde"] }
+
+# Logging & Telemetry
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter", "json"] }
+
+# Error handling & Utilities
+thiserror = "1.0"
+anyhow = "1.0"
+toml = "0.8"
+
+# Web scraping & HTML Parsing
+scraper = "0.19"
+regex = "1.10"
+
+# Database & SQL (TimescaleDB / SQLite)
+sqlx = { version = "0.7", default-features = false, features = ["runtime-tokio", "tls-rustls", "postgres", "sqlite", "chrono", "rust_decimal", "uuid", "macros"] }
+
+# Modern Testing Suite
+rstest = "0.21"
+mockall = "0.13"
+proptest = "1.5"
+
+# Binary & Compression for Dukascopy .bi5
+byteorder = "1.5"
+lzma-rs = "0.3"
+
+# Internal Workspace Crates
+domain = { path = "crates/core/domain" }
+application = { path = "crates/core/application" }
+publisher-traderfamily = { path = "crates/adapters/publisher-traderfamily" }
+storage-db = { path = "crates/adapters/storage-db" }
+notifier-telegram = { path = "crates/adapters/notifier-telegram" }
+broker-connector = { path = "crates/adapters/broker-connector" }
+dukascopy-rs = { path = "crates/scrapers/dukascopy-rs" }
+forexfactory-rs = { path = "crates/scrapers/forexfactory-rs" }
+myfxbook-rs = { path = "crates/scrapers/myfxbook-rs" }
+investing-rs = { path = "crates/scrapers/investing-rs" }

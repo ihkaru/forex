@@ -1,0 +1,23 @@
+[package]
+name = "signal-daemon"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+
+[dependencies]
+domain = { workspace = true }
+application = { workspace = true }
+publisher-traderfamily = { workspace = true }
+notifier-telegram = { workspace = true }
+storage-db = { workspace = true }
+broker-connector = { path = "../../crates/adapters/broker-connector" }
+tokio = { workspace = true }
+tracing = { workspace = true }
+tracing-subscriber = { workspace = true }
+anyhow = { workspace = true }
+async-trait = { workspace = true }
+chrono = { workspace = true }
+rust_decimal = { workspace = true }
+rust_decimal_macros = { workspace = true }
+uuid = { workspace = true }

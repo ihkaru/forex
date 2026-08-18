@@ -1,0 +1,55 @@
+version: '3.8'
+
+services:
+  timescaledb:
+    image: timescale/timescaledb:latest-pg16
+    container_name: forex_timescale
+    environment:
+      POSTGRES_USER: forex_admin
+      POSTGRES_PASSWORD: forex_secure_password
+      POSTGRES_DB: forex_market_data
+    ports:
+      - "5432:5432"
+    volumes:
+      - timescaledb_data:/var/lib/postgresql/data
+      - ../crates/adapters/storage-db/migrations/001_initial_schema.sql:/docker-entrypoint-initdb.d/001_initial_schema.sql:ro
+    restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    container_name: forex_redis
+    ports:
+      - "6379:6379"
+    restart: unless-stopped
+
+  signal-daemon:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile
+    container_name: forex_signal_daemon
+    command: ["signal-daemon"]
+    depends_on:
+      - timescaledb
+      - redis
+    environment:
+      - RUST_LOG=info
+      - DATABASE_URL=postgres://forex_admin:forex_secure_password@timescaledb:5432/forex_market_data
+    restart: unless-stopped
+
+  api-server:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile
+    container_name: forex_api_server
+    command: ["api-server"]
+    ports:
+      - "8080:8080"
+    depends_on:
+      - timescaledb
+      - redis
+    environment:
+      - RUST_LOG=info
+    restart: unless-stopped
+
+volumes:
+  timescaledb_data:

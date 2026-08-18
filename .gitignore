@@ -1,0 +1,47 @@
+# Rust build artifacts
+target/
+**/*.rs.bk
+
+# IDE & OS
+.idea/
+.vscode/
+*.swp
+*.swo
+.DS_Store
+*.sublime-workspace
+
+# Python & Research Artifacts
+__pycache__/
+*.py[cod]
+*$py.class
+.ipynb_checkpoints/
+.venv/
+env/
+venv/
+*.parquet
+*.feather
+*.h5
+
+# Reverse Engineering dumps & secrets
+*.apk
+*.dex
+*.pcap
+*.mitm
+.env
+.env.*
+!.env.example
+secrets/
+tokens.json
+
+# Node & UI build artifacts
+ui/node_modules/
+ui/dist/
+ui/.svelte-kit/
+
+# Logs & Database files
+*.log
+*.sqlite
+*.duckdb
+data/*
+!data/historical/
+!data/historical/*.json
