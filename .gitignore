@@ -34,6 +34,7 @@ secrets/
 tokens.json
 
 # Node & UI build artifacts
+node_modules/
 ui/node_modules/
 ui/dist/
 ui/.svelte-kit/

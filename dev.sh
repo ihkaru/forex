@@ -86,14 +86,14 @@ trap cleanup_on_exit SIGINT SIGTERM EXIT
 # 📦 DATA INTEGRITY & CACHE VALIDATION
 # ==============================================================================
 validate_prerequisites() {
-  echo -e "${CLR_CYAN}📡 Memverifikasi kelengkapan data pasar nyata di database/storage...${CLR_RESET}"
+  echo -e "${CLR_CYAN}📡 Memverifikasi kelengkapan data pasar institusional Dukascopy Bank SA di storage...${CLR_RESET}"
   
-  # Pastikan file data historis nyata ada di backend
+  # Pastikan file data historis resmi Dukascopy ada di backend
   if [ ! -f "data/historical/EURGBP_H1.json" ]; then
-    echo -e "${CLR_YELLOW}⚠️ Data market storage belum lengkap. Mengunduh data historis nyata...${CLR_RESET}"
-    python3 scripts/download_real_forex_data.py
+    echo -e "${CLR_YELLOW}⚠️ Data market storage belum lengkap. Mengunduh 10 tahun data resmi Dukascopy Bank SA...${CLR_RESET}"
+    node scripts/fetch_dukascopy_historical.js
   fi
-  echo -e "${CLR_GREEN}✅ Data historis backend 100% siap (${CLR_BOLD}103.556 Bar H1${CLR_RESET}${CLR_GREEN}).${CLR_RESET}"
+  echo -e "${CLR_GREEN}✅ Data historis resmi Dukascopy Bank SA (Swiss) 100% siap (${CLR_BOLD}198.534 Bar H1 • 10 Tahun${CLR_RESET}${CLR_GREEN}).${CLR_RESET}"
 }
 
 # ==============================================================================

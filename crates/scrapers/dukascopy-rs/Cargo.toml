@@ -17,3 +17,7 @@ byteorder = { workspace = true }
 lzma-rs = { workspace = true }
 tracing = { workspace = true }
 thiserror = { workspace = true }
+
+[dev-dependencies]
+serde = { workspace = true }
+serde_json = { workspace = true }
