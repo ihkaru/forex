@@ -1,8 +1,9 @@
 use async_trait::async_trait;
+use chrono::{DateTime, Utc};
 use uuid::Uuid;
 
 use crate::errors::DomainError;
-use crate::models::{Candle, Order, Signal, Symbol, Timeframe};
+use crate::models::{Candle, MarketDataSource, Order, Signal, Symbol, Timeframe};
 
 #[cfg_attr(test, mockall::automock)]
 #[async_trait]
@@ -20,5 +21,11 @@ pub trait StoragePort: Send + Sync {
         timeframe: Timeframe,
         limit: usize,
     ) -> Result<Vec<Candle>, DomainError>;
+    async fn get_high_watermark(
+        &self,
+        symbol: &Symbol,
+        timeframe: Timeframe,
+        source: MarketDataSource,
+    ) -> Result<Option<DateTime<Utc>>, DomainError>;
     async fn save_order(&self, order: &Order) -> Result<(), DomainError>;
 }

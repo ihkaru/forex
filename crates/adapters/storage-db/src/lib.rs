@@ -71,6 +71,21 @@ impl StoragePort for InMemoryStorage {
         Ok(filtered)
     }
 
+    async fn get_high_watermark(
+        &self,
+        symbol: &Symbol,
+        timeframe: Timeframe,
+        source: domain::models::MarketDataSource,
+    ) -> Result<Option<chrono::DateTime<chrono::Utc>>, DomainError> {
+        let list = self.candles.read().await;
+        let max_ts = list
+            .iter()
+            .filter(|c| &c.symbol == symbol && c.timeframe == timeframe && c.source == source)
+            .map(|c| c.timestamp)
+            .max();
+        Ok(max_ts)
+    }
+
     async fn save_order(&self, order: &Order) -> Result<(), DomainError> {
         let mut map = self.orders.write().await;
         map.insert(order.id, order.clone());
@@ -319,6 +334,38 @@ impl StoragePort for SqlxStorage {
             });
         }
         Ok(candles)
+    }
+
+    async fn get_high_watermark(
+        &self,
+        symbol: &Symbol,
+        timeframe: Timeframe,
+        source: domain::models::MarketDataSource,
+    ) -> Result<Option<chrono::DateTime<chrono::Utc>>, DomainError> {
+        let symbol_str = symbol.to_compact_string();
+        let timeframe_str = format!("{:?}", timeframe);
+        let source_str = format!("{:?}", source);
+
+        let query = r#"
+            SELECT MAX(timestamp) as max_ts
+            FROM candles
+            WHERE symbol = $1 AND timeframe = $2 AND source = $3
+        "#;
+
+        let row = sqlx::query(query)
+            .bind(symbol_str)
+            .bind(timeframe_str)
+            .bind(source_str)
+            .fetch_optional(&self.pool)
+            .await
+            .map_err(|e| {
+                DomainError::AdapterError(format!("SQL get_high_watermark error: {}", e))
+            })?;
+
+        match row {
+            Some(r) => Ok(r.try_get("max_ts").ok()),
+            None => Ok(None),
+        }
     }
 
     async fn save_order(&self, order: &Order) -> Result<(), DomainError> {
