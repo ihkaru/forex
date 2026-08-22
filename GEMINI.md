@@ -31,6 +31,21 @@ revenue sharing subscriber Priority Channel.
 
 ---
 
+## 🚫 Invariant & Larangan Mutlak Analis Traders Family (Hard Constraints)
+
+```
+[ ] 1. DILARANG INSTANT EXECUTION : Hanya boleh Pending Order (BuyLimit, SellLimit, BuyStop, SellStop)
+[ ] 2. NO-INTERVENTION RULE       : Sinyal RUNNING DILARANG diubah SL/TP atau di-close manual di tengah jalan
+[ ] 3. BATAS R:R 1:1.0 s.d. 1:3.0 : DILARANG R:R > 1:3.0. DILARANG SL > 1.5 × TP dalam pips
+[ ] 4. MAKSIMAL 2 SINYAL / PAIR   : Kuota maksimal 2 sinyal aktif bersamaan per instrumen
+[ ] 5. JARAK PENDING SEARAH       : Tier 1 ≥ 50 pips, Tier 2 ≥ 75 pips, Tier 3/4 ≥ 100 pips (Anti-Martingale)
+[ ] 6. SLA SALIN SINYAL (≥ 5 MIN) : Pending order wajib diposting ≥ 5 menit sebelum tersentuh harga pasar
+[ ] 7. DURASI KADALUWARSA (EXPIRY): Min 1 jam, Maks 48 jam (Senin–Kamis), Maks 96 jam (Khusus hari Jumat)
+[ ] 8. ANTI-HEDGING & INTEGRITAS  : DILARANG multi-account hedging/arbitrage atau membiarkan floating loss ekstrem
+```
+
+---
+
 ## 📚 Dokumentasi Detail (Baca Sesuai Konteks Task)
 
 | Topik | File | Kapan Dibaca |
