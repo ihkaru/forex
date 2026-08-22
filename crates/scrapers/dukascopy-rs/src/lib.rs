@@ -103,6 +103,7 @@ impl DukascopyDownloader {
         compressed_bytes: &[u8],
         hour_start: DateTime<Utc>,
         point_multiplier: Decimal,
+        symbol: &Symbol,
     ) -> Result<Vec<Tick>, DomainError> {
         if compressed_bytes.is_empty() {
             return Ok(Vec::new());
@@ -124,7 +125,6 @@ impl DukascopyDownloader {
         let total_records = decompressed.len() / 20;
         let mut rdr = Cursor::new(decompressed);
         let mut ticks = Vec::with_capacity(total_records);
-        let symbol = Symbol::new("EUR", "USD"); // default sample symbol
 
         for _ in 0..total_records {
             let time_offset_ms = rdr.read_u32::<BigEndian>().map_err(|e| {
@@ -266,12 +266,9 @@ impl DukascopyDownloader {
                 .await
             {
                 if !raw_bytes.is_empty() {
-                    if let Ok(mut ticks) =
-                        self.parse_bi5_bytes(&raw_bytes, hour_start, point_multiplier)
+                    if let Ok(ticks) =
+                        self.parse_bi5_bytes(&raw_bytes, hour_start, point_multiplier, symbol)
                     {
-                        for t in &mut ticks {
-                            t.symbol = symbol.clone();
-                        }
                         all_ticks.extend(ticks);
                     }
                 }
