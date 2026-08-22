@@ -191,6 +191,11 @@
     }
   }
 
+  function handleOpenProvenance() {
+    modalType = 'data-provenance';
+    isModalOpen = true;
+  }
+
   async function handleOpenEda() {
     try {
       edaReport = await composition.edaPort.getEdaHealth(activeSymbol);
@@ -287,6 +292,7 @@
             onScanSignal={() => loadMarketData(activeSymbol)}
             onOpenEda={handleOpenEda}
             onSyncDelta={handleSyncDelta}
+            onOpenProvenance={handleOpenProvenance}
           />
         </div>
 
@@ -317,6 +323,7 @@
     {scorecardData}
     {strategies}
     {monteCarloData}
+    {candles}
     onClose={() => {
       isModalOpen = false;
       activeNav = 'terminal';

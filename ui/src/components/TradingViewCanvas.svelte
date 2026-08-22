@@ -18,7 +18,8 @@
     Stethoscope,
     ShieldAlert,
     Cpu,
-    RefreshCw
+    RefreshCw,
+    Info
   } from '@lucide/svelte';
   import type { Candle, Signal } from '../domain/models';
   import type { SimulatedTrade } from '../ports/layers';
@@ -36,6 +37,7 @@
     onScanSignal: () => void;
     onOpenEda: () => void;
     onSyncDelta?: () => void;
+    onOpenProvenance?: () => void;
   }
 
   let {
@@ -49,7 +51,8 @@
     onSelectSymbol,
     onScanSignal,
     onOpenEda,
-    onSyncDelta
+    onSyncDelta,
+    onOpenProvenance
   }: Props = $props();
 
   let chartContainer: HTMLDivElement | null = $state(null);
@@ -262,9 +265,14 @@
         <span class="text-[10px] font-semibold px-2 py-0.5 rounded bg-[#131722] text-[#787b86] border border-[#2a2e39] font-mono">
           H1 Candlestick
         </span>
-        <span class="text-[10px] font-bold px-2 py-0.5 rounded bg-[#089981]/20 text-[#089981] border border-[#089981]/40 font-mono flex items-center gap-1">
-          🇨🇭 DUKASCOPY ECN (SWISS BANK)
-        </span>
+        <button
+          onclick={onOpenProvenance}
+          class="text-[10px] font-bold px-2 py-0.5 rounded bg-[#089981]/20 hover:bg-[#089981]/30 text-[#089981] hover:text-[#26a69a] border border-[#089981]/40 hover:border-[#089981] font-mono flex items-center gap-1 transition-all cursor-pointer shadow-sm"
+          title="Klik untuk membuka Inspektur Asal-Usul & Provenance Data Pasar"
+        >
+          <span>🇨🇭 DUKASCOPY ECN (SWISS BANK)</span>
+          <Info class="w-3 h-3 text-[#089981]" />
+        </button>
         <span class="text-base font-black font-mono text-[#089981]">
           {currentPrice.toFixed(5)}
         </span>
