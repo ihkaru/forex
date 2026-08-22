@@ -8,6 +8,7 @@ use crate::models::{MarketDataSource, Symbol, Timeframe};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PillarAuditItem {
+    pub code: String,
     pub name: String,
     pub weight_pct: Decimal,
     pub max_points: u32,
@@ -245,6 +246,8 @@ pub struct PaginatedTradesResponse {
 pub struct FullQuantAuditReport {
     pub generated_at: DateTime<Utc>,
     pub total_portfolio_valued_pips: Decimal,
+    pub current_month_valued_pips: Decimal,
+    pub current_month_trades: usize,
     pub monthly_tf_target_vp: Decimal,
     pub is_portfolio_tf_qualified: bool,
     pub portfolio_win_rate_pct: Decimal,

@@ -59,11 +59,16 @@
   // Monte Carlo State
   let monteCarloData = $state<MonteCarloReport | null>(null);
 
-  let valuedPips = $state(951.3);
+  let valuedPips = $state(-12874.4);
+  let currentMonthVp = $state(0.0);
+  let currentMonthTrades = $state(0);
   let targetPips = $state(300.0);
-  let scorecardScore = $state(28);
+  let scorecardScore = $state(12);
+  let scorecardTier = $state('SILVER_PRIORITY');
+  let scorecardPillars = $state<any[]>([]);
   let wferPct = $state(94.8);
-  let isTfQualified = $state(true);
+  let totalBars = $state(198534);
+  let isTfQualified = $state(false);
 
   let isModalOpen = $state(false);
   let modalType = $state('lifecycle');
@@ -155,20 +160,43 @@
 
   async function loadBacktestAndScorecard() {
     try {
-      const [bt, sc] = await Promise.all([
-        composition.backtestPort.runBacktest().catch(() => null),
+      const [fullAudit, sc, bt] = await Promise.all([
+        fetch('http://127.0.0.1:5000/api/audit/full').then(r => r.json()).catch(() => null),
         fetch('http://127.0.0.1:5000/api/scorecard').then(r => r.json()).catch(() => null),
+        composition.backtestPort.runBacktest().catch(() => null),
       ]);
 
-      if (bt) {
+      if (fullAudit) {
+        valuedPips = Number(fullAudit.total_portfolio_valued_pips || 0);
+        currentMonthVp = Number(fullAudit.current_month_valued_pips || 0);
+        currentMonthTrades = Number(fullAudit.current_month_trades || 0);
+        targetPips = Number(fullAudit.monthly_tf_target_vp || 300.0);
+        isTfQualified = Boolean(fullAudit.is_portfolio_tf_qualified);
+
+        if (fullAudit.scorecard) {
+          scorecardScore = Number(fullAudit.scorecard.total_score || 12);
+          scorecardTier = fullAudit.scorecard.revenue_share_tier || 'SILVER_PRIORITY';
+          scorecardPillars = fullAudit.scorecard.pillars || [];
+        }
+
+        if (fullAudit.walk_forward) {
+          wferPct = Number(fullAudit.walk_forward.wfer_pct || 94.8);
+          totalBars = Number(fullAudit.walk_forward.total_verified_bars || 198534);
+        }
+      } else if (bt) {
         backtestData = bt;
         valuedPips = bt.totalValuedPips;
         wferPct = bt.wferPct;
         isTfQualified = bt.isTfQualified;
       }
+
       if (sc) {
         scorecardData = sc;
-        scorecardScore = sc.total_score;
+        if (!fullAudit?.scorecard) {
+          scorecardScore = sc.total_score;
+          scorecardTier = sc.channel_level;
+          scorecardPillars = sc.pillars;
+        }
       }
     } catch (e) {
       console.warn('API sync warn:', e);
@@ -226,9 +254,14 @@
   <!-- Top Bento Bar Header -->
   <TopBentoBar
     {valuedPips}
+    {currentMonthVp}
+    {currentMonthTrades}
     {targetPips}
     {scorecardScore}
+    {scorecardTier}
+    {scorecardPillars}
     {wferPct}
+    {totalBars}
     {isTfQualified}
     activeStrategyName={selectedStrategy.name}
   />
