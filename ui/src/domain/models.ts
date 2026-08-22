@@ -43,11 +43,12 @@ export interface Signal {
   stopLoss: number;
   takeProfit1: number;
   takeProfit2: number;
-  riskRewardRatio: string;
-  valuedPipsEstimate: number;
+  riskRewardRatio: number;
+  valuedPipsEstimate?: number;
+  confidenceScore?: number;
   strategyName: string;
   rationale: string;
-  status: SignalStatus;
+  status: SignalStatus | string;
   createdAt: string;
 }
 
