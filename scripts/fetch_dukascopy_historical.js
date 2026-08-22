@@ -21,71 +21,74 @@ const PAIRS = [
 ];
 
 const OUTPUT_DIR = path.resolve(__dirname, '../data/historical');
-// Rentang waktu: 10 Tahun Data Historis Modern (2015 s/d 2026)
-const FROM_DATE = new Date('2015-01-01T00:00:00Z');
-const TO_DATE = new Date('2026-08-22T00:00:00Z');
+const START_YEAR = 2015;
+const END_YEAR = 2026;
 
 async function downloadPair(pair) {
   const { instrument, symbolStr, base, quote } = pair;
   console.log(`\n📡 Mengunduh data resmi Dukascopy Bank SA: ${symbolStr} (${instrument})...`);
-  console.log(`   Rentang: ${FROM_DATE.toISOString().slice(0, 10)} s/d ${TO_DATE.toISOString().slice(0, 10)} (H1 - BID)`);
+  console.log(`   Rentang: ${START_YEAR} s/d ${END_YEAR} (10 Tahun H1 - BID)`);
 
   const startTime = Date.now();
+  const cleanCandles = [];
+  let invalidCount = 0;
+
   try {
-    const rawRates = await getHistoricRates({
-      instrument,
-      dates: {
-        from: FROM_DATE,
-        to: TO_DATE,
-      },
-      timeframe: 'h1',
-      priceType: 'bid',
-      volumes: true,
-      ignoreFlats: true,
-      batchSize: 15,
-      pauseBetweenBatchesMs: 200,
-    });
+    for (let year = START_YEAR; year <= END_YEAR; year++) {
+      const from = `${year}-01-01`;
+      const to = year === END_YEAR ? '2026-08-22' : `${year + 1}-01-01`;
 
-    if (!rawRates || rawRates.length === 0) {
-      console.error(`❌ Gagal: 0 bar diterima untuk ${symbolStr}`);
-      return 0;
-    }
+      try {
+        const rawRates = await getHistoricRates({
+          instrument,
+          dates: { from, to },
+          timeframe: 'h1',
+          priceType: 'bid',
+          volumes: true,
+          ignoreFlats: true,
+          batchSize: 10,
+          pauseBetweenBatchesMs: 50,
+        });
 
-    const cleanCandles = [];
-    let invalidCount = 0;
+        if (rawRates && rawRates.length > 0) {
+          for (const bar of rawRates) {
+            const ts = bar[0];
+            const o = Number(bar[1]);
+            const h = Number(bar[2]);
+            const l = Number(bar[3]);
+            const c = Number(bar[4]);
+            const v = bar[5] !== undefined ? Number(bar[5]) : 1.0;
 
-    for (const bar of rawRates) {
-      // Format: [timestamp, open, high, low, close, volume]
-      const ts = bar[0];
-      const o = Number(bar[1]);
-      const h = Number(bar[2]);
-      const l = Number(bar[3]);
-      const c = Number(bar[4]);
-      const v = bar[5] !== undefined ? Number(bar[5]) : 1.0;
+            if (isNaN(o) || isNaN(h) || isNaN(l) || isNaN(c)) {
+              invalidCount++;
+              continue;
+            }
 
-      if (isNaN(o) || isNaN(h) || isNaN(l) || isNaN(c)) {
-        invalidCount++;
-        continue;
+            if (h < l || h < o || h < c || l > o || l > c || o <= 0 || h <= 0 || l <= 0 || c <= 0) {
+              invalidCount++;
+              continue;
+            }
+
+            const epochSecs = Math.floor(ts / 1000);
+            const isoStr = new Date(ts).toISOString().replace('.000Z', 'Z');
+
+            cleanCandles.push({
+              symbol: { base, quote },
+              timeframe: 'H1',
+              time: epochSecs,
+              timestamp: isoStr,
+              source: 'DukascopyEcn',
+              open: o.toFixed(5),
+              high: h.toFixed(5),
+              low: l.toFixed(5),
+              close: c.toFixed(5),
+              volume: (v > 0 ? v : 1.0).toFixed(1),
+            });
+          }
+        }
+      } catch (e) {
+        console.warn(`   ⚠️ Gagal menarik tahun ${year} untuk ${symbolStr}: ${e.message}`);
       }
-
-      // Mathematical Invariants Check
-      if (h < l || h < o || h < c || l > o || l > c || o <= 0 || h <= 0 || l <= 0 || c <= 0) {
-        invalidCount++;
-        continue;
-      }
-
-      const isoStr = new Date(ts).toISOString().replace('.000Z', 'Z');
-
-      cleanCandles.push({
-        symbol: { base, quote },
-        timeframe: 'H1',
-        timestamp: isoStr,
-        open: o.toFixed(5),
-        high: h.toFixed(5),
-        low: l.toFixed(5),
-        close: c.toFixed(5),
-        volume: (v > 0 ? v : 1.0).toFixed(1),
-      });
     }
 
     fs.mkdirSync(OUTPUT_DIR, { recursive: true });

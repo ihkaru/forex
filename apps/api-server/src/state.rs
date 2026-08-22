@@ -14,7 +14,12 @@ pub struct RealHistoricalMarketAdapter {
 
 #[derive(serde::Deserialize)]
 struct RawCandleJson {
-    timestamp: String,
+    #[serde(default)]
+    time: Option<i64>,
+    #[serde(default)]
+    timestamp: Option<String>,
+    #[serde(default)]
+    source: Option<domain::models::MarketDataSource>,
     open: String,
     high: String,
     low: String,
@@ -80,7 +85,16 @@ impl RealHistoricalMarketAdapter {
 
         let mut candles = Vec::with_capacity(raw_candles.len());
         for raw in raw_candles {
-            let ts = DateTime::parse_from_rfc3339(&raw.timestamp)?.with_timezone(&Utc);
+            let ts = if let Some(epoch_sec) = raw.time {
+                DateTime::from_timestamp(epoch_sec, 0).unwrap_or_else(Utc::now)
+            } else if let Some(ref iso_str) = raw.timestamp {
+                DateTime::parse_from_rfc3339(iso_str)?.with_timezone(&Utc)
+            } else {
+                Utc::now()
+            };
+            let source = raw
+                .source
+                .unwrap_or(domain::models::MarketDataSource::DukascopyEcn);
             let open = Decimal::from_str(&raw.open)?;
             let high = Decimal::from_str(&raw.high)?;
             let low = Decimal::from_str(&raw.low)?;
@@ -91,7 +105,7 @@ impl RealHistoricalMarketAdapter {
                 symbol: symbol.clone(),
                 timeframe: Timeframe::H1,
                 timestamp: ts,
-                source: domain::models::MarketDataSource::DukascopyEcn,
+                source,
                 open,
                 high,
                 low,

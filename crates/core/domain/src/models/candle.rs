@@ -49,7 +49,54 @@ pub struct Tick {
     pub ask: Decimal,
 }
 
+impl Candle {
+    #[inline]
+    pub fn epoch_seconds(&self) -> i64 {
+        self.timestamp.timestamp()
+    }
+
+    #[inline]
+    pub fn epoch_millis(&self) -> i64 {
+        self.timestamp.timestamp_millis()
+    }
+
+    pub fn from_epoch_seconds(
+        symbol: Symbol,
+        timeframe: Timeframe,
+        epoch_secs: i64,
+        source: MarketDataSource,
+        open: Decimal,
+        high: Decimal,
+        low: Decimal,
+        close: Decimal,
+        volume: Decimal,
+    ) -> Option<Self> {
+        let timestamp = DateTime::from_timestamp(epoch_secs, 0)?;
+        Some(Self {
+            symbol,
+            timeframe,
+            timestamp,
+            source,
+            open,
+            high,
+            low,
+            close,
+            volume,
+        })
+    }
+}
+
 impl Tick {
+    #[inline]
+    pub fn epoch_seconds(&self) -> i64 {
+        self.timestamp.timestamp()
+    }
+
+    #[inline]
+    pub fn epoch_millis(&self) -> i64 {
+        self.timestamp.timestamp_millis()
+    }
+
     pub fn spread(&self) -> Decimal {
         self.ask - self.bid
     }
