@@ -1,9 +1,11 @@
+pub mod audit;
 pub mod backtest;
 pub mod benchmark;
 pub mod eda;
 pub mod signal_engine;
 pub mod sync;
 
+pub use audit::QuantAuditService;
 pub use backtest::{
     BacktestReport, BacktestService, DetailedBacktestResult, EquityPoint, TradeDirectionBreakdown,
     TradingViewPerformanceSummary,

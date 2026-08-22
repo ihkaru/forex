@@ -66,7 +66,7 @@
   },
   "trades": [
     {
-      "id": "2a448449-5420-4761-9c47-20140901b502",
+      "id": "c88b0cdd-1465-4caa-aca0-4913d0c96b4d",
       "symbol": "USDCHF",
       "action": "SellLimit",
       "open_time": 1423202400,
@@ -81,7 +81,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "88073707-7e66-4a20-a8d2-e292669fdd6d",
+      "id": "e225e616-0f87-45c2-bf58-0932de19e159",
       "symbol": "USDCHF",
       "action": "BuyLimit",
       "open_time": 1424080800,
@@ -96,7 +96,7 @@
       "exit_reason": "TP_HIT"
     },
     {
-      "id": "1fce7b39-84c4-4163-a270-d5bb283e19c6",
+      "id": "ce2d1dbe-c228-457a-9bb0-a7aa2c8ce451",
       "symbol": "USDCHF",
       "action": "BuyLimit",
       "open_time": 1424325600,
@@ -111,7 +111,7 @@
       "exit_reason": "TP_HIT"
     },
     {
-      "id": "46fd4a76-fcc2-4a27-8bd6-0a45dc1a0fe9",
+      "id": "b4e4b137-b04b-4114-8b21-24665c00c0e1",
       "symbol": "USDCHF",
       "action": "BuyLimit",
       "open_time": 1425456000,
@@ -126,7 +126,7 @@
       "exit_reason": "TP_HIT"
     },
     {
-      "id": "c52081dd-8d82-4c56-a382-bca0a46c67bb",
+      "id": "23301062-33c3-4e91-942d-05a71610b31c",
       "symbol": "USDCHF",
       "action": "SellLimit",
       "open_time": 1426633200,
@@ -141,7 +141,7 @@
       "exit_reason": "TP_HIT"
     },
     {
-      "id": "0fb2abb7-438c-4821-b4e3-8ab758de9548",
+      "id": "2568b76d-90b6-44d9-bf38-f48f1c59625f",
       "symbol": "USDCHF",
       "action": "SellLimit",
       "open_time": 1427270400,
@@ -156,7 +156,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "e1f54ca5-8acd-4d2e-b25a-03c6feca0c49",
+      "id": "625f1080-ff5a-42f5-b27d-7333d6e3a35a",
       "symbol": "USDCHF",
       "action": "BuyLimit",
       "open_time": 1427860800,
@@ -171,7 +171,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "c4a507c6-d9bc-4523-83c6-e401dbf4e7cd",
+      "id": "bf106edb-798b-4269-8550-1602546b4a03",
       "symbol": "USDCHF",
       "action": "BuyLimit",
       "open_time": 1428876000,
@@ -186,7 +186,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "3f4d72c3-506b-4520-9cff-44831f0f4bff",
+      "id": "7b1f1c66-0876-4eca-922d-adb6319d5f31",
       "symbol": "USDCHF",
       "action": "SellLimit",
       "open_time": 1429520400,
@@ -201,7 +201,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "d592b393-06cf-4c4c-bab2-f211f8e2bd59",
+      "id": "f8c9cacd-d231-4b55-bb57-43d875eba954",
       "symbol": "USDCHF",
       "action": "BuyLimit",
       "open_time": 1429552800,
@@ -216,7 +216,7 @@
       "exit_reason": "TP_HIT"
     },
     {
-      "id": "5e5f1b4c-aaac-4a1b-8bbf-e24055a2edaf",
+      "id": "0a1993bf-5907-4153-ba6d-0d580032bc1f",
       "symbol": "USDCHF",
       "action": "BuyLimit",
       "open_time": 1430215200,
@@ -231,7 +231,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "b69ddfe6-0973-4d1e-910d-c6239cd34771",
+      "id": "4335258c-cd41-4097-bc76-0538d5a37f74",
       "symbol": "USDCHF",
       "action": "BuyLimit",
       "open_time": 1430733600,
@@ -246,7 +246,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "877ce96c-e374-4123-9136-ee5b8a5e3d3e",
+      "id": "cf5277b4-6da8-4868-add8-ff1fc576b5ef",
       "symbol": "USDCHF",
       "action": "SellLimit",
       "open_time": 1431666000,
@@ -261,7 +261,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "15781750-5cab-4ff5-9914-56921a0a50d6",
+      "id": "8888fe5a-e353-441c-af42-0537c2ec86c2",
       "symbol": "USDCHF",
       "action": "SellLimit",
       "open_time": 1433134800,
@@ -276,7 +276,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "439b8135-79dd-4f11-be4f-61e08dbe4b18",
+      "id": "5df1a8e8-9c78-4332-89a2-a0d265b647b4",
       "symbol": "USDCHF",
       "action": "BuyLimit",
       "open_time": 1433206800,
@@ -291,7 +291,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "9c1dbcff-54bd-48ed-bcfe-23596a6f4806",
+      "id": "0a11e4c3-4a6d-4d60-860d-24b0e82d8160",
       "symbol": "USDCHF",
       "action": "SellLimit",
       "open_time": 1433394000,
@@ -306,7 +306,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "79a606b6-5f8e-4ca7-a10c-423ff66c07c3",
+      "id": "7c216d71-bec7-42e7-97d4-4f2e8fba0fa1",
       "symbol": "USDCHF",
       "action": "BuyLimit",
       "open_time": 1433725200,
@@ -321,7 +321,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "17ad1c07-5e82-4ca9-8079-20fc8662d9a4",
+      "id": "ad6aaa01-adee-4f9e-be54-96a8824fe1ce",
       "symbol": "USDCHF",
       "action": "SellLimit",
       "open_time": 1433919600,
@@ -336,7 +336,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "316e0d7b-4682-42a4-8767-7a56e53f02fa",
+      "id": "caf53a53-ab10-48e3-8413-a35dc853ae6e",
       "symbol": "USDCHF",
       "action": "BuyLimit",
       "open_time": 1434070800,
@@ -351,7 +351,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "3b2bec9d-a927-4995-b518-9bfb8e0d1fd1",
+      "id": "d09524a7-a3da-47f9-a727-4d44e72d98e0",
       "symbol": "USDCHF",
       "action": "SellLimit",
       "open_time": 1434344400,
@@ -366,7 +366,7 @@
       "exit_reason": "TP_HIT"
     },
     {
-      "id": "4b6f478e-975e-406b-971b-45260f8621e7",
+      "id": "e6c0878d-a06b-477f-ae6e-f1e1be3fa8f8",
       "symbol": "USDCHF",
       "action": "BuyLimit",
       "open_time": 1434715200,
@@ -381,7 +381,7 @@
       "exit_reason": "TP_HIT"
     },
     {
-      "id": "25747ae9-1cd0-4714-a001-d94523fd0e12",
+      "id": "b0c22e27-f922-4c63-ad4e-9053c7cf0a3c",
       "symbol": "USDCHF",
       "action": "BuyLimit",
       "open_time": 1435536000,
@@ -396,7 +396,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "c7a02b38-f0b1-4d6f-9fca-e0658abf0f83",
+      "id": "f04aea6c-2afe-4e52-bcfc-e28aba2d0cfb",
       "symbol": "USDCHF",
       "action": "BuyLimit",
       "open_time": 1436461200,
@@ -411,7 +411,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "7ea4fa6e-7d0a-4a43-b664-0254cb5ad94c",
+      "id": "7c317aa5-64f6-4d91-bc98-dd0569ed7a6c",
       "symbol": "USDCHF",
       "action": "SellLimit",
       "open_time": 1436734800,
@@ -426,7 +426,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "322473b0-b6d8-40b3-9844-cfcd931e00a5",
+      "id": "b1ad7ccc-552b-47a0-944d-732a27fffae7",
       "symbol": "USDCHF",
       "action": "SellLimit",
       "open_time": 1436932800,
@@ -441,7 +441,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "aecb38cf-5bda-4a9f-a2ad-9d508d27164e",
+      "id": "d21db548-db18-47d7-befb-e054f13c3500",
       "symbol": "USDCHF",
       "action": "BuyLimit",
       "open_time": 1438056000,
@@ -456,7 +456,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "5bdbfd0e-5624-4414-862c-64a5a53250e6",
+      "id": "d01909ea-f50c-4f23-9b5c-b7c37027578c",
       "symbol": "USDCHF",
       "action": "SellLimit",
       "open_time": 1460008800,
@@ -471,7 +471,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "290e1faa-afa1-45b5-8804-cb8d6bddf4a6",
+      "id": "211b41e3-81d6-41fd-bea3-e6562941f343",
       "symbol": "USDCHF",
       "action": "SellLimit",
       "open_time": 1461117600,
@@ -486,7 +486,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "045f8cda-284c-40ac-b888-46fbff5c0331",
+      "id": "c773fa2b-62ff-49a2-80d2-1e7c17f7972f",
       "symbol": "USDCHF",
       "action": "BuyLimit",
       "open_time": 1461236400,
@@ -501,7 +501,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "208f4718-46c0-4b08-b5e7-2447533f3f76",
+      "id": "058cb24d-8268-4738-b817-1f93a5637e35",
       "symbol": "USDCHF",
       "action": "BuyLimit",
       "open_time": 1462856400,
@@ -516,7 +516,7 @@
       "exit_reason": "TP_HIT"
     },
     {
-      "id": "8a64e577-1430-485f-892a-75c09d8a4e5a",
+      "id": "4d3e464b-0db9-4615-b5c6-3dd5f4e6dfd0",
       "symbol": "USDCHF",
       "action": "BuyLimit",
       "open_time": 1463464800,
@@ -531,7 +531,7 @@
       "exit_reason": "TP_HIT"
     },
     {
-      "id": "f1776e04-0f5e-41b1-8f1e-49a3e41a4629",
+      "id": "efcb017f-f438-4cb4-a319-31e2b74f6606",
       "symbol": "USDCHF",
       "action": "SellLimit",
       "open_time": 1464073200,
@@ -546,7 +546,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "c2673c41-9243-439e-935a-5b95f4de709b",
+      "id": "301e331a-6979-4582-a184-0733f85349a7",
       "symbol": "USDCHF",
       "action": "BuyLimit",
       "open_time": 1464753600,
@@ -561,7 +561,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "7d6bc654-7333-46db-bb25-46854ea453f8",
+      "id": "d3d317bc-7ec4-43c8-ad59-56c6f1b332cb",
       "symbol": "USDCHF",
       "action": "BuyLimit",
       "open_time": 1464919200,
@@ -576,7 +576,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "5c01f520-4a7e-456f-98ba-ea8eff41376e",
+      "id": "a7b2024a-cfe9-4407-94d1-9c2916c5ef7c",
       "symbol": "USDCHF",
       "action": "BuyLimit",
       "open_time": 1465815600,
@@ -591,7 +591,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "01850afb-31d3-44fc-894f-857ca4e4c526",
+      "id": "62d28e13-1dc1-4417-9670-4c74f798e29b",
       "symbol": "USDCHF",
       "action": "BuyLimit",
       "open_time": 1466118000,
@@ -606,7 +606,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "88e3b1f5-9587-4c72-baff-eeb26292df01",
+      "id": "6abda8f5-26a0-45b9-afd5-0a6902a2860a",
       "symbol": "USDCHF",
       "action": "BuyLimit",
       "open_time": 1467255600,
@@ -621,7 +621,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "04af19bb-6d4a-4b76-a9ef-0a3ba505f913",
+      "id": "ae2e3dac-c49c-4a18-b5da-10a5f27357e0",
       "symbol": "USDCHF",
       "action": "SellLimit",
       "open_time": 1467712800,
@@ -636,7 +636,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "4dc23f90-689a-46ef-b29f-d0ede429d430",
+      "id": "be57135a-2426-4409-9325-ad080591fbae",
       "symbol": "USDCHF",
       "action": "SellLimit",
       "open_time": 1468540800,
@@ -651,7 +651,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "4515e075-8538-4735-a726-494e5ea2fd1f",
+      "id": "13450656-bc04-4cc2-a469-2d5f386780cc",
       "symbol": "USDCHF",
       "action": "BuyLimit",
       "open_time": 1469638800,
@@ -666,7 +666,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "8164751f-644a-4240-bc9a-78c988dadcdf",
+      "id": "35365e24-2aa3-4b6e-a8d7-a5a5a6d60b17",
       "symbol": "USDCHF",
       "action": "BuyLimit",
       "open_time": 1470391200,
@@ -681,7 +681,7 @@
       "exit_reason": "TP_HIT"
     },
     {
-      "id": "2999f72b-2709-406f-9cb8-b0c9e2cbd988",
+      "id": "9f911f02-75b7-4238-a596-1085413c7cff",
       "symbol": "USDCHF",
       "action": "BuyLimit",
       "open_time": 1470704400,
@@ -696,7 +696,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "1ef691e4-a3b0-4cfc-8c36-eb21c01191e5",
+      "id": "4191c632-f1bd-4cff-9f6a-124020a3cee7",
       "symbol": "USDCHF",
       "action": "BuyLimit",
       "open_time": 1471003200,
@@ -711,7 +711,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "a5084471-6e1c-4524-8221-9a67d8909830",
+      "id": "95a351d6-6974-491b-911c-4044e6e42a40",
       "symbol": "USDCHF",
       "action": "SellLimit",
       "open_time": 1471590000,
@@ -726,7 +726,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "f9310be4-0325-4d74-8eb0-b7743fb0cfb7",
+      "id": "e9f7b081-6dcd-445e-98e7-1f38b16d3f8a",
       "symbol": "USDCHF",
       "action": "BuyLimit",
       "open_time": 1472083200,
@@ -741,7 +741,7 @@
       "exit_reason": "TP_HIT"
     },
     {
-      "id": "43db9748-a67e-46b4-b906-23e1abb3f156",
+      "id": "83db359e-149b-44ab-b84e-a6707230ea2b",
       "symbol": "USDCHF",
       "action": "BuyLimit",
       "open_time": 1472652000,
@@ -756,7 +756,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "984e89e7-c10a-4f4f-8ac6-a330f659b3ff",
+      "id": "a26110e4-89af-45f5-9343-9fcd0d6fd404",
       "symbol": "USDCHF",
       "action": "BuyLimit",
       "open_time": 1473123600,
@@ -771,7 +771,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "7135bbed-7300-4684-91a0-54ca2b5f5789",
+      "id": "2c2759fa-60ff-40f7-97c6-c279d53afd27",
       "symbol": "USDCHF",
       "action": "SellLimit",
       "open_time": 1473246000,
@@ -786,7 +786,7 @@
       "exit_reason": "TP_HIT"
     },
     {
-      "id": "bda13bbf-896f-4816-8c7f-db3d124e57e7",
+      "id": "dfd005ac-2056-466b-b748-cf55fb5a2803",
       "symbol": "USDCHF",
       "action": "BuyLimit",
       "open_time": 1473642000,
@@ -801,7 +801,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "32918a8d-c0c6-475b-ba4e-85bcf2563781",
+      "id": "550aabdc-1bdc-4c9b-8041-6cf95306b249",
       "symbol": "USDCHF",
       "action": "SellLimit",
       "open_time": 1473937200,
@@ -816,7 +816,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "a49eb038-bb03-41fd-bcee-6e91cafe4390",
+      "id": "069cf70f-3f59-44f3-bf41-3b3dde215a03",
       "symbol": "USDCHF",
       "action": "BuyLimit",
       "open_time": 1474268400,
@@ -831,7 +831,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "15e8e1fe-04be-4731-96cb-97f8451e8745",
+      "id": "7480390a-2a7b-4bce-84d6-49348a38ef4a",
       "symbol": "USDCHF",
       "action": "SellLimit",
       "open_time": 1474581600,
@@ -846,7 +846,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "115f981f-865c-4808-bb7c-9fe1f7185d9c",
+      "id": "23735e42-1548-4c3d-bf6c-b67664cc2b77",
       "symbol": "USDCHF",
       "action": "BuyLimit",
       "open_time": 1476925200,
@@ -861,7 +861,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "9cfea9d1-8e7e-4c99-bb1f-e4f5821f7a73",
+      "id": "e128ae53-8458-435d-ad36-eebdd08ad2d5",
       "symbol": "USDCHF",
       "action": "BuyLimit",
       "open_time": 1477634400,
@@ -876,7 +876,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "9fa1d7dc-6e81-4743-af7e-ec12d3c66612",
+      "id": "6bd51c5a-ad80-42e1-9f73-0da47ab85786",
       "symbol": "USDCHF",
       "action": "SellLimit",
       "open_time": 1477893600,
@@ -891,7 +891,7 @@
       "exit_reason": "TP_HIT"
     },
     {
-      "id": "16b92e1d-3699-4708-8ede-cbf9a3f476fe",
+      "id": "93d536a3-45fa-460c-9612-e8465e2ec70c",
       "symbol": "USDCHF",
       "action": "SellLimit",
       "open_time": 1501844400,
@@ -906,7 +906,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "80c25b76-4b92-48b5-822e-cfa974f0bfbd",
+      "id": "532eca77-dd34-4074-adf8-377c66409078",
       "symbol": "USDCHF",
       "action": "BuyLimit",
       "open_time": 1502830800,
@@ -921,7 +921,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "ee97e51a-6ec3-4562-8d70-412a744ff1f4",
+      "id": "218886d1-e0f3-4e98-bcc0-553ec5c3f3a4",
       "symbol": "USDCHF",
       "action": "SellLimit",
       "open_time": 1503054000,
@@ -936,7 +936,7 @@
       "exit_reason": "TP_HIT"
     },
     {
-      "id": "a8a7c718-989b-4dc7-a5df-4daa874d1ad6",
+      "id": "008bb718-9197-4f20-bf42-9e50f9f5c6aa",
       "symbol": "USDCHF",
       "action": "SellLimit",
       "open_time": 1505682000,
@@ -951,7 +951,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "9f6fbe70-b527-48f9-9d75-802db1059abf",
+      "id": "fd9f7c88-2ac0-4ee4-920c-3e4158a1c3c0",
       "symbol": "USDCHF",
       "action": "BuyLimit",
       "open_time": 1507590000,
@@ -966,7 +966,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "340da7da-3de5-410e-bf44-6359a6e0ef76",
+      "id": "93ae57cf-8dd7-412e-abca-d9116198039c",
       "symbol": "USDCHF",
       "action": "SellLimit",
       "open_time": 1507755600,
@@ -981,7 +981,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "2e6a91f9-f07f-4ceb-b8cf-7da309becffb",
+      "id": "4d4f8a5c-361a-47cb-8ef3-a7b3355bb7ea",
       "symbol": "USDCHF",
       "action": "BuyLimit",
       "open_time": 1507892400,
@@ -996,7 +996,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "d8176a31-2260-4ad7-9888-6475c1f63c25",
+      "id": "817ea8ca-68bf-429c-b1ea-58b3d61d1faf",
       "symbol": "USDCHF",
       "action": "BuyLimit",
       "open_time": 1508277600,
@@ -1011,7 +1011,7 @@
       "exit_reason": "TP_HIT"
     },
     {
-      "id": "7a3ef018-e442-460f-b03c-52c171e01e18",
+      "id": "fc8380ac-96b7-4790-b018-ebe9f1950240",
       "symbol": "USDCHF",
       "action": "BuyLimit",
       "open_time": 1508356800,
@@ -1026,7 +1026,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "8ad91cfd-fee3-4a0f-9adf-d01d931fecc4",
+      "id": "e2b25179-39ad-4eff-8b7a-45430fa31636",
       "symbol": "USDCHF",
       "action": "BuyLimit",
       "open_time": 1508781600,
@@ -1041,7 +1041,7 @@
       "exit_reason": "TP_HIT"
     },
     {
-      "id": "39aaacf1-18bf-4475-949d-773f2fc1ac59",
+      "id": "da9ec947-4482-4cb2-9690-5719ad1328cb",
       "symbol": "USDCHF",
       "action": "BuyLimit",
       "open_time": 1508922000,
@@ -1056,7 +1056,7 @@
       "exit_reason": "TP_HIT"
     },
     {
-      "id": "cde8261f-3bb1-4598-a3e4-88c4c849f5f7",
+      "id": "9b2ba588-1a01-4321-bd28-3f5e38382826",
       "symbol": "USDCHF",
       "action": "SellLimit",
       "open_time": 1509426000,
@@ -1071,7 +1071,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "1bad81bc-c6eb-4cbe-8ee1-b8f2268e70ee",
+      "id": "a01b71dd-c8be-48f9-bea2-0a75da95f2ba",
       "symbol": "USDCHF",
       "action": "BuyLimit",
       "open_time": 1509933600,
@@ -1086,7 +1086,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "a5d94c2b-2041-41c6-b520-8349087acca5",
+      "id": "136bbd85-422a-42ce-88a1-034d0d2b2476",
       "symbol": "USDCHF",
       "action": "SellLimit",
       "open_time": 1511154000,
@@ -1101,7 +1101,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "9c5ff492-dea2-4041-bb93-6f3b500bf440",
+      "id": "24aa68a9-6674-4ffa-a071-4ddd372868e2",
       "symbol": "USDCHF",
       "action": "BuyLimit",
       "open_time": 1511985600,
@@ -1116,7 +1116,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "6a891484-b441-4eb3-8180-2305e277fe99",
+      "id": "92cbedc2-1bb1-46e4-9402-531a468b5182",
       "symbol": "USDCHF",
       "action": "SellLimit",
       "open_time": 1512363600,
@@ -1131,7 +1131,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "cbb959bc-983c-4113-ba37-b2145e5ac80b",
+      "id": "328f654c-a9e9-4b9d-8011-287d330f193d",
       "symbol": "USDCHF",
       "action": "BuyLimit",
       "open_time": 1513558800,
@@ -1146,7 +1146,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "e60731e3-a98e-4642-96d8-693e461c051a",
+      "id": "41a7fd0c-4e95-4df2-8596-09c626b8e5b9",
       "symbol": "USDCHF",
       "action": "SellLimit",
       "open_time": 1513692000,
@@ -1161,7 +1161,7 @@
       "exit_reason": "TP_HIT"
     },
     {
-      "id": "a2d62c74-596a-4f32-abe1-6945b65ce285",
+      "id": "2c1ed2d8-bf3e-4c50-8ba6-780fdba45f36",
       "symbol": "USDCHF",
       "action": "SellLimit",
       "open_time": 1514959200,
@@ -1176,7 +1176,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "f74cc819-f72d-436f-af41-5bbd484981cc",
+      "id": "04d2e341-4e25-487d-a7fd-ffe35ac73935",
       "symbol": "USDCHF",
       "action": "SellLimit",
       "open_time": 1515625200,
@@ -1191,7 +1191,7 @@
       "exit_reason": "TP_HIT"
     },
     {
-      "id": "8c6178ec-d709-4737-b415-3ba1dad6913f",
+      "id": "d455e872-6854-4788-b347-a049c1216879",
       "symbol": "USDCHF",
       "action": "SellLimit",
       "open_time": 1516046400,
@@ -1206,7 +1206,7 @@
       "exit_reason": "TP_HIT"
     },
     {
-      "id": "239d6760-af92-4e3e-88e6-2aaffc0a044f",
+      "id": "b1743ab5-8e55-4e7b-ab9e-e508b6d16d76",
       "symbol": "USDCHF",
       "action": "BuyLimit",
       "open_time": 1516586400,
@@ -1221,7 +1221,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "3800f207-1b21-4c00-a2c9-9b3bc02c7149",
+      "id": "693dfd98-c6c4-4db1-a6a8-d105c5d19e8d",
       "symbol": "USDCHF",
       "action": "BuyLimit",
       "open_time": 1517288400,
@@ -1236,7 +1236,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "e1605849-932d-4bcf-b38e-64626f7ff3fb",
+      "id": "a7a3e73e-e3e4-4dcb-bd80-1cb69b3d79cd",
       "symbol": "USDCHF",
       "action": "SellLimit",
       "open_time": 1538960400,
@@ -1251,7 +1251,7 @@
       "exit_reason": "TP_HIT"
     },
     {
-      "id": "d1387178-c772-48c2-8717-fd740b0c96bc",
+      "id": "2966e601-1cbf-4bad-a763-59e21516c8fa",
       "symbol": "USDCHF",
       "action": "BuyLimit",
       "open_time": 1539565200,
@@ -1266,7 +1266,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "ff5d4143-3ada-4b4d-b894-2c453de628e8",
+      "id": "93a1d71a-cb62-48b0-aacd-12ac45857968",
       "symbol": "USDCHF",
       "action": "BuyLimit",
       "open_time": 1540515600,
@@ -1281,7 +1281,7 @@
       "exit_reason": "TP_HIT"
     },
     {
-      "id": "96e5e66d-7097-4abe-a9bd-c49e3fd1c470",
+      "id": "26ea4f9f-dc77-405c-a005-6554693b07ee",
       "symbol": "USDCHF",
       "action": "BuyLimit",
       "open_time": 1540987200,
@@ -1296,7 +1296,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "fd7c8601-228a-4c42-9962-25ae2ade1d54",
+      "id": "ffa2480c-81b6-4ebf-aa21-3d7236e5534e",
       "symbol": "USDCHF",
       "action": "SellLimit",
       "open_time": 1541638800,
@@ -1311,7 +1311,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "dc5d3f31-85e7-4712-8459-1a95d3ed9e1f",
+      "id": "2db4bdc7-9fba-46bf-8d6c-54c0e915cf77",
       "symbol": "USDCHF",
       "action": "BuyLimit",
       "open_time": 1542369600,
@@ -1326,7 +1326,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "e1c0a2a2-a75a-47b6-bc6a-03194659c5f2",
+      "id": "0b7fbd36-a2c8-4e30-bc78-d952611df1ec",
       "symbol": "USDCHF",
       "action": "SellLimit",
       "open_time": 1542877200,
@@ -1341,7 +1341,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "be5caf09-3492-41ec-8d64-583be1eb2c45",
+      "id": "98918a7a-ed29-4e11-8b09-c32388ff0c8f",
       "symbol": "USDCHF",
       "action": "BuyLimit",
       "open_time": 1543197600,
@@ -1356,7 +1356,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "cae093e8-4a19-4047-a43b-ae30d9bd1119",
+      "id": "beeef50d-ed1a-4bd5-ba50-73d0467ea008",
       "symbol": "USDCHF",
       "action": "BuyLimit",
       "open_time": 1543802400,
@@ -1371,7 +1371,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "043022b1-bc60-4a27-b5da-0110be35a71e",
+      "id": "8d81feb8-dab4-47ab-ac9d-df582c4d8b4b",
       "symbol": "USDCHF",
       "action": "BuyLimit",
       "open_time": 1543978800,
@@ -1386,7 +1386,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "031ee10a-3d4f-4313-a1ad-96a1e11fc0e3",
+      "id": "f9923dc1-04ea-4570-b917-7ad0d7475de9",
       "symbol": "USDCHF",
       "action": "SellLimit",
       "open_time": 1545382800,
@@ -1401,7 +1401,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "54f64460-4202-4e48-acd4-587d7c44582b",
+      "id": "7f30174d-cbe5-46bf-943d-cb28c1b98b9f",
       "symbol": "USDCHF",
       "action": "SellLimit",
       "open_time": 1546405200,
@@ -1416,7 +1416,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "b4edc2e7-8935-4b21-9f00-bb3960557132",
+      "id": "f2702805-bbb0-4332-ae0f-f0165227169e",
       "symbol": "USDCHF",
       "action": "BuyLimit",
       "open_time": 1546484400,
@@ -1431,7 +1431,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "d8095c39-40a3-462e-a129-69db8c0d6ec9",
+      "id": "5bce0394-0194-44b3-8ed1-f19393a8da02",
       "symbol": "USDCHF",
       "action": "BuyLimit",
       "open_time": 1547017200,
@@ -1446,7 +1446,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "7c2e52f3-7ade-443a-afaa-f43206b6f567",
+      "id": "3635763e-d501-4aab-9f1e-146b2176d75a",
       "symbol": "USDCHF",
       "action": "BuyLimit",
       "open_time": 1548104400,
@@ -1461,7 +1461,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "302cac15-a716-4c80-ba4d-bcb80e03bf0b",
+      "id": "95724866-f58a-42ad-be12-ad6a1fdf490d",
       "symbol": "USDCHF",
       "action": "BuyLimit",
       "open_time": 1548403200,
@@ -1476,7 +1476,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "c8242921-d017-4136-91f4-f830799012c7",
+      "id": "57f6a3a7-8203-4817-8196-9982a8eeb4bf",
       "symbol": "USDCHF",
       "action": "SellLimit",
       "open_time": 1548738000,
@@ -1491,7 +1491,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "d77fc386-f017-4937-a4e9-4b40df13dfeb",
+      "id": "2bff9735-1950-453b-a8da-9015502380ac",
       "symbol": "USDCHF",
       "action": "BuyLimit",
       "open_time": 1548813600,
@@ -1506,7 +1506,7 @@
       "exit_reason": "TP_HIT"
     },
     {
-      "id": "78423b0c-bc37-403a-a00d-f8660a0922db",
+      "id": "f7ab840c-10cb-4655-8e8e-5efcf50cc32f",
       "symbol": "USDCHF",
       "action": "BuyLimit",
       "open_time": 1549418400,
@@ -1521,7 +1521,7 @@
       "exit_reason": "TP_HIT"
     },
     {
-      "id": "c5ffffed-7155-45cc-bb72-dbb60459fd69",
+      "id": "62e25526-013e-4a66-802e-9d8cf5e1919e",
       "symbol": "USDCHF",
       "action": "SellLimit",
       "open_time": 1550710800,
@@ -1536,7 +1536,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "a911ab1f-61f1-4193-adaa-6ce834d80e82",
+      "id": "971918ec-fa91-409e-a541-75448e92b917",
       "symbol": "USDCHF",
       "action": "SellLimit",
       "open_time": 1551056400,
@@ -1551,7 +1551,7 @@
       "exit_reason": "TP_HIT"
     },
     {
-      "id": "25118789-3bdc-4843-8f53-1374afe5f605",
+      "id": "68bbf002-e0dc-43ed-b712-e29ab0d92be6",
       "symbol": "USDCHF",
       "action": "SellLimit",
       "open_time": 1551380400,
@@ -1566,7 +1566,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "a488a9c7-daca-4955-a697-00397f607b71",
+      "id": "f423937d-44eb-4b4c-b6e0-86dd6da59e77",
       "symbol": "USDCHF",
       "action": "BuyLimit",
       "open_time": 1551873600,
@@ -1581,7 +1581,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "9c9fc465-0903-4723-a99f-ab85a14ca60a",
+      "id": "95f736f6-5d78-4231-aab9-97cccbaaf77d",
       "symbol": "USDCHF",
       "action": "BuyLimit",
       "open_time": 1552039200,
@@ -1596,7 +1596,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "66d55899-5ca5-4d89-9805-d17fd3923cd7",
+      "id": "6a6545c2-8f03-4f0b-9c41-35d941472ce1",
       "symbol": "USDCHF",
       "action": "SellLimit",
       "open_time": 1553598000,
@@ -1611,7 +1611,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "6ff38773-e16e-4cda-acc5-689aff6962b4",
+      "id": "3f3ec9ca-6d4b-4302-81c2-f17bddfb6083",
       "symbol": "USDCHF",
       "action": "BuyLimit",
       "open_time": 1553634000,
@@ -1626,7 +1626,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "0b363bf1-264c-401b-9ca8-698306d877ac",
+      "id": "05678adc-7ffc-408f-a89c-815ac7695d2d",
       "symbol": "USDCHF",
       "action": "BuyLimit",
       "open_time": 1578261600,
@@ -1641,7 +1641,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "01f34ab7-568c-461b-a7ea-1765105438e2",
+      "id": "09c721de-d50f-45e8-a9c9-58be12d231f6",
       "symbol": "USDCHF",
       "action": "SellLimit",
       "open_time": 1578333600,
@@ -1656,7 +1656,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "636adfea-4049-400b-9b58-ac9170348107",
+      "id": "a93fc40b-b5e2-474b-ae4a-6535cbfb395b",
       "symbol": "USDCHF",
       "action": "SellLimit",
       "open_time": 1579172400,
@@ -1671,7 +1671,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "4ef2fdf6-0776-4b68-9a52-c92d4556ee7d",
+      "id": "78065175-c01b-41c6-af47-387c4f6970bc",
       "symbol": "USDCHF",
       "action": "SellLimit",
       "open_time": 1580162400,
@@ -1686,7 +1686,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "19618e12-bc97-4ece-8cca-4c4db804e263",
+      "id": "e9ced13e-8b59-41f3-96ba-6dafa17b143a",
       "symbol": "USDCHF",
       "action": "BuyLimit",
       "open_time": 1580299200,
@@ -1701,7 +1701,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "116e2469-183e-410e-9c96-9accba155a63",
+      "id": "134c8327-72a5-4858-8aab-8059359f6586",
       "symbol": "USDCHF",
       "action": "SellLimit",
       "open_time": 1581480000,
@@ -1716,7 +1716,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "5ce0b6ba-5016-4713-968d-01df5ced6847",
+      "id": "4bc01f19-15ea-4463-8112-c0ddfc82e734",
       "symbol": "USDCHF",
       "action": "SellLimit",
       "open_time": 1581998400,
@@ -1731,7 +1731,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "4977a141-19c9-4a25-9fa3-d665b195b867",
+      "id": "671cb743-a601-4c72-8155-af9590e23331",
       "symbol": "USDCHF",
       "action": "SellLimit",
       "open_time": 1582714800,
@@ -1746,7 +1746,7 @@
       "exit_reason": "TP_HIT"
     },
     {
-      "id": "b9dc259f-3506-408a-8185-4d59e840d19c",
+      "id": "f3783d3e-b0da-4ad2-a429-0c3124ba7b34",
       "symbol": "USDCHF",
       "action": "SellLimit",
       "open_time": 1583236800,
@@ -1761,7 +1761,7 @@
       "exit_reason": "TP_HIT"
     },
     {
-      "id": "fd62f150-1f42-4b0b-9538-61ec217d4be3",
+      "id": "ed6473b3-13da-4fff-b6df-09c7f6b34ee5",
       "symbol": "USDCHF",
       "action": "BuyLimit",
       "open_time": 1583928000,
@@ -1776,7 +1776,7 @@
       "exit_reason": "TP_HIT"
     },
     {
-      "id": "a2fe7e6d-ca5f-4bb4-97d5-15c8c1a72941",
+      "id": "3b57b87c-63b9-4453-8e8a-3c8057ecf1b7",
       "symbol": "USDCHF",
       "action": "BuyLimit",
       "open_time": 1584957600,
@@ -1791,7 +1791,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "ad946715-0350-4e74-a8d8-9ad1b3e4512a",
+      "id": "9d44ee95-6037-48fe-9d8c-043a20be218a",
       "symbol": "USDCHF",
       "action": "SellLimit",
       "open_time": 1585594800,
@@ -1806,7 +1806,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "aba1d1e8-73ce-4a6f-86e1-fc7847fb2c3b",
+      "id": "23869568-a7d0-44cf-9744-294916ad88e9",
       "symbol": "USDCHF",
       "action": "BuyLimit",
       "open_time": 1586170800,
@@ -1821,7 +1821,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "73fd404b-0e33-4933-a41d-e7fe5745b178",
+      "id": "e214da18-50c7-4410-a07e-e401f57a5a5a",
       "symbol": "USDCHF",
       "action": "BuyLimit",
       "open_time": 1587085200,
@@ -1836,7 +1836,7 @@
       "exit_reason": "TP_HIT"
     },
     {
-      "id": "65ddf682-d1f0-4a13-98fe-a87597037f77",
+      "id": "ce28e423-9c5f-4123-a144-fb3d65ad9079",
       "symbol": "USDCHF",
       "action": "SellLimit",
       "open_time": 1587945600,
@@ -1851,7 +1851,7 @@
       "exit_reason": "TP_HIT"
     },
     {
-      "id": "4b7e5434-f6be-4c51-bbdb-40179d4d93b8",
+      "id": "31fee214-cd3e-4e0c-892b-2d3c14e7f440",
       "symbol": "USDCHF",
       "action": "SellLimit",
       "open_time": 1589342400,
@@ -1866,7 +1866,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "1de86c99-0eff-43ad-a77c-1dd72446235a",
+      "id": "3f15dd16-6b74-4c3c-a422-4536ecc8c895",
       "symbol": "USDCHF",
       "action": "SellLimit",
       "open_time": 1590037200,
@@ -1881,7 +1881,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "207b18c9-1a9b-426b-80ae-52d59a5dd0a3",
+      "id": "b533ce71-3b37-4e3b-b681-0b4b7471656b",
       "symbol": "USDCHF",
       "action": "BuyLimit",
       "open_time": 1590613200,
@@ -1896,7 +1896,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "74343b65-35f4-452a-bfe2-5f2d80932d05",
+      "id": "e0713e2c-28c6-439c-91c8-d7aef6a9fc34",
       "symbol": "USDCHF",
       "action": "BuyLimit",
       "open_time": 1591578000,
@@ -1911,7 +1911,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "2c44473b-851b-471c-97c8-ef6b3afdca2e",
+      "id": "dd4ec32e-3c9d-4481-bc41-742a481e0212",
       "symbol": "USDCHF",
       "action": "SellLimit",
       "open_time": 1591866000,
@@ -1926,7 +1926,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "b835b90a-fac8-43c1-a8be-97d6ed768766",
+      "id": "2960f95d-4ded-44c9-8cfe-c88a124e9aa1",
       "symbol": "USDCHF",
       "action": "SellLimit",
       "open_time": 1592460000,
@@ -1941,7 +1941,7 @@
       "exit_reason": "TP_HIT"
     },
     {
-      "id": "e77830b1-a312-4185-8e9d-53cc8af3b781",
+      "id": "40ceff47-d7d3-41e2-9854-7f694ae40323",
       "symbol": "USDCHF",
       "action": "SellLimit",
       "open_time": 1592949600,
@@ -1956,7 +1956,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "072382a9-6a03-4cba-a44d-283bcd34d63f",
+      "id": "2a5f2be2-90fd-4396-ab59-2995f2ae3652",
       "symbol": "USDCHF",
       "action": "SellLimit",
       "open_time": 1593428400,
@@ -1971,7 +1971,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "bd847ceb-2014-4ec9-8227-2e264f8704ce",
+      "id": "06ec9dab-9998-4f3b-a560-641ed95006ad",
       "symbol": "USDCHF",
       "action": "BuyLimit",
       "open_time": 1594634400,
@@ -1986,7 +1986,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "d5a5d261-2559-4a6d-8769-061a95e853a1",
+      "id": "8a0fe064-7ccf-4c46-9a30-5277382826b9",
       "symbol": "USDCHF",
       "action": "SellLimit",
       "open_time": 1595206800,
@@ -2001,7 +2001,7 @@
       "exit_reason": "TP_HIT"
     },
     {
-      "id": "df2cef09-ab23-4516-82bb-107098c158df",
+      "id": "b1506b5d-adb0-4926-a342-d7a02fed94b4",
       "symbol": "USDCHF",
       "action": "SellLimit",
       "open_time": 1595865600,
@@ -2016,7 +2016,7 @@
       "exit_reason": "TP_HIT"
     },
     {
-      "id": "d7b62680-366f-4b5f-af19-89ccc97ae06d",
+      "id": "868e0fbf-397b-4f0c-b108-f79ed946b292",
       "symbol": "USDCHF",
       "action": "SellLimit",
       "open_time": 1596088800,
@@ -2031,7 +2031,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "77d0520b-011a-43bd-848f-b68d55497414",
+      "id": "8a932a5e-ed63-46c3-9c6c-8e4b4ba9fd2e",
       "symbol": "USDCHF",
       "action": "BuyLimit",
       "open_time": 1618448400,
@@ -2046,7 +2046,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "633735a8-2b9d-480b-b7a7-0c5e2590a5a7",
+      "id": "048effd7-d47c-417b-920a-6fd1eb0ee931",
       "symbol": "USDCHF",
       "action": "SellLimit",
       "open_time": 1618855200,
@@ -2061,7 +2061,7 @@
       "exit_reason": "TP_HIT"
     },
     {
-      "id": "d262e2ed-06b2-4a88-9ec4-e1669ef97605",
+      "id": "8aa61b47-37d4-4d94-85d3-4b99c5b6ccf9",
       "symbol": "USDCHF",
       "action": "BuyLimit",
       "open_time": 1621443600,
@@ -2076,7 +2076,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "dc945a05-5f01-4ef0-8409-e8fc37b071a5",
+      "id": "09fd50ac-b3b5-4c74-8afa-ce029a5db477",
       "symbol": "USDCHF",
       "action": "SellLimit",
       "open_time": 1621843200,
@@ -2091,7 +2091,7 @@
       "exit_reason": "TP_HIT"
     },
     {
-      "id": "9b695325-0b7a-4604-97c5-09e9664c6c46",
+      "id": "cdbd5af5-c870-4d09-b437-9a342f27fc43",
       "symbol": "USDCHF",
       "action": "SellLimit",
       "open_time": 1622001600,
@@ -2106,7 +2106,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "c51ee621-b534-447e-ae4f-8e562f657a39",
+      "id": "a20d80a1-5cda-4a93-97f5-c89f1c6cd6db",
       "symbol": "USDCHF",
       "action": "BuyLimit",
       "open_time": 1622077200,
@@ -2121,7 +2121,7 @@
       "exit_reason": "TP_HIT"
     },
     {
-      "id": "c8ffffa7-945d-4346-ae28-1293313fab5a",
+      "id": "8f61b60a-12fc-42ce-943a-e48b7d72664f",
       "symbol": "USDCHF",
       "action": "BuyLimit",
       "open_time": 1622422800,
@@ -2136,7 +2136,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "65c510ee-71e5-4d7d-8302-f8e2d23488c0",
+      "id": "b9eb4f93-7204-4442-916a-5329d30eaffa",
       "symbol": "USDCHF",
       "action": "SellLimit",
       "open_time": 1622592000,
@@ -2151,7 +2151,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "c9c635f4-88b7-48e8-a0c4-27b65c5e3b0f",
+      "id": "6f5af620-c0b2-40aa-8a06-91edf022a80d",
       "symbol": "USDCHF",
       "action": "SellLimit",
       "open_time": 1623236400,
@@ -2166,7 +2166,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "5d5e0765-c3e8-430a-a7fe-cfcde7c8fc04",
+      "id": "9dd74dfc-c273-451d-9860-d92529f04488",
       "symbol": "USDCHF",
       "action": "SellLimit",
       "open_time": 1624438800,
@@ -2181,7 +2181,7 @@
       "exit_reason": "TP_HIT"
     },
     {
-      "id": "db51dcdf-57e6-4e86-9712-413245b37adb",
+      "id": "76285f5e-e4ef-4e30-84a5-86255e7004fe",
       "symbol": "USDCHF",
       "action": "SellLimit",
       "open_time": 1625482800,
@@ -2196,7 +2196,7 @@
       "exit_reason": "TP_HIT"
     },
     {
-      "id": "ee7fffe9-00f8-4f14-95d2-d1603148c9ea",
+      "id": "b72207a1-7314-444a-a7a1-9dc501f7726a",
       "symbol": "USDCHF",
       "action": "BuyLimit",
       "open_time": 1626822000,
@@ -2211,7 +2211,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "e3000ae0-064d-46fc-ae6d-8c8008fff69a",
+      "id": "6d1353dc-a1ce-4cdd-ade8-1e472caf85f5",
       "symbol": "USDCHF",
       "action": "SellLimit",
       "open_time": 1627884000,
@@ -2226,7 +2226,7 @@
       "exit_reason": "TP_HIT"
     },
     {
-      "id": "4ccd7251-9e51-4402-9a84-3750e38dd8e6",
+      "id": "7b9811c5-cd4d-4984-8ea9-b74ae87f6103",
       "symbol": "USDCHF",
       "action": "SellLimit",
       "open_time": 1628017200,
@@ -2241,7 +2241,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "808b29b6-3338-4f84-a288-0f53c8e3b0ca",
+      "id": "89ce7131-0d2a-43cb-8ef5-2086b15ff740",
       "symbol": "USDCHF",
       "action": "BuyLimit",
       "open_time": 1628125200,
@@ -2256,7 +2256,7 @@
       "exit_reason": "TP_HIT"
     },
     {
-      "id": "7dc52ac5-0c0c-4086-8419-7388654db205",
+      "id": "8ace245c-8810-4362-bfe8-ef67ddabc89c",
       "symbol": "USDCHF",
       "action": "BuyLimit",
       "open_time": 1628665200,
@@ -2271,7 +2271,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "c1ee1d80-65ce-4345-9213-4e4c808a9912",
+      "id": "80fffcec-1432-4209-8c2f-19c5bf3085ac",
       "symbol": "USDCHF",
       "action": "BuyLimit",
       "open_time": 1629270000,
@@ -2286,7 +2286,7 @@
       "exit_reason": "TP_HIT"
     },
     {
-      "id": "e28926ce-1fe8-407d-9c94-e4997b84c82d",
+      "id": "f5f5f70f-c921-456f-b5f9-2612c7dd28d5",
       "symbol": "USDCHF",
       "action": "BuyLimit",
       "open_time": 1633309200,
@@ -2301,7 +2301,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "f8c89a39-d796-4dfb-b78a-11ebc190b8ce",
+      "id": "9a262715-bcaa-43fc-aecc-41c85543ccb5",
       "symbol": "USDCHF",
       "action": "BuyLimit",
       "open_time": 1633658400,
@@ -2316,7 +2316,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "6afabaad-36dd-4bec-84f6-44166106a2ee",
+      "id": "f4ce2d04-af52-4f13-a9ba-b5be2ae6b427",
       "symbol": "USDCHF",
       "action": "SellLimit",
       "open_time": 1634245200,
@@ -2331,7 +2331,7 @@
       "exit_reason": "TP_HIT"
     },
     {
-      "id": "f8e7d564-0571-4e1a-9f28-f38699cedaf1",
+      "id": "8c93b792-45d8-4542-ac21-17e91d862d8a",
       "symbol": "USDCHF",
       "action": "BuyLimit",
       "open_time": 1656907200,
@@ -2346,7 +2346,7 @@
       "exit_reason": "TP_HIT"
     },
     {
-      "id": "f576a526-8ff3-4da9-a044-7c8ff261f5eb",
+      "id": "7bf7fc71-2053-48d2-bbf5-743d3b6025c2",
       "symbol": "USDCHF",
       "action": "BuyLimit",
       "open_time": 1657069200,
@@ -2361,7 +2361,7 @@
       "exit_reason": "TP_HIT"
     },
     {
-      "id": "fe885df7-5770-4957-856c-8dce8d043ec6",
+      "id": "3170371f-9dcb-43a7-86d8-3a5569807454",
       "symbol": "USDCHF",
       "action": "SellLimit",
       "open_time": 1657699200,
@@ -2376,7 +2376,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "aa7f3197-da08-4584-960e-d0b1529a9911",
+      "id": "39adedce-2c2d-4d99-81b4-faa44e53b6a2",
       "symbol": "USDCHF",
       "action": "SellLimit",
       "open_time": 1658268000,
@@ -2391,7 +2391,7 @@
       "exit_reason": "TP_HIT"
     },
     {
-      "id": "62e89243-d2ad-4b6f-aeac-b4a374844704",
+      "id": "dc4c130a-c207-4117-a2d4-7128ccfc3bec",
       "symbol": "USDCHF",
       "action": "SellLimit",
       "open_time": 1659355200,
@@ -2406,7 +2406,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "35a6c3a4-fc0e-4d75-b33a-711ddeffe7b2",
+      "id": "7bfdd747-cbb4-4836-8bb4-8e6602fa93df",
       "symbol": "USDCHF",
       "action": "BuyLimit",
       "open_time": 1659574800,
@@ -2421,7 +2421,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "fbb7c40f-34dd-4fd7-84f5-a93fa2872c50",
+      "id": "f3bd35ca-793c-47ed-aa61-7b115605a346",
       "symbol": "USDCHF",
       "action": "SellLimit",
       "open_time": 1660255200,
@@ -2436,7 +2436,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "339ff4c3-a4f4-4e51-a8af-81c9b9b54b86",
+      "id": "28f8324e-9e87-4fa1-9d4f-0add70a3b991",
       "symbol": "USDCHF",
       "action": "BuyLimit",
       "open_time": 1660773600,
@@ -2451,7 +2451,7 @@
       "exit_reason": "TP_HIT"
     },
     {
-      "id": "4c4a95c6-04d5-4f01-98c8-59ee7d3b35ed",
+      "id": "bef9d927-eb5d-40c6-a9ec-7a30e9d1f393",
       "symbol": "USDCHF",
       "action": "BuyLimit",
       "open_time": 1661216400,
@@ -2466,7 +2466,7 @@
       "exit_reason": "TP_HIT"
     },
     {
-      "id": "b07ece81-1a87-4ff0-b5e2-1e9d995faeea",
+      "id": "c38f862b-9f01-442b-94ee-e2f9966b2236",
       "symbol": "USDCHF",
       "action": "BuyLimit",
       "open_time": 1662091200,
@@ -2481,7 +2481,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "c9b15153-4bd0-4691-9bde-b54f82dedf45",
+      "id": "5bfa5c2d-b03d-4c48-9a8c-90a9b5f85461",
       "symbol": "USDCHF",
       "action": "SellLimit",
       "open_time": 1663272000,
@@ -2496,7 +2496,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "b5664ed5-96fb-4acc-92fb-52cccae357aa",
+      "id": "d54a6465-99f5-4e8c-8c57-95378957b6ab",
       "symbol": "USDCHF",
       "action": "SellLimit",
       "open_time": 1665554400,
@@ -2511,7 +2511,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "dd8545c5-0d85-4e01-882a-92f4033d08f2",
+      "id": "20bc4389-e0ad-4721-9b78-9d8699797482",
       "symbol": "USDCHF",
       "action": "BuyLimit",
       "open_time": 1665979200,
@@ -2526,7 +2526,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "f58a29a6-156f-49e6-ad60-99731a71ccb5",
+      "id": "18205564-8fbc-42de-b7a1-92165497ab77",
       "symbol": "USDCHF",
       "action": "BuyLimit",
       "open_time": 1666350000,
@@ -2541,7 +2541,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "9503f82c-2d4d-4e81-8b31-456015702df2",
+      "id": "ab333430-afb0-46cb-bffb-91999a86f645",
       "symbol": "USDCHF",
       "action": "SellLimit",
       "open_time": 1667386800,
@@ -2556,7 +2556,7 @@
       "exit_reason": "TP_HIT"
     },
     {
-      "id": "0646bf01-8fd0-44f2-b9f7-0a0a39777859",
+      "id": "89bb85a1-edd4-450a-a48a-a621b945bc28",
       "symbol": "USDCHF",
       "action": "SellLimit",
       "open_time": 1667988000,
@@ -2571,7 +2571,7 @@
       "exit_reason": "TP_HIT"
     },
     {
-      "id": "3b3e856b-40c5-476f-806f-297a4de952d1",
+      "id": "1cdfd615-c44d-4e40-ae13-71126e5f880c",
       "symbol": "USDCHF",
       "action": "SellLimit",
       "open_time": 1668495600,
@@ -2586,7 +2586,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "f312cc47-f4a4-46e6-9270-40a212a05cef",
+      "id": "e8c895fb-fee4-4ac2-855c-76c7aa45df24",
       "symbol": "USDCHF",
       "action": "BuyLimit",
       "open_time": 1668733200,
@@ -2601,7 +2601,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "db93f254-ec4e-4536-8e90-bf4ebc4d6270",
+      "id": "f8c75865-1591-45fb-8bfd-cd462ae4257d",
       "symbol": "USDCHF",
       "action": "BuyLimit",
       "open_time": 1669590000,
@@ -2616,7 +2616,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "21a5bc9d-f0bc-4801-8b26-dfba286a1c85",
+      "id": "ead12210-6879-4890-92c1-784676c1c22b",
       "symbol": "USDCHF",
       "action": "SellLimit",
       "open_time": 1670238000,
@@ -2631,7 +2631,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "65def539-1f96-474a-a597-3ac4b3759a38",
+      "id": "8ae37206-b507-4c48-9af5-fb7d166ee409",
       "symbol": "USDCHF",
       "action": "BuyLimit",
       "open_time": 1670500800,
@@ -2646,7 +2646,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "d03eb06e-25e2-49ef-bfe1-5a8a356d178b",
+      "id": "0c352eb8-2e45-457d-911f-e3cc157f72d4",
       "symbol": "USDCHF",
       "action": "SellLimit",
       "open_time": 1670824800,
@@ -2661,7 +2661,7 @@
       "exit_reason": "TP_HIT"
     },
     {
-      "id": "800d6faa-7993-484f-a70e-00bb92df3b27",
+      "id": "d1584d68-1abf-42f6-91c8-2ca9e2c6c230",
       "symbol": "USDCHF",
       "action": "BuyLimit",
       "open_time": 1671170400,
@@ -2676,7 +2676,7 @@
       "exit_reason": "TP_HIT"
     },
     {
-      "id": "f8b8e83a-41e5-4958-9f57-0d4d9fe987fb",
+      "id": "0ba64d82-e582-4ead-8792-bf46848617c7",
       "symbol": "USDCHF",
       "action": "BuyLimit",
       "open_time": 1671429600,
@@ -2691,7 +2691,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "a85acc70-294a-422c-88e4-e6abc9ecea4e",
+      "id": "07c26323-5947-4a29-af08-02e6edc55eea",
       "symbol": "USDCHF",
       "action": "BuyLimit",
       "open_time": 1672027200,
@@ -2706,7 +2706,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "0a671381-7e12-4560-9a42-451af69fac50",
+      "id": "e6d36dd1-fd82-4000-8c24-09d61310f71f",
       "symbol": "USDCHF",
       "action": "BuyLimit",
       "open_time": 1672783200,
@@ -2721,7 +2721,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "8762f264-e4b9-4e7e-b1f0-da48426329d1",
+      "id": "aab0cc09-5138-4d9e-aa1c-4048361d31ad",
       "symbol": "USDCHF",
       "action": "SellLimit",
       "open_time": 1673604000,
@@ -2736,7 +2736,7 @@
       "exit_reason": "TP_HIT"
     },
     {
-      "id": "50627bd7-1328-4572-ac07-982de2a03890",
+      "id": "a0442103-6120-4256-bf76-6131bafcf622",
       "symbol": "USDCHF",
       "action": "SellLimit",
       "open_time": 1674075600,
@@ -2751,7 +2751,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "cf7b9547-6d44-4d59-a69a-a66f2aa21afb",
+      "id": "4e987c9b-0f6c-46b4-8f31-f47ed1a0100e",
       "symbol": "USDCHF",
       "action": "BuyLimit",
       "open_time": 1674612000,
@@ -2766,7 +2766,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "a138d06a-691b-4098-b654-c361e63d2ca3",
+      "id": "9761b00f-9dc6-4218-ab13-3644ea1c8fd2",
       "symbol": "USDCHF",
       "action": "SellLimit",
       "open_time": 1696514400,
@@ -2781,7 +2781,7 @@
       "exit_reason": "TP_HIT"
     },
     {
-      "id": "18396c23-4366-47a9-8ed0-42273f23e30a",
+      "id": "f77333c9-dc16-4353-9fac-fd927b1038a2",
       "symbol": "USDCHF",
       "action": "SellLimit",
       "open_time": 1696935600,
@@ -2796,7 +2796,7 @@
       "exit_reason": "TP_HIT"
     },
     {
-      "id": "5d24476b-97c3-4ebe-963e-b1d2b709abd9",
+      "id": "99644639-f7dd-43cf-bd66-0bcd3d21217b",
       "symbol": "USDCHF",
       "action": "SellLimit",
       "open_time": 1697637600,
@@ -2811,7 +2811,7 @@
       "exit_reason": "TP_HIT"
     },
     {
-      "id": "84d56c25-0552-4cce-9ad4-f972211ec119",
+      "id": "df718300-68e4-41d2-9697-7ff3942390a3",
       "symbol": "USDCHF",
       "action": "SellLimit",
       "open_time": 1698091200,
@@ -2826,7 +2826,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "09c28213-cd5b-41e7-b596-783e0e4744a0",
+      "id": "10fe0053-ab65-4654-91b2-e8b996739445",
       "symbol": "USDCHF",
       "action": "BuyLimit",
       "open_time": 1698663600,
@@ -2841,7 +2841,7 @@
       "exit_reason": "TP_HIT"
     },
     {
-      "id": "ec3dd597-0a64-42cc-abe0-9f7d60bda086",
+      "id": "c0539ed7-9579-4693-851f-080cf40ddf1c",
       "symbol": "USDCHF",
       "action": "SellLimit",
       "open_time": 1698926400,
@@ -2856,7 +2856,7 @@
       "exit_reason": "TP_HIT"
     },
     {
-      "id": "62bff028-26ab-4791-b83b-086c367831ff",
+      "id": "bd02d112-79b1-4ea2-b136-3ba3b3052324",
       "symbol": "USDCHF",
       "action": "SellLimit",
       "open_time": 1700056800,
@@ -2871,7 +2871,7 @@
       "exit_reason": "TP_HIT"
     },
     {
-      "id": "153a3021-5ebd-497d-9e83-8a966837fd4d",
+      "id": "8b561cd5-aed9-4b3b-aa0d-17d23a4acdd8",
       "symbol": "USDCHF",
       "action": "SellLimit",
       "open_time": 1700568000,
@@ -2886,7 +2886,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "be451e5b-d6c6-42a0-b1fc-beaa509fe0a7",
+      "id": "a5586c20-b3ba-42d4-90ef-00834896a5af",
       "symbol": "USDCHF",
       "action": "BuyLimit",
       "open_time": 1700647200,
@@ -2901,7 +2901,7 @@
       "exit_reason": "TP_HIT"
     },
     {
-      "id": "17c51504-adee-490b-b386-03daacfb5385",
+      "id": "42c0ec42-08d5-47b3-bfbc-4069e10bd24e",
       "symbol": "USDCHF",
       "action": "SellLimit",
       "open_time": 1701118800,
@@ -2916,7 +2916,7 @@
       "exit_reason": "TP_HIT"
     },
     {
-      "id": "32bcf7ea-c0bc-498e-8801-88492aef4a45",
+      "id": "c5220a80-7247-4bcf-80fa-6eb58fe060a2",
       "symbol": "USDCHF",
       "action": "BuyLimit",
       "open_time": 1701417600,
@@ -2931,7 +2931,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "97538cb6-89f9-4d37-a3da-56eb50173103",
+      "id": "f5165ca9-eafb-49b5-8d9d-c6297a9638f0",
       "symbol": "USDCHF",
       "action": "BuyLimit",
       "open_time": 1702270800,
@@ -2946,7 +2946,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "e4e01645-6c74-4622-aa22-382be8bd7460",
+      "id": "fd0fb922-dab6-4f3c-a579-b2ad9d4ccceb",
       "symbol": "USDCHF",
       "action": "SellLimit",
       "open_time": 1702476000,
@@ -2961,7 +2961,7 @@
       "exit_reason": "TP_HIT"
     },
     {
-      "id": "8e74329d-661e-46c7-a707-5cd53e53cb6a",
+      "id": "e2b33369-87b5-41f4-a12a-3ab213437f5d",
       "symbol": "USDCHF",
       "action": "SellLimit",
       "open_time": 1702612800,
@@ -2976,7 +2976,7 @@
       "exit_reason": "TP_HIT"
     },
     {
-      "id": "7af01a82-bb47-42a2-99f1-b123ee43c636",
+      "id": "a951ac1c-9e7e-43e7-8e2f-1d7b67e47a63",
       "symbol": "USDCHF",
       "action": "SellLimit",
       "open_time": 1703563200,
@@ -2991,7 +2991,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "85b2c0ef-11cc-4be2-b45e-574e5a531bd0",
+      "id": "6f0223ba-e4eb-4e56-bad6-ff7ab006995b",
       "symbol": "USDCHF",
       "action": "BuyLimit",
       "open_time": 1705028400,
@@ -3006,7 +3006,7 @@
       "exit_reason": "TP_HIT"
     },
     {
-      "id": "b78afcc6-8e40-44eb-b9b6-24c489fdc27c",
+      "id": "c6bc6e9c-629e-40f9-b90e-a523e1135dc9",
       "symbol": "USDCHF",
       "action": "BuyLimit",
       "open_time": 1706065200,
@@ -3021,7 +3021,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "add94218-87d4-4b39-8241-2a545de7a354",
+      "id": "50811211-75b9-4346-8c16-b3eef2318cbf",
       "symbol": "USDCHF",
       "action": "BuyLimit",
       "open_time": 1706248800,
@@ -3036,7 +3036,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "687c0598-e20f-4431-8724-7d9c11fa740e",
+      "id": "bbae1b04-8df8-477e-8022-beeb44478490",
       "symbol": "USDCHF",
       "action": "BuyLimit",
       "open_time": 1706706000,
@@ -3051,7 +3051,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "5eb88a1b-b4a2-4ce2-acf9-60557be8be35",
+      "id": "592d6a51-49f7-4989-879e-226f939d0329",
       "symbol": "USDCHF",
       "action": "BuyLimit",
       "open_time": 1707220800,
@@ -3066,7 +3066,7 @@
       "exit_reason": "TP_HIT"
     },
     {
-      "id": "fbb8b648-c743-41ec-9a1b-f282aa9dbcc2",
+      "id": "0e655a8a-f4cf-4bb5-ae1b-cafda8162fea",
       "symbol": "USDCHF",
       "action": "BuyLimit",
       "open_time": 1707429600,
@@ -3081,7 +3081,7 @@
       "exit_reason": "TP_HIT"
     },
     {
-      "id": "45e975d3-d4fb-427f-97c5-d27f36e84947",
+      "id": "5d768d7c-e1ef-443c-8e0a-d643e44c69f8",
       "symbol": "USDCHF",
       "action": "SellLimit",
       "open_time": 1708329600,
@@ -3096,7 +3096,7 @@
       "exit_reason": "TP_HIT"
     },
     {
-      "id": "befe87ba-b001-42e8-8a96-c303d9c8fa29",
+      "id": "2d329fad-6d4b-4f2a-881d-f9f222ac5693",
       "symbol": "USDCHF",
       "action": "BuyLimit",
       "open_time": 1708660800,
@@ -3111,7 +3111,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "f9f0214d-36ae-4c12-accf-54cc82c514f9",
+      "id": "2c021145-d873-4a36-b78e-28d13e22e972",
       "symbol": "USDCHF",
       "action": "SellLimit",
       "open_time": 1712224800,
@@ -3126,7 +3126,7 @@
       "exit_reason": "TP_HIT"
     },
     {
-      "id": "2f6ef77c-6f74-4760-9e9d-de1e9f5b5c23",
+      "id": "dc2748ec-42ee-4246-9b22-8e7cba136066",
       "symbol": "USDCHF",
       "action": "BuyLimit",
       "open_time": 1712595600,
@@ -3141,7 +3141,7 @@
       "exit_reason": "TP_HIT"
     },
     {
-      "id": "181898ef-22c4-4bb0-98a6-f60d069b6048",
+      "id": "d8df280b-49a4-428a-8a37-109803eeeabf",
       "symbol": "USDCHF",
       "action": "BuyLimit",
       "open_time": 1713182400,
@@ -3156,7 +3156,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "1e2cf7c8-ce8d-4a3e-a5fe-e15d9f751819",
+      "id": "70253a69-24ec-49e8-bcd7-8f0d146bf7fd",
       "symbol": "USDCHF",
       "action": "BuyLimit",
       "open_time": 1714017600,
@@ -3171,7 +3171,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "0861ee6a-5137-46cc-a109-3a94e136ada5",
+      "id": "3a9d80ce-f978-475e-98db-b2e7f402a14c",
       "symbol": "USDCHF",
       "action": "SellLimit",
       "open_time": 1714111200,
@@ -3186,7 +3186,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "35c63b15-1fa4-4dcf-a69f-ffb4e5636599",
+      "id": "a5f3766a-7135-4e29-b729-9e73eba3f15b",
       "symbol": "USDCHF",
       "action": "SellLimit",
       "open_time": 1736222400,
@@ -3201,7 +3201,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "4bc06c9b-6c9f-4376-bd41-2d6ad3c98014",
+      "id": "e2cdd7ae-85e5-4e93-94d2-4c4eeafecd31",
       "symbol": "USDCHF",
       "action": "BuyLimit",
       "open_time": 1736733600,
@@ -3216,7 +3216,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "34c6c7ce-4eb1-442f-8d69-771ba7627353",
+      "id": "5d5921c0-ef91-45b3-be26-3172f1d1f7bd",
       "symbol": "USDCHF",
       "action": "SellLimit",
       "open_time": 1737018000,
@@ -3231,7 +3231,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "84d154c8-c136-4e62-91f0-387e6ebcbaac",
+      "id": "c689ce17-bed4-4261-8b74-2125dcc5efd0",
       "symbol": "USDCHF",
       "action": "BuyLimit",
       "open_time": 1737338400,
@@ -3246,7 +3246,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "6ee2ca1e-b169-4db0-ac0b-e41d2cebfaca",
+      "id": "0cac56fa-aec1-4234-82a4-2205f38ccc00",
       "symbol": "USDCHF",
       "action": "SellLimit",
       "open_time": 1737432000,
@@ -3261,7 +3261,7 @@
       "exit_reason": "TP_HIT"
     },
     {
-      "id": "c9521e0d-7be9-44b8-ba51-57ede43c9e69",
+      "id": "826a28cc-0fbe-4a2c-bdf7-b85f09e06134",
       "symbol": "USDCHF",
       "action": "SellLimit",
       "open_time": 1738018800,
@@ -3276,7 +3276,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "dc49e89d-c10d-4ff1-8cb3-3d8fe5bf6df3",
+      "id": "6e995bdf-b5c9-4709-baa4-6e9a1e12afb6",
       "symbol": "USDCHF",
       "action": "BuyLimit",
       "open_time": 1739275200,
@@ -3291,7 +3291,7 @@
       "exit_reason": "TP_HIT"
     },
     {
-      "id": "a9abb245-a874-4a0b-a9d8-080b0d2798ab",
+      "id": "7abc398c-a36a-4f4b-858e-2109437afd0e",
       "symbol": "USDCHF",
       "action": "SellLimit",
       "open_time": 1740114000,
@@ -3306,7 +3306,7 @@
       "exit_reason": "TP_HIT"
     },
     {
-      "id": "27c16058-c471-41b7-bc4e-1e665c6115c3",
+      "id": "db92227b-3cfc-47fe-9db5-998bfacf5a47",
       "symbol": "USDCHF",
       "action": "BuyLimit",
       "open_time": 1740988800,
@@ -3321,7 +3321,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "0444e615-9f44-42cc-82bb-2d40bb48f1fb",
+      "id": "c6f3a3ca-ceb0-4660-b083-f7259320856d",
       "symbol": "USDCHF",
       "action": "BuyLimit",
       "open_time": 1741237200,
@@ -3336,7 +3336,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "dab999c0-61e3-47a6-b5df-ff828e127cd6",
+      "id": "8d33bddf-c693-4415-bf37-b7c8ec89cf9c",
       "symbol": "USDCHF",
       "action": "BuyLimit",
       "open_time": 1741669200,
@@ -3351,7 +3351,7 @@
       "exit_reason": "TP_HIT"
     },
     {
-      "id": "696684d6-f7f4-4967-937f-86d74ed4c0c6",
+      "id": "601a59e3-7c1f-4784-b884-7e48b8bde744",
       "symbol": "USDCHF",
       "action": "BuyLimit",
       "open_time": 1741784400,
@@ -3366,7 +3366,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "752bdab4-eabf-4a82-ae4a-4a5664915af4",
+      "id": "3d69dabc-c741-4c9b-a363-b90fda3db339",
       "symbol": "USDCHF",
       "action": "SellLimit",
       "open_time": 1742360400,
@@ -3381,7 +3381,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "8f174b73-4cdb-4241-9921-88cbf9359e91",
+      "id": "d047f61c-93d7-473a-b269-ce3e5b21e040",
       "symbol": "USDCHF",
       "action": "BuyLimit",
       "open_time": 1742518800,
@@ -3396,7 +3396,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "f4d43949-a11b-4b9f-8afc-2f72fbc0e5b6",
+      "id": "51e63bc1-3ab9-4b90-8e4c-d8a732e63190",
       "symbol": "USDCHF",
       "action": "SellLimit",
       "open_time": 1744005600,
@@ -3411,7 +3411,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "8de058c5-818b-4520-95e5-24e84fd8a187",
+      "id": "74dacf79-9456-42f8-b8c6-00cb2191dc9b",
       "symbol": "USDCHF",
       "action": "SellLimit",
       "open_time": 1744689600,
@@ -3426,7 +3426,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "8aa27a90-4e06-4a5a-88c5-cf2d87ea99bc",
+      "id": "44cc4f31-2658-4f63-b5f4-a6371e0ae525",
       "symbol": "USDCHF",
       "action": "BuyLimit",
       "open_time": 1745460000,
@@ -3441,7 +3441,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "aca7be1e-13c9-40f4-8923-5438bc4f4d40",
+      "id": "da16be28-b5f2-4e70-b1d8-133432b9c714",
       "symbol": "USDCHF",
       "action": "BuyLimit",
       "open_time": 1747069200,
@@ -3456,7 +3456,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "84bee901-41c1-461a-8793-5a347d17038e",
+      "id": "c0313fac-2c58-4eee-820a-752f7a5d269c",
       "symbol": "USDCHF",
       "action": "BuyLimit",
       "open_time": 1747998000,
@@ -3471,7 +3471,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "aeb59123-422f-4b25-984a-7e067d038bcf",
+      "id": "e4a23b70-e301-4033-8af3-be17fd4a7cb8",
       "symbol": "USDCHF",
       "action": "SellLimit",
       "open_time": 1748307600,
@@ -3486,7 +3486,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "1f5037bd-5f72-4d41-a3b9-1423b6606ab3",
+      "id": "06afeb9d-dca1-48b2-b552-9d7bb4833e68",
       "symbol": "USDCHF",
       "action": "BuyLimit",
       "open_time": 1749448800,
@@ -3501,7 +3501,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "e7c2b544-d456-4597-b0e0-8ac9f41e1a7f",
+      "id": "d8f9c8be-b4bc-4465-b352-5416a9d8cbf9",
       "symbol": "USDCHF",
       "action": "BuyLimit",
       "open_time": 1750053600,
@@ -3516,7 +3516,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "a2d84b03-255c-4bbd-8e43-0939375a7251",
+      "id": "19f479a2-5b80-4c97-89dc-b082d2a6963e",
       "symbol": "USDCHF",
       "action": "SellLimit",
       "open_time": 1751454000,
@@ -3531,7 +3531,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "f12b0ae6-20e5-44d4-b489-b890dfa47693",
+      "id": "1a69e876-db28-4395-b547-dc88d3890089",
       "symbol": "USDCHF",
       "action": "BuyLimit",
       "open_time": 1751590800,
@@ -3546,7 +3546,7 @@
       "exit_reason": "TP_HIT"
     },
     {
-      "id": "c84d83cd-8bd8-451d-9455-ac82a00d4705",
+      "id": "43d5dd25-36af-481b-a844-c837d3647c8e",
       "symbol": "USDCHF",
       "action": "SellLimit",
       "open_time": 1753052400,
@@ -3561,7 +3561,7 @@
       "exit_reason": "TP_HIT"
     },
     {
-      "id": "67f65b31-5369-4e49-80ee-523d5452f8f6",
+      "id": "3fbd66da-d790-484c-ad53-70b90f4c9c32",
       "symbol": "USDCHF",
       "action": "SellLimit",
       "open_time": 1753142400,
@@ -3576,7 +3576,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "a64e56f8-5156-43b4-9c7f-5dd85513a919",
+      "id": "f55546be-632c-4e5e-9a91-023f72732fed",
       "symbol": "USDCHF",
       "action": "BuyLimit",
       "open_time": 1775574000,
@@ -3591,7 +3591,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "1e85b7ba-f917-461d-84b0-c6b776c5dbeb",
+      "id": "31e03593-3c1f-436f-966f-8e2629ce248c",
       "symbol": "USDCHF",
       "action": "SellLimit",
       "open_time": 1776211200,
@@ -3606,7 +3606,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "29e6beef-5c7f-485d-a947-7601e1b9e6d8",
+      "id": "65afd7fe-8375-4432-832f-b63d00c5ae8f",
       "symbol": "USDCHF",
       "action": "BuyLimit",
       "open_time": 1776819600,
@@ -3621,7 +3621,7 @@
       "exit_reason": "TP_HIT"
     },
     {
-      "id": "3e3e4075-6157-4d88-ab83-c5db67af7c5f",
+      "id": "0d605a75-44d1-4b59-bf56-89ed3df757b9",
       "symbol": "USDCHF",
       "action": "BuyLimit",
       "open_time": 1777402800,
@@ -3636,7 +3636,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "2cb19e26-aaf3-49d2-97af-a7e51faafae1",
+      "id": "ce74c631-d8ac-42ba-9e51-b96a874a5f6c",
       "symbol": "USDCHF",
       "action": "BuyLimit",
       "open_time": 1777921200,
@@ -3651,7 +3651,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "4a36dffb-04c8-4c47-b4aa-b9f3519f2152",
+      "id": "a3f53e02-c971-4c4d-8da9-4f327ad359ba",
       "symbol": "USDCHF",
       "action": "SellLimit",
       "open_time": 1778515200,
@@ -3666,7 +3666,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "6065a5ba-bf96-4def-931f-f2d940fba5be",
+      "id": "ebb80273-2f1a-4417-80f7-18c0beac815f",
       "symbol": "USDCHF",
       "action": "BuyLimit",
       "open_time": 1778720400,
@@ -3681,7 +3681,7 @@
       "exit_reason": "TP_HIT"
     },
     {
-      "id": "d973c18c-dc7f-43d0-8c70-dc1ed1215ba4",
+      "id": "6696f292-3958-4b78-9a22-246398b2bce7",
       "symbol": "USDCHF",
       "action": "BuyLimit",
       "open_time": 1779066000,
@@ -3696,7 +3696,7 @@
       "exit_reason": "TP_HIT"
     },
     {
-      "id": "d16f7706-a72e-4f5c-9314-5b843faa72f4",
+      "id": "d8f071e4-2513-4b05-a6f8-ec85c98d0b6a",
       "symbol": "USDCHF",
       "action": "BuyLimit",
       "open_time": 1779238800,
@@ -3711,7 +3711,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "0b82f1e6-c05b-4936-8986-88d73c2748cb",
+      "id": "43022f63-4fbc-4005-a97f-3cff3c29cac7",
       "symbol": "USDCHF",
       "action": "BuyLimit",
       "open_time": 1779930000,
@@ -3726,7 +3726,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "f65c2876-79ee-4e79-a0bc-cd4a1df2bc94",
+      "id": "b2cd1efe-9c29-4473-a991-1ffd15649fbd",
       "symbol": "USDCHF",
       "action": "SellLimit",
       "open_time": 1780617600,
@@ -3741,7 +3741,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "f83b324d-53d2-4f28-8c86-acc51f02e69b",
+      "id": "b431ae2d-f3dd-4037-af55-f7d1a6b11b3c",
       "symbol": "USDCHF",
       "action": "BuyLimit",
       "open_time": 1780966800,
@@ -3756,7 +3756,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "41198c0c-4f0f-416f-b6bc-3d47f5b82a74",
+      "id": "99a82562-3a7c-4c87-ac1c-b484c058c5cf",
       "symbol": "USDCHF",
       "action": "SellLimit",
       "open_time": 1781240400,
@@ -3771,7 +3771,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "836b4e57-e458-4927-a6d9-3e78527e7793",
+      "id": "fcd8d7e1-e9d7-4181-b494-99f0d1dc4879",
       "symbol": "USDCHF",
       "action": "BuyLimit",
       "open_time": 1782352800,
@@ -3786,7 +3786,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "e2461102-c793-43ee-a8ce-b13cd85b4ca3",
+      "id": "450f1f76-b8df-48d1-882a-10375fabafa2",
       "symbol": "USDCHF",
       "action": "SellLimit",
       "open_time": 1783609200,
@@ -3801,7 +3801,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "d4aa9690-84a5-42df-aa1e-a55298f5a8c5",
+      "id": "c689bf29-7ce4-465a-8ea9-dd933c79e093",
       "symbol": "USDCHF",
       "action": "BuyLimit",
       "open_time": 1783947600,
@@ -3816,7 +3816,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "aee54920-9677-4277-8a2b-13393d489584",
+      "id": "2ac8ef6e-c7ac-4613-880e-f9d489d816f1",
       "symbol": "USDCHF",
       "action": "BuyLimit",
       "open_time": 1784250000,
@@ -3831,7 +3831,7 @@
       "exit_reason": "TP_HIT"
     },
     {
-      "id": "1447fa0c-f567-43ae-b4ac-a935066a5c54",
+      "id": "f223cbae-ed3e-4cb2-9f58-5ccae05b4b3d",
       "symbol": "USDCHF",
       "action": "SellLimit",
       "open_time": 1785153600,
@@ -3846,7 +3846,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "6c076d61-d28e-4174-90f8-d16e396e6abf",
+      "id": "528c9f4f-681a-4d65-9512-459bac0a17fa",
       "symbol": "USDCHF",
       "action": "BuyLimit",
       "open_time": 1785348000,
@@ -3861,7 +3861,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "f0d77b06-1cc2-44c8-a205-c9ddbb4d7770",
+      "id": "3bbcd656-3a93-4e45-9eb6-290ca6eda9b3",
       "symbol": "USDCHF",
       "action": "BuyLimit",
       "open_time": 1786064400,

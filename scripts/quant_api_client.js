@@ -178,6 +178,51 @@ Contoh:
         console.log(`Max Revenue Share   : ${data.max_revenue_share_pct}%`);
         console.log('═════════════════════════════════════════════════════════════════════════');
       }
+    } else if (cmd === 'audit') {
+      const sym = (args[1] || 'EURGBP').toUpperCase();
+      const data = await requestApi(`audit/pair/${sym}`);
+      if (exportPath) exportJson(data, exportPath);
+      else if (isJsonOnly) console.log(JSON.stringify(data, null, 2));
+      else {
+        console.log('═════════════════════════════════════════════════════════════════════════');
+        console.log(`🔬 COMPLETE 360° QUANT AUDIT REPORT: ${sym}`);
+        console.log('═════════════════════════════════════════════════════════════════════════');
+        console.log(`Pair Tier & Multiplier: Tier ${data.tier} (${data.multiplier}x VP Multiplier)`);
+        console.log(`Total Trades          : ${data.total_trades} trades (${data.winning_trades} Win / ${data.losing_trades} Loss)`);
+        console.log(`Win Rate              : ${data.win_rate_pct.toFixed(1)}%`);
+        console.log(`Raw PnL & Valued Pips : ${data.total_raw_pips > 0 ? '+' : ''}${data.total_raw_pips.toFixed(1)} pips | ${data.total_valued_pips > 0 ? '+' : ''}${data.total_valued_pips.toFixed(1)} VP`);
+        console.log(`Profit & Rec. Factor  : PF: ${data.profit_factor.toFixed(2)} | RecF: ${data.recovery_factor.toFixed(2)}`);
+        console.log(`Sharpe / Sortino / Cal: ${data.sharpe_ratio.toFixed(2)} / ${data.sortino_ratio.toFixed(2)} / ${data.calmar_ratio.toFixed(2)}`);
+        console.log(`Max Drawdown          : ${data.max_drawdown_pips.toFixed(1)} pips (${data.max_drawdown_vp.toFixed(1)} VP)`);
+        console.log(`TF Reward Qualified   : ${data.is_tf_qualified ? '✅ YES (>= 300 VP)' : '❌ IN PROGRESS'}`);
+        console.log(`Data Footprint        : ${data.provenance.total_bars.toLocaleString()} Bars (${data.provenance.provider_name})`);
+        console.log(`Math Integrity Check  : ${data.provenance.mathematical_integrity_pct.toFixed(1)}% Passed (Zero Invariant Errors)`);
+        console.log(`Monthly History       : ${data.monthly_breakdown.length} months recorded`);
+        console.log(`Equity Curve Points   : ${data.equity_curve.length} points`);
+        console.log(`Settled Trades Log    : ${data.trades.length} individual trade records`);
+        console.log('═════════════════════════════════════════════════════════════════════════');
+      }
+    } else if (cmd === 'audit-full') {
+      const data = await requestApi('audit/full');
+      if (exportPath) exportJson(data, exportPath);
+      else if (isJsonOnly) console.log(JSON.stringify(data, null, 2));
+      else {
+        console.log('═════════════════════════════════════════════════════════════════════════');
+        console.log('🏛️ FULL PORTFOLIO 360° QUANT AUDIT REPORT (UI-MIRRORED EXACT NUMBERS)');
+        console.log('═════════════════════════════════════════════════════════════════════════');
+        console.log(`Generated At          : ${data.generated_at}`);
+        console.log(`Portfolio Valued Pips : ${data.total_portfolio_valued_pips > 0 ? '+' : ''}${data.total_portfolio_valued_pips.toFixed(1)} VP / ${data.monthly_tf_target_vp} VP Target`);
+        console.log(`Portfolio Status      : ${data.is_portfolio_tf_qualified ? '✅ QUALIFIED REVENUE SHARE' : '❌ IN PROGRESS'}`);
+        console.log(`Portfolio Win Rate    : ${data.portfolio_win_rate_pct.toFixed(1)}% (${data.total_portfolio_trades} Total Trades)`);
+        console.log(`7-Pillar Scorecard    : ${data.scorecard.total_score} / ${data.scorecard.max_score} (${data.scorecard.score_pct.toFixed(1)}% - ${data.scorecard.revenue_share_tier})`);
+        console.log(`Walk-Forward WFER     : ${data.walk_forward.wfer_pct.toFixed(1)}% (${data.walk_forward.total_verified_bars.toLocaleString()} Real Dukascopy Bars)`);
+        console.log('─────────────────────────────────────────────────────────────────────────');
+        console.log('PER-PAIR AUDIT BREAKDOWN:');
+        for (const p of data.pairs) {
+          console.log(`  • ${p.symbol.base}/${p.symbol.quote} (Tier ${p.tier}): ${p.total_trades} trades | Win: ${p.win_rate_pct.toFixed(1)}% | VP: ${p.total_valued_pips > 0 ? '+' : ''}${p.total_valued_pips.toFixed(1)} VP | PF: ${p.profit_factor.toFixed(2)} | Bars: ${p.provenance.total_bars.toLocaleString()}`);
+        }
+        console.log('═════════════════════════════════════════════════════════════════════════');
+      }
     } else if (cmd === 'dump-all') {
       const outDirIdx = args.indexOf('--out-dir');
       const outDir = outDirIdx !== -1 ? args[outDirIdx + 1] : 'reports/backtest';

@@ -26,6 +26,8 @@ pub fn create_router(state: Arc<AppState>) -> Router {
         .route("/api/market/candles/:symbol", get(market_candles_handler))
         .route("/api/market/sync/:symbol", get(sync_delta_handler))
         .route("/api/signals/scan", get(signals_scan_handler))
+        .route("/api/audit/full", get(audit_full_handler))
+        .route("/api/audit/pair/:symbol", get(audit_pair_handler))
         .layer(CorsLayer::permissive())
         .with_state(state)
 }

@@ -66,7 +66,7 @@
   },
   "trades": [
     {
-      "id": "5d242fc5-68b7-4507-aaa7-65fa2290f252",
+      "id": "3cb2c178-7571-4375-ab26-c9dc2e9e1ab2",
       "symbol": "NZDUSD",
       "action": "SellLimit",
       "open_time": 1420502400,
@@ -81,7 +81,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "0ff1beb3-a7de-42c7-be5f-9e245617a2ae",
+      "id": "e20ccceb-0607-47ca-8b82-28a91fab7fcb",
       "symbol": "NZDUSD",
       "action": "BuyLimit",
       "open_time": 1420779600,
@@ -96,7 +96,7 @@
       "exit_reason": "TP_HIT"
     },
     {
-      "id": "0cfb1d2f-ab91-42d4-9ad6-09eedeb764a6",
+      "id": "10500954-045e-4560-b2fd-559765a3ce76",
       "symbol": "NZDUSD",
       "action": "SellLimit",
       "open_time": 1421110800,
@@ -111,7 +111,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "8c17a020-94b5-4b83-b0f0-8b7659457d22",
+      "id": "696ac2e3-ebdc-4952-9f71-f19133aacd2c",
       "symbol": "NZDUSD",
       "action": "BuyLimit",
       "open_time": 1421373600,
@@ -126,7 +126,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "bdfd8f59-abb3-4d4e-b928-22f59fdf819f",
+      "id": "45a9866f-bb63-4d34-95e8-be6df3e4523a",
       "symbol": "NZDUSD",
       "action": "SellLimit",
       "open_time": 1422331200,
@@ -141,7 +141,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "6af5e12a-890d-4097-877b-9e3feb8bd8e4",
+      "id": "58db2982-a869-4396-9f06-f337e9eff8a1",
       "symbol": "NZDUSD",
       "action": "BuyLimit",
       "open_time": 1423076400,
@@ -156,7 +156,7 @@
       "exit_reason": "TP_HIT"
     },
     {
-      "id": "9ae05adc-b477-42cc-86ef-a4953554e6cd",
+      "id": "9680f29e-5376-4677-89e3-4c611d42e714",
       "symbol": "NZDUSD",
       "action": "SellLimit",
       "open_time": 1424412000,
@@ -171,7 +171,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "807f642d-0fb4-4aef-b3e7-6fbc37457bcd",
+      "id": "776cde03-40b4-4adf-8973-9b0d379f4037",
       "symbol": "NZDUSD",
       "action": "BuyLimit",
       "open_time": 1424433600,
@@ -186,7 +186,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "6eea0b1b-8802-476f-b0aa-8ed7d848eb97",
+      "id": "a9160193-2534-4aa8-ab7d-a4bcf69b8e13",
       "symbol": "NZDUSD",
       "action": "SellLimit",
       "open_time": 1424804400,
@@ -201,7 +201,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "cc055bad-45e7-4e43-99a6-7acb1e6caf21",
+      "id": "318d46c7-65a9-4391-87d9-b632b19c7b5c",
       "symbol": "NZDUSD",
       "action": "BuyLimit",
       "open_time": 1425495600,
@@ -216,7 +216,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "61bf759e-d1f0-46c0-a8fc-63ece80d3f03",
+      "id": "8b53cb8e-ced2-4c73-8ce3-afc149d9edae",
       "symbol": "NZDUSD",
       "action": "SellLimit",
       "open_time": 1426046400,
@@ -231,7 +231,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "74b72600-0dc2-40f6-b864-92cdf6463d57",
+      "id": "95b377c5-aecc-4e9e-abe1-8fad94e9debc",
       "symbol": "NZDUSD",
       "action": "SellLimit",
       "open_time": 1426464000,
@@ -246,7 +246,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "afa7beb0-63a2-44ef-aaf3-c47c6219857f",
+      "id": "0e18ab4b-3f58-420d-b15c-84a6c752cb84",
       "symbol": "NZDUSD",
       "action": "BuyLimit",
       "open_time": 1428516000,
@@ -261,7 +261,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "a6e875ef-c9e1-4deb-ae4a-5a2dddb2b5aa",
+      "id": "893fe579-0dd7-4563-baf0-d9875ce9d956",
       "symbol": "NZDUSD",
       "action": "SellLimit",
       "open_time": 1429581600,
@@ -276,7 +276,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "8b4513f5-00e2-474d-86ce-d6ea40fef6ca",
+      "id": "9540d619-b3de-4327-8bfb-25582c03438d",
       "symbol": "NZDUSD",
       "action": "BuyLimit",
       "open_time": 1430190000,
@@ -291,7 +291,7 @@
       "exit_reason": "TP_HIT"
     },
     {
-      "id": "4f0f0c5f-bf5a-4ad8-8802-72ba999a49d5",
+      "id": "0f678878-9123-433b-b069-af36ef751ea2",
       "symbol": "NZDUSD",
       "action": "BuyLimit",
       "open_time": 1430269200,
@@ -306,7 +306,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "1b296d7d-ed8d-4997-9ef8-83bb948ac4ae",
+      "id": "89456919-1a6f-4396-a5b8-626803ad4877",
       "symbol": "NZDUSD",
       "action": "SellLimit",
       "open_time": 1430910000,
@@ -321,7 +321,7 @@
       "exit_reason": "TP_HIT"
     },
     {
-      "id": "680b8817-55b8-4df1-aa90-473b491509b5",
+      "id": "642f03b1-d188-4edf-b4e2-8353b47fd005",
       "symbol": "NZDUSD",
       "action": "SellLimit",
       "open_time": 1432198800,
@@ -336,7 +336,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "ebcb292a-ddc0-4ad2-8158-1029b497a148",
+      "id": "4f1b40f3-0526-4e39-bc3f-63d14de27358",
       "symbol": "NZDUSD",
       "action": "SellLimit",
       "open_time": 1432749600,
@@ -351,7 +351,7 @@
       "exit_reason": "TP_HIT"
     },
     {
-      "id": "b518227e-0884-4e76-8f3d-de586300fad3",
+      "id": "93ec7a14-92b6-418d-b487-efd7df3471f9",
       "symbol": "NZDUSD",
       "action": "SellLimit",
       "open_time": 1432850400,
@@ -366,7 +366,7 @@
       "exit_reason": "TP_HIT"
     },
     {
-      "id": "62f79702-5761-49ae-943b-806734f1c9de",
+      "id": "772674d4-e6fb-47cc-89ce-d5e725dafb0d",
       "symbol": "NZDUSD",
       "action": "BuyLimit",
       "open_time": 1436475600,
@@ -381,7 +381,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "8c51e7ab-9641-4746-8709-9e6559d1d735",
+      "id": "a248cac6-d39b-422c-88ef-a3eb50f131e0",
       "symbol": "NZDUSD",
       "action": "SellLimit",
       "open_time": 1436745600,
@@ -396,7 +396,7 @@
       "exit_reason": "TP_HIT"
     },
     {
-      "id": "02864686-014b-401e-ba53-91650e34ac08",
+      "id": "39bbfb02-4158-4a45-9f2b-c51ce4db7232",
       "symbol": "NZDUSD",
       "action": "BuyLimit",
       "open_time": 1437501600,
@@ -411,7 +411,7 @@
       "exit_reason": "TP_HIT"
     },
     {
-      "id": "dbdbb62d-ba22-4375-a9a2-836953a250aa",
+      "id": "57a75344-b31f-4538-9e81-fa76510cda82",
       "symbol": "NZDUSD",
       "action": "SellLimit",
       "open_time": 1460091600,
@@ -426,7 +426,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "483d3ec1-195c-40d0-9746-cb066aa49435",
+      "id": "1bed38c8-34ab-41c4-8e07-d6a78bfabcad",
       "symbol": "NZDUSD",
       "action": "BuyLimit",
       "open_time": 1460541600,
@@ -441,7 +441,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "b7df3bb2-0af3-49d6-8167-7575993fee65",
+      "id": "7d07de09-a901-4338-9185-897865bdd341",
       "symbol": "NZDUSD",
       "action": "SellLimit",
       "open_time": 1460649600,
@@ -456,7 +456,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "f8ebc329-6c8a-4993-baa3-9e06d2016edd",
+      "id": "d6966002-aed3-4279-a549-324eaf5f784d",
       "symbol": "NZDUSD",
       "action": "BuyLimit",
       "open_time": 1461668400,
@@ -471,7 +471,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "d30f1f78-1438-476f-a400-17da2253a292",
+      "id": "183cd325-5ea5-4163-a280-6b03f10a5a3e",
       "symbol": "NZDUSD",
       "action": "BuyLimit",
       "open_time": 1461888000,
@@ -486,7 +486,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "1e11c8e6-39ad-4b21-954a-838e30f78abc",
+      "id": "73a1f4d9-00a8-419c-96b7-5fd1b0e8c794",
       "symbol": "NZDUSD",
       "action": "BuyLimit",
       "open_time": 1465480800,
@@ -501,7 +501,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "64c81b4b-8b75-480c-be2c-38f0f2acdf2d",
+      "id": "64bb5607-ca37-438e-a3a2-bda013cef398",
       "symbol": "NZDUSD",
       "action": "BuyLimit",
       "open_time": 1466013600,
@@ -516,7 +516,7 @@
       "exit_reason": "TP_HIT"
     },
     {
-      "id": "79e65896-51a8-4f86-80aa-86550464cb8a",
+      "id": "4f2c2666-2671-4667-a5c1-6542ebb2c485",
       "symbol": "NZDUSD",
       "action": "BuyLimit",
       "open_time": 1466532000,
@@ -531,7 +531,7 @@
       "exit_reason": "TP_HIT"
     },
     {
-      "id": "28042c16-1dd8-4545-9db6-ddafcbf734be",
+      "id": "32811303-d943-4eb6-9cd9-2bc26097e0b9",
       "symbol": "NZDUSD",
       "action": "BuyLimit",
       "open_time": 1466658000,
@@ -546,7 +546,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "8c885287-8f15-4c2d-9497-ef95b7131f48",
+      "id": "c1440112-4265-45d2-8e71-59a547994129",
       "symbol": "NZDUSD",
       "action": "BuyLimit",
       "open_time": 1468346400,
@@ -561,7 +561,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "4d34986b-f9ae-4965-b66c-11bcee119f00",
+      "id": "139b5d60-0e5e-478d-98b8-2345a352c20b",
       "symbol": "NZDUSD",
       "action": "SellLimit",
       "open_time": 1469440800,
@@ -576,7 +576,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "d6194b2d-0ade-40ac-b932-0cba74bc55eb",
+      "id": "34bf0445-9362-4745-a6eb-f99063aa1e07",
       "symbol": "NZDUSD",
       "action": "BuyLimit",
       "open_time": 1469566800,
@@ -591,7 +591,7 @@
       "exit_reason": "TP_HIT"
     },
     {
-      "id": "ac0bd730-2445-4915-b6ca-d28697b6c0a1",
+      "id": "57933194-63a4-47cd-af74-5d81463afccf",
       "symbol": "NZDUSD",
       "action": "SellLimit",
       "open_time": 1470286800,
@@ -606,7 +606,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "abc45024-b1be-4cb1-999d-e7879b049648",
+      "id": "52eb1b03-b7e1-46f6-bbb0-8ff45f962089",
       "symbol": "NZDUSD",
       "action": "BuyLimit",
       "open_time": 1470916800,
@@ -621,7 +621,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "43255e9b-45d5-4176-b1a0-722c6f73c11c",
+      "id": "cd1f530c-6756-4bf6-b487-acc354c8b1c2",
       "symbol": "NZDUSD",
       "action": "BuyLimit",
       "open_time": 1471366800,
@@ -636,7 +636,7 @@
       "exit_reason": "TP_HIT"
     },
     {
-      "id": "5a0fe536-38c3-4d8c-ae73-e4bc2bb59ac0",
+      "id": "2de0fc9c-1c56-47d2-b601-ef24ee1072df",
       "symbol": "NZDUSD",
       "action": "BuyLimit",
       "open_time": 1472065200,
@@ -651,7 +651,7 @@
       "exit_reason": "TP_HIT"
     },
     {
-      "id": "c957f0a8-cf84-4083-97df-d7b0197306fa",
+      "id": "87594478-5e33-4207-89de-0a7dfc7bd337",
       "symbol": "NZDUSD",
       "action": "BuyLimit",
       "open_time": 1472641200,
@@ -666,7 +666,7 @@
       "exit_reason": "TP_HIT"
     },
     {
-      "id": "8b07ffae-2cbb-4448-91d0-d0dffc2d645e",
+      "id": "c78e5601-26cc-4e6a-9332-bf18c1d96a53",
       "symbol": "NZDUSD",
       "action": "BuyLimit",
       "open_time": 1473267600,
@@ -681,7 +681,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "8606af85-f449-4aeb-8d90-a1b8796c3573",
+      "id": "cffd1a5a-4a70-4e0f-8587-b58ae6848e79",
       "symbol": "NZDUSD",
       "action": "SellLimit",
       "open_time": 1474434000,
@@ -696,7 +696,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "bc489934-80f8-4ae5-a9f1-c518afe71500",
+      "id": "a217719c-ee9d-4c4e-b292-a70dad61faff",
       "symbol": "NZDUSD",
       "action": "BuyLimit",
       "open_time": 1474531200,
@@ -711,7 +711,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "69bc7198-66b3-4aac-8a56-8709ed574a64",
+      "id": "8f9cccba-95a0-4f91-bc67-7691fe89a143",
       "symbol": "NZDUSD",
       "action": "BuyLimit",
       "open_time": 1475035200,
@@ -726,7 +726,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "3f5cb0ad-9e08-4e5d-a2c5-007f354629c7",
+      "id": "82acf5b5-50a8-4fae-a165-eb36aa934c59",
       "symbol": "NZDUSD",
       "action": "BuyLimit",
       "open_time": 1475467200,
@@ -741,7 +741,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "baa9860a-a9e6-4121-8ca3-8672f51a8080",
+      "id": "c147021e-bcec-4e10-8216-18f1b25f0bfa",
       "symbol": "NZDUSD",
       "action": "BuyLimit",
       "open_time": 1476093600,
@@ -756,7 +756,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "21bf04a5-c01b-4a44-bb09-93d46c3fc544",
+      "id": "aeefa77c-24d5-4406-9a78-e185f453a72f",
       "symbol": "NZDUSD",
       "action": "SellLimit",
       "open_time": 1476201600,
@@ -771,7 +771,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "2e5df607-c389-4a40-8aa0-6c07034e6f91",
+      "id": "7b09c3c0-7599-4b2e-8b59-54da34138dbc",
       "symbol": "NZDUSD",
       "action": "BuyLimit",
       "open_time": 1476810000,
@@ -786,7 +786,7 @@
       "exit_reason": "TP_HIT"
     },
     {
-      "id": "ba515c1c-6a6f-458f-8d10-768314eb3c68",
+      "id": "b754f33f-e22a-4fa6-8b9f-cb8f018b92d9",
       "symbol": "NZDUSD",
       "action": "SellLimit",
       "open_time": 1477353600,
@@ -801,7 +801,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "7a73a366-87af-4879-933c-0d78bccc3158",
+      "id": "f467c463-9d7c-40d0-ad77-2141009168cd",
       "symbol": "NZDUSD",
       "action": "SellLimit",
       "open_time": 1477548000,
@@ -816,7 +816,7 @@
       "exit_reason": "TP_HIT"
     },
     {
-      "id": "45f2af5a-9394-4c9f-8269-60fbf374c9e5",
+      "id": "8d94f797-3b7f-48f0-9a9d-04701bf25951",
       "symbol": "NZDUSD",
       "action": "SellLimit",
       "open_time": 1477641600,
@@ -831,7 +831,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "1c63355b-5021-4ed6-857d-88b2c96ee08c",
+      "id": "753504ca-fa78-46b0-a82d-3a869efc7b52",
       "symbol": "NZDUSD",
       "action": "BuyLimit",
       "open_time": 1499421600,
@@ -846,7 +846,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "f87ee381-508e-46c9-a7a4-7baeff669d8f",
+      "id": "c3c985eb-6243-499a-bebc-5d16f0e57090",
       "symbol": "NZDUSD",
       "action": "SellLimit",
       "open_time": 1500951600,
@@ -861,7 +861,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "824f3454-a238-4f68-843e-714b7e005639",
+      "id": "c6cb60fb-41dc-46f0-b9c4-8f8da2fa6cc6",
       "symbol": "NZDUSD",
       "action": "SellLimit",
       "open_time": 1501045200,
@@ -876,7 +876,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "5c58b282-3bdf-4f98-a772-50fca268e5fd",
+      "id": "7ee6d390-2f5f-4b9f-be64-17f8fa6149f9",
       "symbol": "NZDUSD",
       "action": "SellLimit",
       "open_time": 1504764000,
@@ -891,7 +891,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "8c81c329-4f8d-40d0-a91d-e2ebeebd8b08",
+      "id": "2edb99b9-624a-4e8c-8442-a8a82a4b246c",
       "symbol": "NZDUSD",
       "action": "SellLimit",
       "open_time": 1505185200,
@@ -906,7 +906,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "79d1de13-78f9-4cb6-9cf9-bf84cc0cccdc",
+      "id": "46bd5e5b-e6d4-4b8c-9c60-db2b085d31e3",
       "symbol": "NZDUSD",
       "action": "BuyLimit",
       "open_time": 1505235600,
@@ -921,7 +921,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "157aff7e-7e21-4ea2-ad5d-40aa8ae09dee",
+      "id": "b72ecc68-9a4e-407b-b793-7ce4ee9e9fca",
       "symbol": "NZDUSD",
       "action": "BuyLimit",
       "open_time": 1505732400,
@@ -936,7 +936,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "3f72e951-47d2-4a27-9973-b94ca4738b21",
+      "id": "bb427166-2558-47bb-a28f-72fa813737d4",
       "symbol": "NZDUSD",
       "action": "SellLimit",
       "open_time": 1507042800,
@@ -951,7 +951,7 @@
       "exit_reason": "TP_HIT"
     },
     {
-      "id": "988b5c32-388d-4881-923a-2879f5d49a15",
+      "id": "cec52cf6-843b-4b5c-a10a-61a70ce55bfd",
       "symbol": "NZDUSD",
       "action": "SellLimit",
       "open_time": 1507528800,
@@ -966,7 +966,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "a1d5b826-ca8b-4d95-826e-9058f35e3a26",
+      "id": "0e2746b0-b9cf-4eb4-a7fe-741bde2ba0fd",
       "symbol": "NZDUSD",
       "action": "BuyLimit",
       "open_time": 1507683600,
@@ -981,7 +981,7 @@
       "exit_reason": "TP_HIT"
     },
     {
-      "id": "0dc11b8e-a397-48ae-a75d-d7f5105e3351",
+      "id": "10fce1d1-1d73-4ae1-9e22-e85d4bbdfbc1",
       "symbol": "NZDUSD",
       "action": "BuyLimit",
       "open_time": 1508119200,
@@ -996,7 +996,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "c2e85d59-85e1-40d5-acd5-7593b45df9b4",
+      "id": "a401f50e-9055-4786-9283-8a9b896560ed",
       "symbol": "NZDUSD",
       "action": "SellLimit",
       "open_time": 1508785200,
@@ -1011,7 +1011,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "1e71040d-4a58-477d-a750-d36b0f00b4c7",
+      "id": "73f0b094-3b56-4f58-b89d-4087ad38c31d",
       "symbol": "NZDUSD",
       "action": "BuyLimit",
       "open_time": 1508810400,
@@ -1026,7 +1026,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "bb80970c-26b0-4bfa-85ba-87987c439d26",
+      "id": "d8fd2879-137f-468d-8ce2-d2553d1c2fc0",
       "symbol": "NZDUSD",
       "action": "SellLimit",
       "open_time": 1509444000,
@@ -1041,7 +1041,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "58787528-e6e6-43a0-8baf-b2a4ad75a588",
+      "id": "affbd935-e3dd-4038-99b3-d608479d5171",
       "symbol": "NZDUSD",
       "action": "SellLimit",
       "open_time": 1509487200,
@@ -1056,7 +1056,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "763afae8-bf70-4c00-bdf7-82ecc1f276f6",
+      "id": "9f5af8b4-654f-4260-9612-45a17cd49560",
       "symbol": "NZDUSD",
       "action": "BuyLimit",
       "open_time": 1509663600,
@@ -1071,7 +1071,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "d6fcdd22-2fa7-425f-9841-45997c7075a5",
+      "id": "80060aae-73ee-4cd7-a7fe-c18bd7b8f7b0",
       "symbol": "NZDUSD",
       "action": "SellLimit",
       "open_time": 1510110000,
@@ -1086,7 +1086,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "03327385-d28f-422c-9430-09800a726b10",
+      "id": "687c06ef-06d8-4547-89ca-5eaa2b1d622c",
       "symbol": "NZDUSD",
       "action": "SellLimit",
       "open_time": 1511139600,
@@ -1101,7 +1101,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "07024f2c-5888-4e20-b868-0a305deee0e7",
+      "id": "106b6f98-f2b0-4aba-934a-9d6770ad793a",
       "symbol": "NZDUSD",
       "action": "BuyLimit",
       "open_time": 1515006000,
@@ -1116,7 +1116,7 @@
       "exit_reason": "TP_HIT"
     },
     {
-      "id": "b092e10f-d1c1-4055-a9e4-f46213018d0e",
+      "id": "83aa3730-203e-4fbc-8ad0-4735d43cfec8",
       "symbol": "NZDUSD",
       "action": "BuyLimit",
       "open_time": 1515758400,
@@ -1131,7 +1131,7 @@
       "exit_reason": "TP_HIT"
     },
     {
-      "id": "78e2bd5b-1005-45f4-a376-7139d6863ee9",
+      "id": "6e9367f5-2098-4088-b0ad-6f83fe0fc8c4",
       "symbol": "NZDUSD",
       "action": "BuyLimit",
       "open_time": 1516881600,
@@ -1146,7 +1146,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "19e8a934-6ffb-4495-994c-62b19670beab",
+      "id": "b527782e-8a96-410f-b92d-1a9d88fbaad6",
       "symbol": "NZDUSD",
       "action": "BuyLimit",
       "open_time": 1538352000,
@@ -1161,7 +1161,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "984cbdaa-4def-489b-80d8-9003f1a0faf1",
+      "id": "716516d0-c16a-48f8-87ea-6684e0beeeb9",
       "symbol": "NZDUSD",
       "action": "BuyLimit",
       "open_time": 1539176400,
@@ -1176,7 +1176,7 @@
       "exit_reason": "TP_HIT"
     },
     {
-      "id": "356de4d9-8803-4ebe-8d4a-81fb2bfc1002",
+      "id": "bf1f3c03-6403-4b5f-a3a3-7763c355233a",
       "symbol": "NZDUSD",
       "action": "SellLimit",
       "open_time": 1539583200,
@@ -1191,7 +1191,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "8532a966-1847-4a72-9f58-2745bae0f392",
+      "id": "e75684ab-49e7-4a46-8f7f-9e5a44ea3f4d",
       "symbol": "NZDUSD",
       "action": "BuyLimit",
       "open_time": 1539738000,
@@ -1206,7 +1206,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "edda55f9-94a0-4c24-beb5-9d1502bec0e9",
+      "id": "5212a18f-52a8-476b-b029-deea653a4d26",
       "symbol": "NZDUSD",
       "action": "BuyLimit",
       "open_time": 1540162800,
@@ -1221,7 +1221,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "9e5729d1-2141-4252-b55f-4f0747274a48",
+      "id": "ae19c11d-c976-4118-a4ea-3ad5edb5a879",
       "symbol": "NZDUSD",
       "action": "SellLimit",
       "open_time": 1540522800,
@@ -1236,7 +1236,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "58cacd30-ee44-4731-ad29-759d92637cf8",
+      "id": "7b6cf002-01ea-4820-86f5-0dfee8b24628",
       "symbol": "NZDUSD",
       "action": "BuyLimit",
       "open_time": 1540908000,
@@ -1251,7 +1251,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "9573d9a2-49bc-4c40-832e-88fb1136f992",
+      "id": "696a8d25-4baa-404a-bccd-bc6ec88a712e",
       "symbol": "NZDUSD",
       "action": "SellLimit",
       "open_time": 1541005200,
@@ -1266,7 +1266,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "7fc6e261-71bb-47fa-ac54-52c1db6745d3",
+      "id": "480f7135-0c64-4ad7-8ff6-c1c4cc82d0cf",
       "symbol": "NZDUSD",
       "action": "BuyLimit",
       "open_time": 1542596400,
@@ -1281,7 +1281,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "f94361a1-802e-4d7d-a540-84e9543023bf",
+      "id": "42b2df59-e83c-4f05-8c74-cf7d88d50847",
       "symbol": "NZDUSD",
       "action": "SellLimit",
       "open_time": 1542898800,
@@ -1296,7 +1296,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "da4c000b-387d-4560-bbc0-4453d7b3d978",
+      "id": "c33d4a4f-d41d-44eb-ab7c-ece3310bfbe3",
       "symbol": "NZDUSD",
       "action": "BuyLimit",
       "open_time": 1543572000,
@@ -1311,7 +1311,7 @@
       "exit_reason": "TP_HIT"
     },
     {
-      "id": "ec9f9fe2-1ae2-4ca5-8be6-0bb4eeb6849c",
+      "id": "f731ce78-102c-44b5-a7a6-a0dbba3b5204",
       "symbol": "NZDUSD",
       "action": "SellLimit",
       "open_time": 1544101200,
@@ -1326,7 +1326,7 @@
       "exit_reason": "TP_HIT"
     },
     {
-      "id": "3851a68b-871a-4a3c-b425-daa398432f07",
+      "id": "8cddb5cf-bc5c-4aea-a704-1fc4d37da980",
       "symbol": "NZDUSD",
       "action": "BuyLimit",
       "open_time": 1547517600,
@@ -1341,7 +1341,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "9a0d26e2-885f-4daf-b97c-6195d9018f08",
+      "id": "be203c05-cd02-4d7c-99e7-411d31502b22",
       "symbol": "NZDUSD",
       "action": "SellLimit",
       "open_time": 1548356400,
@@ -1356,7 +1356,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "cf6999b1-0fd6-4bc6-bb14-45e991e6789e",
+      "id": "2934f19c-9e31-4240-b46b-c58fdb1b2a0e",
       "symbol": "NZDUSD",
       "action": "BuyLimit",
       "open_time": 1549382400,
@@ -1371,7 +1371,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "c6e863ce-5142-4dda-b663-82996f02bb73",
+      "id": "4f91ed33-1b5f-462b-9c7a-9dfaae683a8a",
       "symbol": "NZDUSD",
       "action": "BuyLimit",
       "open_time": 1550491200,
@@ -1386,7 +1386,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "ddcdf9a8-e5cb-41ce-b20a-6f073e51ebb2",
+      "id": "88f535b2-b358-47cf-8be6-ee94232a2f85",
       "symbol": "NZDUSD",
       "action": "SellLimit",
       "open_time": 1550548800,
@@ -1401,7 +1401,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "ac53610e-bd60-4778-b173-2cc4cb5fca40",
+      "id": "0c714ec4-fbc7-4371-81ed-8a04ac4d2358",
       "symbol": "NZDUSD",
       "action": "BuyLimit",
       "open_time": 1550678400,
@@ -1416,7 +1416,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "29bc473c-0db0-4687-af9a-263e6e7bf307",
+      "id": "3042d93f-0d16-4401-bbe1-9b120694b737",
       "symbol": "NZDUSD",
       "action": "BuyLimit",
       "open_time": 1554310800,
@@ -1431,7 +1431,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "ff5f5bef-d966-4650-a992-add138f760fa",
+      "id": "1fa712f5-6d7c-4e42-949e-5d0b79edcda0",
       "symbol": "NZDUSD",
       "action": "SellLimit",
       "open_time": 1555390800,
@@ -1446,7 +1446,7 @@
       "exit_reason": "TP_HIT"
     },
     {
-      "id": "9c6e1af8-e5cc-4559-9a7f-f23e26ac3fe5",
+      "id": "78e337d4-1495-4b9d-b47c-c0b27c11d9be",
       "symbol": "NZDUSD",
       "action": "BuyLimit",
       "open_time": 1580886000,
@@ -1461,7 +1461,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "56f516c2-f603-4813-b17b-35f8e1a3a4a6",
+      "id": "935bf8d3-2b3b-41bb-b895-0f10529ddd25",
       "symbol": "NZDUSD",
       "action": "SellLimit",
       "open_time": 1581948000,
@@ -1476,7 +1476,7 @@
       "exit_reason": "TP_HIT"
     },
     {
-      "id": "49fd2798-ebae-4c58-8459-c32900bca3ae",
+      "id": "09d79ec7-9dab-4d3c-850d-a093e9afc36a",
       "symbol": "NZDUSD",
       "action": "SellLimit",
       "open_time": 1582290000,
@@ -1491,7 +1491,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "a3d39d5d-20f0-4ae3-bba1-40c3f9575ef2",
+      "id": "b7264822-57ee-47fc-b3b2-9c9973678154",
       "symbol": "NZDUSD",
       "action": "BuyLimit",
       "open_time": 1582837200,
@@ -1506,7 +1506,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "82c61faa-f3b4-48b6-8777-194c298c588e",
+      "id": "c93ea3b0-a7a0-4d13-a85b-3f26a2878e2a",
       "symbol": "NZDUSD",
       "action": "BuyLimit",
       "open_time": 1583316000,
@@ -1521,7 +1521,7 @@
       "exit_reason": "TP_HIT"
     },
     {
-      "id": "34563070-c373-4b27-939a-a8d4db451f42",
+      "id": "f1da653d-9397-4799-99ed-1d94c9a4c798",
       "symbol": "NZDUSD",
       "action": "SellLimit",
       "open_time": 1583902800,
@@ -1536,7 +1536,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "68dd1957-a126-4f62-bf4a-03c6dcaf5500",
+      "id": "4a227a37-af96-4208-8638-5cfc3638a263",
       "symbol": "NZDUSD",
       "action": "BuyLimit",
       "open_time": 1585533600,
@@ -1551,7 +1551,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "9fd1821a-68d8-4d34-be11-1ecd6ef63830",
+      "id": "46f19075-b48b-4117-a88e-b71da2446f57",
       "symbol": "NZDUSD",
       "action": "SellLimit",
       "open_time": 1585803600,
@@ -1566,7 +1566,7 @@
       "exit_reason": "TP_HIT"
     },
     {
-      "id": "e23d9b4d-923c-430d-8532-9385fc0451e1",
+      "id": "938282d1-d4fa-4d11-aefe-fea4a446914d",
       "symbol": "NZDUSD",
       "action": "SellLimit",
       "open_time": 1586145600,
@@ -1581,7 +1581,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "2154dcf6-a2d7-447f-b940-aef8e2cf7f18",
+      "id": "cc83f9ee-99a4-4d79-a26d-26104625d8fa",
       "symbol": "NZDUSD",
       "action": "BuyLimit",
       "open_time": 1586394000,
@@ -1596,7 +1596,7 @@
       "exit_reason": "TP_HIT"
     },
     {
-      "id": "726ffb9d-0ded-4bb4-9606-12aadf9fbf02",
+      "id": "2b94207f-aa03-42e7-b027-3b0bea693533",
       "symbol": "NZDUSD",
       "action": "BuyLimit",
       "open_time": 1586826000,
@@ -1611,7 +1611,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "960a6c07-cc24-4e2d-ab58-ca479e22b0da",
+      "id": "2841f368-a752-4686-835d-e6465134c7c2",
       "symbol": "NZDUSD",
       "action": "SellLimit",
       "open_time": 1588784400,
@@ -1626,7 +1626,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "f5afa655-0b82-4c18-b5d2-a3804f8503ce",
+      "id": "963e9f49-6c29-4121-b113-a4b0dea4a72f",
       "symbol": "NZDUSD",
       "action": "BuyLimit",
       "open_time": 1589162400,
@@ -1641,7 +1641,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "036be734-55df-410b-abc1-9d458fcb4052",
+      "id": "56794c9c-0982-4b4a-b0dd-9df2530dac27",
       "symbol": "NZDUSD",
       "action": "BuyLimit",
       "open_time": 1590552000,
@@ -1656,7 +1656,7 @@
       "exit_reason": "TP_HIT"
     },
     {
-      "id": "ac33f890-6922-446f-8917-9a241193b4a5",
+      "id": "be1a044d-4dfb-454f-b0ab-8c10ec5211bb",
       "symbol": "NZDUSD",
       "action": "BuyLimit",
       "open_time": 1591228800,
@@ -1671,7 +1671,7 @@
       "exit_reason": "TP_HIT"
     },
     {
-      "id": "f4b8655b-143d-47f8-a678-5b599ee355d3",
+      "id": "4135edab-7b30-43d1-b6ba-a2ded9bb523f",
       "symbol": "NZDUSD",
       "action": "BuyLimit",
       "open_time": 1591610400,
@@ -1686,7 +1686,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "0bddce12-3829-4e60-b74a-a3ab187c70a9",
+      "id": "4bb9a6a6-dd46-415f-a31f-b134bfc1a7e7",
       "symbol": "NZDUSD",
       "action": "SellLimit",
       "open_time": 1591729200,
@@ -1701,7 +1701,7 @@
       "exit_reason": "TP_HIT"
     },
     {
-      "id": "fa12eaca-c70c-4be2-bf12-7c05bb188284",
+      "id": "c8a0707e-a2e1-4235-800e-1a1f9eb297de",
       "symbol": "NZDUSD",
       "action": "SellLimit",
       "open_time": 1591963200,
@@ -1716,7 +1716,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "417d5ef2-ea07-418c-9b0f-ce31b0c6a38d",
+      "id": "7b417c1e-74af-42bb-a4ec-511615701c94",
       "symbol": "NZDUSD",
       "action": "BuyLimit",
       "open_time": 1592960400,
@@ -1731,7 +1731,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "4eac74ca-d038-4878-9b77-4320eac51b0a",
+      "id": "44ad9aea-de78-4627-ad9c-d7e970514394",
       "symbol": "NZDUSD",
       "action": "SellLimit",
       "open_time": 1593486000,
@@ -1746,7 +1746,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "57d44ae3-25a9-4736-847d-0943824206e5",
+      "id": "20a5f16e-777f-46c5-99a2-e9cf71ef340d",
       "symbol": "NZDUSD",
       "action": "BuyLimit",
       "open_time": 1617361200,
@@ -1761,7 +1761,7 @@
       "exit_reason": "TP_HIT"
     },
     {
-      "id": "09815f22-1383-4781-a897-e483c17369dc",
+      "id": "7eff6c75-ef03-4262-99b4-0a51211cda50",
       "symbol": "NZDUSD",
       "action": "BuyLimit",
       "open_time": 1617670800,
@@ -1776,7 +1776,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "c18a9ecc-1d5f-4c89-bd6a-201124263d6a",
+      "id": "c9b894bd-e637-4159-8de9-a1390efabfa7",
       "symbol": "NZDUSD",
       "action": "BuyLimit",
       "open_time": 1618866000,
@@ -1791,7 +1791,7 @@
       "exit_reason": "TP_HIT"
     },
     {
-      "id": "aa8fe5bd-987e-4f47-bac8-3a60c7232ea7",
+      "id": "0d7d8bd2-362d-4f56-bc99-672721572b9c",
       "symbol": "NZDUSD",
       "action": "BuyLimit",
       "open_time": 1619755200,
@@ -1806,7 +1806,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "bb1d2076-6cb7-42ba-9f2d-267d20f7a307",
+      "id": "9a892e81-82cc-4d88-a301-7d4b151e38a5",
       "symbol": "NZDUSD",
       "action": "SellLimit",
       "open_time": 1620014400,
@@ -1821,7 +1821,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "27731dce-eaab-483d-8142-676e7e9977e0",
+      "id": "f514e583-f8b5-448e-94c1-7812202b18f3",
       "symbol": "NZDUSD",
       "action": "SellLimit",
       "open_time": 1620882000,
@@ -1836,7 +1836,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "ef40b6f4-23db-4df1-867f-8d6251606286",
+      "id": "df040670-53e2-4093-9712-d6c0c717833e",
       "symbol": "NZDUSD",
       "action": "SellLimit",
       "open_time": 1621292400,
@@ -1851,7 +1851,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "d223189d-d103-4974-a439-1ee3ebec29d1",
+      "id": "7a45bacf-1ceb-472d-8196-220ec225ae1a",
       "symbol": "NZDUSD",
       "action": "BuyLimit",
       "open_time": 1621576800,
@@ -1866,7 +1866,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "5c391fcd-7714-410a-8298-43266c70a7b3",
+      "id": "f44119fe-fb52-4e22-8a00-002bdc746bba",
       "symbol": "NZDUSD",
       "action": "SellLimit",
       "open_time": 1621821600,
@@ -1881,7 +1881,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "cbcfa60b-8b08-4180-84bf-5b02c3f87cc8",
+      "id": "c56d3151-9169-4d5b-9cf9-ac5ad5868d80",
       "symbol": "NZDUSD",
       "action": "BuyLimit",
       "open_time": 1621944000,
@@ -1896,7 +1896,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "9d936705-270c-450e-ae3a-a0e1d3c24a0b",
+      "id": "bb4f3560-2e85-4d48-9e70-683e72dc4ab3",
       "symbol": "NZDUSD",
       "action": "BuyLimit",
       "open_time": 1623114000,
@@ -1911,7 +1911,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "493199bf-e84c-43c7-a534-6545a43d168a",
+      "id": "fd3970b4-b456-4459-aeb8-daba83af8a53",
       "symbol": "NZDUSD",
       "action": "BuyLimit",
       "open_time": 1623373200,
@@ -1926,7 +1926,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "17fa18ab-a550-45f2-bf81-8eb3c681c745",
+      "id": "13eeda6c-b369-4186-8d67-2337673f6e53",
       "symbol": "NZDUSD",
       "action": "SellLimit",
       "open_time": 1623661200,
@@ -1941,7 +1941,7 @@
       "exit_reason": "TP_HIT"
     },
     {
-      "id": "a00f87f4-c104-48c5-a991-7b045cf5cc86",
+      "id": "613af783-4c8a-4f4c-a1e5-c79507be03f1",
       "symbol": "NZDUSD",
       "action": "BuyLimit",
       "open_time": 1624633200,
@@ -1956,7 +1956,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "ff672250-851e-43e0-8d15-b70b08c3aedc",
+      "id": "e85a0806-5013-423b-a719-abbd2279b3dd",
       "symbol": "NZDUSD",
       "action": "SellLimit",
       "open_time": 1625076000,
@@ -1971,7 +1971,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "4855745b-c58b-46f1-867f-40a2d2473143",
+      "id": "2f0f3da2-abd3-45e6-8863-794b4db40148",
       "symbol": "NZDUSD",
       "action": "BuyLimit",
       "open_time": 1625479200,
@@ -1986,7 +1986,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "b74351e1-f65b-4423-ba57-5cc83ab3c014",
+      "id": "02e2fc3e-fb36-4c81-888e-17d6a99ba8cd",
       "symbol": "NZDUSD",
       "action": "SellLimit",
       "open_time": 1625799600,
@@ -2001,7 +2001,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "1aed56e0-ea6c-4289-b65c-99c51c886708",
+      "id": "8f9f2943-f5fc-421d-af0e-a14634d98b97",
       "symbol": "NZDUSD",
       "action": "SellLimit",
       "open_time": 1626372000,
@@ -2016,7 +2016,7 @@
       "exit_reason": "TP_HIT"
     },
     {
-      "id": "0e066441-6165-4b9b-bb34-2608f30ce21a",
+      "id": "888f2f23-ec1f-4bdb-afdb-2cbb6595137f",
       "symbol": "NZDUSD",
       "action": "BuyLimit",
       "open_time": 1628182800,
@@ -2031,7 +2031,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "4e7abb69-1945-4eca-b302-b822f53316f6",
+      "id": "3dc6d91f-85e4-45a0-99f8-aa80aef4b846",
       "symbol": "NZDUSD",
       "action": "BuyLimit",
       "open_time": 1630285200,
@@ -2046,7 +2046,7 @@
       "exit_reason": "TP_HIT"
     },
     {
-      "id": "0fb73742-708a-41ff-89ce-718ad35df85a",
+      "id": "ba1f7339-ed33-4ed3-9374-cad023517b67",
       "symbol": "NZDUSD",
       "action": "BuyLimit",
       "open_time": 1631491200,
@@ -2061,7 +2061,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "b021b985-6bad-4353-9e9e-9c8ff7fc02f5",
+      "id": "5238a2a7-e873-4704-93a2-e05bce9df808",
       "symbol": "NZDUSD",
       "action": "BuyLimit",
       "open_time": 1632445200,
@@ -2076,7 +2076,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "a4a616d9-57c4-4526-9bbb-3e96aced7756",
+      "id": "6a169bf9-d23b-4386-9b07-1e42ff9ea1fc",
       "symbol": "NZDUSD",
       "action": "SellLimit",
       "open_time": 1632985200,
@@ -2091,7 +2091,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "9521b0c3-0504-43c2-855e-cc3aa4f7c019",
+      "id": "f0a7b89e-c92f-424d-9240-7357cec2c4ec",
       "symbol": "NZDUSD",
       "action": "BuyLimit",
       "open_time": 1633374000,
@@ -2106,7 +2106,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "2fb5d4ac-5b0d-4958-a9a8-3a1f4237da7b",
+      "id": "4779aa17-f5fd-433a-8321-fdfd56077be4",
       "symbol": "NZDUSD",
       "action": "SellLimit",
       "open_time": 1633543200,
@@ -2121,7 +2121,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "a6e94ae8-bb9a-4107-8c3c-0bafa3f1cbdd",
+      "id": "67751ee1-26cf-49ec-a7f5-a25d868a32ac",
       "symbol": "NZDUSD",
       "action": "BuyLimit",
       "open_time": 1634518800,
@@ -2136,7 +2136,7 @@
       "exit_reason": "TP_HIT"
     },
     {
-      "id": "0093282f-3a25-4fd3-9f23-b8b7dad3496b",
+      "id": "6c1db3ee-001c-459e-983e-3a0fcffd3e77",
       "symbol": "NZDUSD",
       "action": "BuyLimit",
       "open_time": 1634781600,
@@ -2151,7 +2151,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "2aa1af12-4735-4dee-af92-2f8d37369409",
+      "id": "5e74848a-9565-4d0f-803d-33100932521d",
       "symbol": "NZDUSD",
       "action": "SellLimit",
       "open_time": 1634839200,
@@ -2166,7 +2166,7 @@
       "exit_reason": "TP_HIT"
     },
     {
-      "id": "951312a4-792c-4573-b6dd-234f64d2872e",
+      "id": "69e93dd7-eaa6-44cc-9ce7-6ab1f7d5943a",
       "symbol": "NZDUSD",
       "action": "BuyLimit",
       "open_time": 1657195200,
@@ -2181,7 +2181,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "dd4753b8-8463-44a0-a6b0-1950be474908",
+      "id": "1a2cf45f-135c-4f73-887f-03d5b2351261",
       "symbol": "NZDUSD",
       "action": "SellLimit",
       "open_time": 1657785600,
@@ -2196,7 +2196,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "23901528-87f2-4b00-b165-7c05a5821814",
+      "id": "cbb8261d-95eb-49df-8b88-65cfd905f5f3",
       "symbol": "NZDUSD",
       "action": "BuyLimit",
       "open_time": 1658106000,
@@ -2211,7 +2211,7 @@
       "exit_reason": "TP_HIT"
     },
     {
-      "id": "4ba969d6-3d2e-4c81-927b-d5c10ff1308e",
+      "id": "714ab783-2c27-4e67-9fa9-9237c3320390",
       "symbol": "NZDUSD",
       "action": "SellLimit",
       "open_time": 1658430000,
@@ -2226,7 +2226,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "21040505-202c-4cc3-80e7-504a29f2528b",
+      "id": "06e45263-d808-480e-a20f-a607e7fe7965",
       "symbol": "NZDUSD",
       "action": "BuyLimit",
       "open_time": 1658700000,
@@ -2241,7 +2241,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "0d2f3de1-25e1-46b5-9887-01c4fe62196d",
+      "id": "050b6c20-e3d0-4c70-ac21-69d473406c23",
       "symbol": "NZDUSD",
       "action": "BuyLimit",
       "open_time": 1659682800,
@@ -2256,7 +2256,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "fc05871d-43e0-49f7-a579-32474fa96ae4",
+      "id": "33defdbb-63f5-47b6-9ac3-881e90d3b492",
       "symbol": "NZDUSD",
       "action": "SellLimit",
       "open_time": 1660672800,
@@ -2271,7 +2271,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "f99dc9e0-5c2c-47b4-8497-0421d7535751",
+      "id": "70ebc71b-0b2b-4aad-b75b-623d0cd489ff",
       "symbol": "NZDUSD",
       "action": "SellLimit",
       "open_time": 1660773600,
@@ -2286,7 +2286,7 @@
       "exit_reason": "TP_HIT"
     },
     {
-      "id": "3b7c5e2a-24ce-41f1-9a41-8786f95bdfdb",
+      "id": "94664215-5f92-41dd-818a-a1b570dfcb63",
       "symbol": "NZDUSD",
       "action": "SellLimit",
       "open_time": 1661796000,
@@ -2301,7 +2301,7 @@
       "exit_reason": "TP_HIT"
     },
     {
-      "id": "69905c46-c5f2-45a7-83c7-9e9e12e524e6",
+      "id": "1a835e96-8fa9-4a82-89a8-cf2db7f1d617",
       "symbol": "NZDUSD",
       "action": "BuyLimit",
       "open_time": 1662620400,
@@ -2316,7 +2316,7 @@
       "exit_reason": "TP_HIT"
     },
     {
-      "id": "a6ea167b-a273-4567-a7e8-f53fbeefb66b",
+      "id": "4c732c4e-2588-43d8-81e9-729ec02c7cf3",
       "symbol": "NZDUSD",
       "action": "SellLimit",
       "open_time": 1663315200,
@@ -2331,7 +2331,7 @@
       "exit_reason": "TP_HIT"
     },
     {
-      "id": "3dd62214-099f-4aba-969f-9ac0ddbdfda4",
+      "id": "1501b88b-2f3d-4829-b9e0-844236a6e4bf",
       "symbol": "NZDUSD",
       "action": "SellLimit",
       "open_time": 1663768800,
@@ -2346,7 +2346,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "ea61651a-4cd7-4f4d-ba81-0a8528f33ede",
+      "id": "0c39805b-cc83-497f-a05a-bf8d3b62a9f5",
       "symbol": "NZDUSD",
       "action": "SellLimit",
       "open_time": 1664254800,
@@ -2361,7 +2361,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "9df977ab-31fb-4276-8b0a-9f056b751c5f",
+      "id": "6a89c2b9-7a5e-4a63-93dd-7eafe38086ab",
       "symbol": "NZDUSD",
       "action": "BuyLimit",
       "open_time": 1664931600,
@@ -2376,7 +2376,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "89d4a210-32e1-463d-913c-34c00742e0b4",
+      "id": "8cc5249d-b50c-44a3-9d98-a96e64060123",
       "symbol": "NZDUSD",
       "action": "BuyLimit",
       "open_time": 1665554400,
@@ -2391,7 +2391,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "57f65c1f-bbfa-4348-9a8e-682e53b0c8ec",
+      "id": "ff329371-5097-412c-a0a1-7bbea47862f7",
       "symbol": "NZDUSD",
       "action": "BuyLimit",
       "open_time": 1666177200,
@@ -2406,7 +2406,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "0e3a268f-b1b1-4885-a242-33e5bf2bd017",
+      "id": "bb302221-9a87-4e81-a06c-2357fb8262b1",
       "symbol": "NZDUSD",
       "action": "BuyLimit",
       "open_time": 1666306800,
@@ -2421,7 +2421,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "eaf8a0f8-48e5-45c6-bc9f-92003a0052c6",
+      "id": "19444295-8c7c-4872-bb23-45e2aaa69827",
       "symbol": "NZDUSD",
       "action": "BuyLimit",
       "open_time": 1666630800,
@@ -2436,7 +2436,7 @@
       "exit_reason": "TP_HIT"
     },
     {
-      "id": "e4d21ce2-a6f8-4c2a-8fb0-60825303417b",
+      "id": "dcd7adcc-82f1-48b7-9d02-50c6de3863b8",
       "symbol": "NZDUSD",
       "action": "BuyLimit",
       "open_time": 1666929600,
@@ -2451,7 +2451,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "0af2f451-dcd1-4771-bb16-e999bae042a5",
+      "id": "bb5f630c-bb56-45aa-b6bb-789d139a3245",
       "symbol": "NZDUSD",
       "action": "SellLimit",
       "open_time": 1667163600,
@@ -2466,7 +2466,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "3d434cf0-de43-41ec-b34e-b95f02d9b096",
+      "id": "48e29f27-6890-4c6c-94b8-1000e53bd7ab",
       "symbol": "NZDUSD",
       "action": "SellLimit",
       "open_time": 1669852800,
@@ -2481,7 +2481,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "f37e14b3-c507-4722-b611-8890db2a8341",
+      "id": "ea2f0217-6c9c-47d4-98e6-a5ed04b08e0c",
       "symbol": "NZDUSD",
       "action": "BuyLimit",
       "open_time": 1670205600,
@@ -2496,7 +2496,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "3792b5f1-ea34-4e7e-8447-8af089811451",
+      "id": "f0519239-7dbb-4bff-b00c-bce7c2300c00",
       "symbol": "NZDUSD",
       "action": "BuyLimit",
       "open_time": 1670252400,
@@ -2511,7 +2511,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "db35ce96-7635-46c2-8643-2bf2a5eb4cd6",
+      "id": "3de9bd44-0cd0-4b48-836a-9a1791cdfcb6",
       "symbol": "NZDUSD",
       "action": "SellLimit",
       "open_time": 1670392800,
@@ -2526,7 +2526,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "d334bbfa-b332-41f7-bd77-ce49a6ecea22",
+      "id": "a1726ead-7b12-4290-8424-f220e191b15f",
       "symbol": "NZDUSD",
       "action": "BuyLimit",
       "open_time": 1670821200,
@@ -2541,7 +2541,7 @@
       "exit_reason": "TP_HIT"
     },
     {
-      "id": "fa6c4faf-18f4-4eeb-bcc2-4f04c2744a0a",
+      "id": "99661c11-aebc-4d38-afd9-8567f0af810b",
       "symbol": "NZDUSD",
       "action": "BuyLimit",
       "open_time": 1670990400,
@@ -2556,7 +2556,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "6d75df6f-3a5d-4974-9bd5-dc84a2ff037c",
+      "id": "b4455f1d-f2df-4884-9c08-ace8d81390d1",
       "symbol": "NZDUSD",
       "action": "SellLimit",
       "open_time": 1671170400,
@@ -2571,7 +2571,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "eeb812e8-2f1f-4c31-99a4-6864e4872df0",
+      "id": "aca1c88a-cf0a-484a-b8c5-25c441c61566",
       "symbol": "NZDUSD",
       "action": "SellLimit",
       "open_time": 1671494400,
@@ -2586,7 +2586,7 @@
       "exit_reason": "TP_HIT"
     },
     {
-      "id": "13de38ed-e867-4581-9fef-2e978f3eb559",
+      "id": "daeaec21-7789-41b9-8ee4-8be617032286",
       "symbol": "NZDUSD",
       "action": "SellLimit",
       "open_time": 1671642000,
@@ -2601,7 +2601,7 @@
       "exit_reason": "TP_HIT"
     },
     {
-      "id": "0b78321c-40da-4f5f-b9d0-cfdd7d714c77",
+      "id": "11ed4715-1715-4311-a65e-78a0b39714ef",
       "symbol": "NZDUSD",
       "action": "SellLimit",
       "open_time": 1671775200,
@@ -2616,7 +2616,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "4a35edf9-c226-4847-80be-6aee82d4d709",
+      "id": "8edeb5f7-9d77-4f01-975e-330d1d82e420",
       "symbol": "NZDUSD",
       "action": "BuyLimit",
       "open_time": 1672257600,
@@ -2631,7 +2631,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "e81d0381-eeac-4b90-ad08-bfd3499fbd17",
+      "id": "82e37efb-05bf-4fc2-8eaf-17a238941848",
       "symbol": "NZDUSD",
       "action": "SellLimit",
       "open_time": 1672768800,
@@ -2646,7 +2646,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "7f554344-5cb8-436b-9768-3ef845fb3a7f",
+      "id": "925c3be3-eb8d-45e6-9a3b-eb3ec80abdfb",
       "symbol": "NZDUSD",
       "action": "BuyLimit",
       "open_time": 1673272800,
@@ -2661,7 +2661,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "a3dba976-a742-4a34-b659-aeaaf86f62e9",
+      "id": "6ded2e96-8041-4787-9882-e6542d52a40d",
       "symbol": "NZDUSD",
       "action": "BuyLimit",
       "open_time": 1673874000,
@@ -2676,7 +2676,7 @@
       "exit_reason": "TP_HIT"
     },
     {
-      "id": "d9401a13-5593-4384-ad76-d656bdb3f2be",
+      "id": "99cc18dd-0e77-4b25-b337-4c588774e9ff",
       "symbol": "NZDUSD",
       "action": "BuyLimit",
       "open_time": 1674471600,
@@ -2691,7 +2691,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "7910ffda-adce-4bb6-9439-d1b36d522b9b",
+      "id": "8eca61ee-88a6-42f6-8cbd-d457eb6fbdda",
       "symbol": "NZDUSD",
       "action": "SellLimit",
       "open_time": 1674644400,
@@ -2706,7 +2706,7 @@
       "exit_reason": "TP_HIT"
     },
     {
-      "id": "af953a3b-1eb6-4598-b0a0-f189483449c5",
+      "id": "ae496149-013d-4aea-a620-6a60780790da",
       "symbol": "NZDUSD",
       "action": "BuyLimit",
       "open_time": 1696816800,
@@ -2721,7 +2721,7 @@
       "exit_reason": "TP_HIT"
     },
     {
-      "id": "e5f889f9-4dff-4410-ae61-e820d8aa0b90",
+      "id": "4b4eae43-45c9-480a-b3b8-5c44adc1c798",
       "symbol": "NZDUSD",
       "action": "SellLimit",
       "open_time": 1697526000,
@@ -2736,7 +2736,7 @@
       "exit_reason": "TP_HIT"
     },
     {
-      "id": "4bd569f5-f89f-4927-9629-448e456e893a",
+      "id": "f4c0524e-8129-4714-9575-4c752f095b86",
       "symbol": "NZDUSD",
       "action": "SellLimit",
       "open_time": 1698030000,
@@ -2751,7 +2751,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "cab15d92-560f-45cd-b6ac-27ab03d722ad",
+      "id": "6f9377cd-a1a1-43d7-8fe6-a06ae000a959",
       "symbol": "NZDUSD",
       "action": "BuyLimit",
       "open_time": 1698109200,
@@ -2766,7 +2766,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "f1b6870d-07b3-45a4-be94-f4397342bfe7",
+      "id": "749e3085-240a-4f72-acfe-d99341db45a7",
       "symbol": "NZDUSD",
       "action": "SellLimit",
       "open_time": 1698800400,
@@ -2781,7 +2781,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "937c4c5d-fb7b-45af-9e6f-d7a5b5334040",
+      "id": "bacd9ee2-a12b-4613-b173-1de559429fd2",
       "symbol": "NZDUSD",
       "action": "BuyLimit",
       "open_time": 1699538400,
@@ -2796,7 +2796,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "150a424c-6533-4085-909e-bae85a7cb5ad",
+      "id": "499b820d-4fb4-433a-9e0c-28ea9fc614cf",
       "symbol": "NZDUSD",
       "action": "SellLimit",
       "open_time": 1699966800,
@@ -2811,7 +2811,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "f82f57e4-9afd-47ff-abc6-6b03e775e022",
+      "id": "e8216c94-1c04-44d3-987b-c5aa01011ffd",
       "symbol": "NZDUSD",
       "action": "SellLimit",
       "open_time": 1700139600,
@@ -2826,7 +2826,7 @@
       "exit_reason": "TP_HIT"
     },
     {
-      "id": "bb86c7b5-a9de-4d90-bfe5-ea2e2008893e",
+      "id": "5b007b42-6791-49f1-97ee-4c73c53e04a6",
       "symbol": "NZDUSD",
       "action": "SellLimit",
       "open_time": 1700643600,
@@ -2841,7 +2841,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "45f05d59-02b6-4331-8a28-bba707b5f621",
+      "id": "0d1c272a-82c9-4258-9362-e7aa985df44e",
       "symbol": "NZDUSD",
       "action": "BuyLimit",
       "open_time": 1702000800,
@@ -2856,7 +2856,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "75d3eb00-ddd4-480a-bc56-9c65b2d06fb0",
+      "id": "47a10374-95d0-4dc6-bdb1-53746c2fe8b8",
       "symbol": "NZDUSD",
       "action": "SellLimit",
       "open_time": 1702440000,
@@ -2871,7 +2871,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "24972c0c-2890-4c82-a929-83a8cd4cefb4",
+      "id": "e33b6683-6304-4c0c-9c9b-170575f6e712",
       "symbol": "NZDUSD",
       "action": "BuyLimit",
       "open_time": 1702638000,
@@ -2886,7 +2886,7 @@
       "exit_reason": "TP_HIT"
     },
     {
-      "id": "f3e8c13d-a0c8-40b4-9999-7ce11fd4f336",
+      "id": "f1af8b8b-7f79-4dfe-bea7-fd962e6ed143",
       "symbol": "NZDUSD",
       "action": "BuyLimit",
       "open_time": 1702933200,
@@ -2901,7 +2901,7 @@
       "exit_reason": "TP_HIT"
     },
     {
-      "id": "5d41d0e2-cbbf-4494-8579-e8d379c1ccd1",
+      "id": "c3ca5a2d-382c-47e8-9e4d-e99f173c2afd",
       "symbol": "NZDUSD",
       "action": "BuyLimit",
       "open_time": 1703091600,
@@ -2916,7 +2916,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "a3f48915-f54b-4cfe-8b13-e2c261f80a08",
+      "id": "2a84e165-fe17-42aa-a8ff-5717e8aa8561",
       "symbol": "NZDUSD",
       "action": "BuyLimit",
       "open_time": 1703592000,
@@ -2931,7 +2931,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "d5f26e8e-abca-4c7e-b70d-722c89e317a7",
+      "id": "50db8ccb-7677-4d4b-9586-032d5d79a390",
       "symbol": "NZDUSD",
       "action": "SellLimit",
       "open_time": 1704430800,
@@ -2946,7 +2946,7 @@
       "exit_reason": "TP_HIT"
     },
     {
-      "id": "947505fa-0ae1-40fd-b9be-d37570692398",
+      "id": "e458a5ba-b3c4-49fb-b0c8-8c83e5a0e954",
       "symbol": "NZDUSD",
       "action": "SellLimit",
       "open_time": 1705593600,
@@ -2961,7 +2961,7 @@
       "exit_reason": "TP_HIT"
     },
     {
-      "id": "41da25c7-592b-4386-8646-0430ff08207d",
+      "id": "4e70da2d-11a1-46ec-bdd1-7db903b93eee",
       "symbol": "NZDUSD",
       "action": "SellLimit",
       "open_time": 1706504400,
@@ -2976,7 +2976,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "1d7c73e5-68b2-4683-93ac-a07b890e0390",
+      "id": "dd0ff76c-23dc-4d93-a3df-5583d92ddc05",
       "symbol": "NZDUSD",
       "action": "SellLimit",
       "open_time": 1713272400,
@@ -2991,7 +2991,7 @@
       "exit_reason": "TP_HIT"
     },
     {
-      "id": "e86bf384-9f68-4e04-b130-6c4d1d5b62c4",
+      "id": "0dd36bfd-1ab3-441d-aef8-794a0ef9167c",
       "symbol": "NZDUSD",
       "action": "BuyLimit",
       "open_time": 1713783600,
@@ -3006,7 +3006,7 @@
       "exit_reason": "TP_HIT"
     },
     {
-      "id": "4c92a327-2131-4b2e-b09f-efdf3e2ced21",
+      "id": "a1cc32ff-bae2-4f6b-a7c0-123bf4bc1cf3",
       "symbol": "NZDUSD",
       "action": "BuyLimit",
       "open_time": 1714388400,
@@ -3021,7 +3021,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "58471c3d-71d7-469b-9559-7f1407af7094",
+      "id": "de34f478-7d81-47c4-a144-614ece757b24",
       "symbol": "NZDUSD",
       "action": "SellLimit",
       "open_time": 1735876800,
@@ -3036,7 +3036,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "1bfd6150-c9e1-45f9-8e62-876aa186a7d1",
+      "id": "9bf31b8d-3489-435b-9d24-5ded81fd3a34",
       "symbol": "NZDUSD",
       "action": "SellLimit",
       "open_time": 1738260000,
@@ -3051,7 +3051,7 @@
       "exit_reason": "TP_HIT"
     },
     {
-      "id": "e61dc0ca-0a4b-4e02-9b33-d2efa0742294",
+      "id": "039eb49a-1f6b-449a-9ce9-e75e66cbd2c7",
       "symbol": "NZDUSD",
       "action": "BuyLimit",
       "open_time": 1738346400,
@@ -3066,7 +3066,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "ed96ec3b-eff8-425c-adc6-680163f01004",
+      "id": "6bdeff9e-773d-40c9-97de-911063fe8a85",
       "symbol": "NZDUSD",
       "action": "SellLimit",
       "open_time": 1738609200,
@@ -3081,7 +3081,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "f48ff310-65ad-4a42-a698-f2827d8558a5",
+      "id": "a3644274-7aa7-4a9b-b461-54bb3303fc73",
       "symbol": "NZDUSD",
       "action": "BuyLimit",
       "open_time": 1739307600,
@@ -3096,7 +3096,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "9589b506-ba56-4e02-9c32-6b14471906ca",
+      "id": "d8919809-9687-45a1-bd0a-a482bb260608",
       "symbol": "NZDUSD",
       "action": "BuyLimit",
       "open_time": 1739793600,
@@ -3111,7 +3111,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "f46cffaf-3992-4f93-b05b-d86bbbddbb78",
+      "id": "dc9e62f1-1412-403e-a7d3-99473b49b289",
       "symbol": "NZDUSD",
       "action": "SellLimit",
       "open_time": 1740502800,
@@ -3126,7 +3126,7 @@
       "exit_reason": "TP_HIT"
     },
     {
-      "id": "33e92d5b-cc32-47d7-9978-ccd603fe2ca4",
+      "id": "637b7337-77ef-4834-b6fc-cba72b39482f",
       "symbol": "NZDUSD",
       "action": "BuyLimit",
       "open_time": 1741611600,
@@ -3141,7 +3141,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "f7079f81-92d3-4df3-a3ee-6199e167e5a7",
+      "id": "02cf6770-f63a-4f89-9a34-ec1b40ec1094",
       "symbol": "NZDUSD",
       "action": "BuyLimit",
       "open_time": 1741827600,
@@ -3156,7 +3156,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "4c09a024-5904-4525-b5d5-8f4fa8f1a39f",
+      "id": "d180b6e8-ef8a-453d-90da-70ba705e8c13",
       "symbol": "NZDUSD",
       "action": "SellLimit",
       "open_time": 1741896000,
@@ -3171,7 +3171,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "667dd15a-4ad9-46f5-b1a6-76dcc8e79f65",
+      "id": "e179f648-1ad1-431f-9e52-056b560c8f5b",
       "symbol": "NZDUSD",
       "action": "SellLimit",
       "open_time": 1742374800,
@@ -3186,7 +3186,7 @@
       "exit_reason": "TP_HIT"
     },
     {
-      "id": "9d213d5c-cb5f-4da1-b2cb-62b4dbbda941",
+      "id": "cd067f54-d2e3-4196-8802-5bfa8d4e424a",
       "symbol": "NZDUSD",
       "action": "SellLimit",
       "open_time": 1742511600,
@@ -3201,7 +3201,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "e8ac98c6-968f-4335-aaaa-c2258fda65de",
+      "id": "8e3f9b84-308e-4daa-9e54-2d6cc06e12cc",
       "symbol": "NZDUSD",
       "action": "SellLimit",
       "open_time": 1744178400,
@@ -3216,7 +3216,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "d9b1e393-9af2-42ef-98fd-68f027cbf270",
+      "id": "6bf0538c-9c7d-4be5-808c-654eda822b32",
       "symbol": "NZDUSD",
       "action": "BuyLimit",
       "open_time": 1744819200,
@@ -3231,7 +3231,7 @@
       "exit_reason": "TP_HIT"
     },
     {
-      "id": "67c966b7-74a5-4f85-b746-5e7c360c27a1",
+      "id": "8a8fe690-066a-41d9-b75e-41ab13e3a832",
       "symbol": "NZDUSD",
       "action": "BuyLimit",
       "open_time": 1744938000,
@@ -3246,7 +3246,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "e1120777-f7e9-4789-8a9c-67794e0e55fb",
+      "id": "73bb1a8c-89b2-4238-b311-66b2b7ed5c21",
       "symbol": "NZDUSD",
       "action": "BuyLimit",
       "open_time": 1746622800,
@@ -3261,7 +3261,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "85b8563f-96a9-40da-8b9e-9d4629bac2b9",
+      "id": "473cb222-6147-4645-8dd4-2b3458e7d2cd",
       "symbol": "NZDUSD",
       "action": "BuyLimit",
       "open_time": 1747828800,
@@ -3276,7 +3276,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "d2f903ec-f35d-44f7-9e7c-fc3671e686a6",
+      "id": "77b54b3f-be98-4e52-a52c-b12c75f4a64a",
       "symbol": "NZDUSD",
       "action": "BuyLimit",
       "open_time": 1748566800,
@@ -3291,7 +3291,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "dbc70ecd-eb1a-4680-8f85-1e802c00735c",
+      "id": "f3f1d4ad-3b21-4a4d-b2d1-d67a15d02e69",
       "symbol": "NZDUSD",
       "action": "BuyLimit",
       "open_time": 1776301200,
@@ -3306,7 +3306,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "96df1b65-8d39-497f-bb1b-fc6f41ce9d1d",
+      "id": "332cdfa7-d614-4db1-b657-b98503f72eb5",
       "symbol": "NZDUSD",
       "action": "SellLimit",
       "open_time": 1776369600,
@@ -3321,7 +3321,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "847771c4-65ac-425d-832a-abe75e3e9862",
+      "id": "8f4b8e15-91fd-41ea-9a89-8851090eefc1",
       "symbol": "NZDUSD",
       "action": "SellLimit",
       "open_time": 1776668400,
@@ -3336,7 +3336,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "4556be03-bc22-4fb9-93f3-808fa76a6055",
+      "id": "9ab39994-c4fd-4746-8d66-972644bd39a9",
       "symbol": "NZDUSD",
       "action": "SellLimit",
       "open_time": 1778245200,
@@ -3351,7 +3351,7 @@
       "exit_reason": "TP_HIT"
     },
     {
-      "id": "3f2e7c44-fddf-40b6-af29-d18e6df18dcf",
+      "id": "4bbf0e23-c68c-41ee-b79e-8b3ab42e3e1b",
       "symbol": "NZDUSD",
       "action": "BuyLimit",
       "open_time": 1779325200,
@@ -3366,7 +3366,7 @@
       "exit_reason": "TP_HIT"
     },
     {
-      "id": "43c87a7d-e91e-4afd-9f6a-44f5cd14fc06",
+      "id": "4d910473-d32b-4668-8fdf-c719996709f0",
       "symbol": "NZDUSD",
       "action": "BuyLimit",
       "open_time": 1780275600,
@@ -3381,7 +3381,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "f2d23c93-dc84-455f-ac9d-408b2e5977e8",
+      "id": "4fc20aba-47df-49d0-bae9-71417eeb2d87",
       "symbol": "NZDUSD",
       "action": "SellLimit",
       "open_time": 1780930800,
@@ -3396,7 +3396,7 @@
       "exit_reason": "TP_HIT"
     },
     {
-      "id": "eb46fbb6-4abd-4bd2-8d05-aaa7af19e9d5",
+      "id": "ec2b5c50-9b85-4a85-9195-34605853f553",
       "symbol": "NZDUSD",
       "action": "SellLimit",
       "open_time": 1786032000,
@@ -3411,7 +3411,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "6a01a121-f6f4-48b2-8ea2-e5f67407c479",
+      "id": "fd01ce33-bae3-4823-b98d-3ea2f98cdd70",
       "symbol": "NZDUSD",
       "action": "SellLimit",
       "open_time": 1786467600,
@@ -3426,7 +3426,7 @@
       "exit_reason": "TP_HIT"
     },
     {
-      "id": "226e9c43-b1e9-45f4-a091-149ec58739d0",
+      "id": "206053ab-636a-4e1f-877e-a4fb7e2751ef",
       "symbol": "NZDUSD",
       "action": "SellLimit",
       "open_time": 1786593600,
@@ -3441,7 +3441,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "eea6bc42-05d8-4fd2-b079-d98d0be4ac46",
+      "id": "47655c73-dfe8-4b05-99fd-b091d0920d91",
       "symbol": "NZDUSD",
       "action": "BuyLimit",
       "open_time": 1787000400,
@@ -3456,7 +3456,7 @@
       "exit_reason": "SL_HIT"
     },
     {
-      "id": "c8be6878-a461-4fbb-8cca-3d3d69d18d9c",
+      "id": "1642cdfe-1b23-4b84-a473-7f82ad8f58c3",
       "symbol": "NZDUSD",
       "action": "SellLimit",
       "open_time": 1787072400,

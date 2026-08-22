@@ -12,9 +12,11 @@ use tower::ServiceExt;
 fn build_test_state() -> Arc<AppState> {
     let market_adapter = Arc::new(RealHistoricalMarketAdapter::new());
     let strategy = Arc::new(PolaNStrategy::default());
+    let storage = Arc::new(storage_db::InMemoryStorage::new());
     Arc::new(AppState {
         market_adapter,
         strategy,
+        storage,
     })
 }
 
@@ -148,4 +150,45 @@ async fn test_api_server_detailed_backtest_endpoint() {
     assert!(data["report"].is_object());
     assert!(data["trades"].is_array());
     assert!(data["equity_curve"].is_array());
+}
+
+#[tokio::test]
+async fn test_api_server_audit_endpoints() {
+    let state = build_test_state();
+    let app = create_router(state);
+
+    // 1. Audit Full
+    let req = Request::builder()
+        .uri("/api/audit/full")
+        .body(Body::empty())
+        .unwrap();
+    let resp = app.clone().oneshot(req).await.unwrap();
+    assert_eq!(resp.status(), StatusCode::OK);
+    let bytes = resp.into_body().collect().await.unwrap().to_bytes();
+    let full_audit: Value = serde_json::from_slice(&bytes).unwrap();
+    assert!(full_audit["pairs"].as_array().unwrap().len() >= 6);
+    assert_eq!(full_audit["scorecard"]["total_score"], 28);
+    assert_eq!(
+        full_audit["walk_forward"]["wfer_pct"].as_f64().unwrap(),
+        94.8
+    );
+
+    // 2. Audit Pair
+    let req2 = Request::builder()
+        .uri("/api/audit/pair/EURGBP")
+        .body(Body::empty())
+        .unwrap();
+    let resp2 = app.oneshot(req2).await.unwrap();
+    assert_eq!(resp2.status(), StatusCode::OK);
+    let bytes2 = resp2.into_body().collect().await.unwrap().to_bytes();
+    let pair_audit: Value = serde_json::from_slice(&bytes2).unwrap();
+    assert_eq!(pair_audit["tier"], 1);
+    assert_eq!(pair_audit["multiplier"].as_f64().unwrap(), 2.0);
+    assert!(!pair_audit["trades"].as_array().unwrap().is_empty());
+    assert!(!pair_audit["monthly_breakdown"]
+        .as_array()
+        .unwrap()
+        .is_empty());
+    assert!(!pair_audit["equity_curve"].as_array().unwrap().is_empty());
+    assert_eq!(pair_audit["provenance"]["zero_mock_verified"], true);
 }

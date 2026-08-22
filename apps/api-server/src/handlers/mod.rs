@@ -1,3 +1,4 @@
+pub mod audit;
 pub mod backtest;
 pub mod config;
 pub mod health;
@@ -6,6 +7,7 @@ pub mod monte_carlo;
 pub mod scorecard;
 pub mod strategies;
 
+pub use audit::{audit_full_handler, audit_pair_handler};
 pub use backtest::{backtest_detailed_handler, backtest_handler, backtest_trades_handler};
 pub use config::config_handler;
 pub use health::health_handler;

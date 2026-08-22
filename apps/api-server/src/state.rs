@@ -178,4 +178,5 @@ impl MarketDataPort for RealHistoricalMarketAdapter {
 pub struct AppState {
     pub market_adapter: Arc<RealHistoricalMarketAdapter>,
     pub strategy: Arc<PolaNStrategy>,
+    pub storage: Arc<storage_db::InMemoryStorage>,
 }
