@@ -29,6 +29,21 @@
   let activeTab = $state<'OVERVIEW' | 'PERFORMANCE_SUMMARY' | 'LIST_OF_TRADES' | 'EQUITY_CURVE'>('OVERVIEW');
   let isCollapsed = $state<boolean>(false);
 
+  let decisiveTrades = $derived((report?.winning_trades ?? 0) + (report?.losing_trades ?? 0));
+  let decisiveWinRate = $derived(
+    decisiveTrades > 0
+      ? ((report?.winning_trades ?? 0) / decisiveTrades) * 100
+      : (report?.win_rate_percent ?? 0)
+  );
+  let beTrades = $derived(
+    Math.max(
+      0,
+      (report?.total_trades ?? 0) -
+        (report?.winning_trades ?? 0) -
+        (report?.losing_trades ?? 0)
+    )
+  );
+
   function fmtPips(val: number): string {
     const prefix = val > 0 ? '+' : '';
     return `${prefix}${val.toFixed(1)} pips`;
@@ -174,14 +189,19 @@
             </span>
           </div>
 
-          <!-- Win Rate -->
+          <!-- Win Rate (Decisive & Breakdown) -->
           <div class="bg-[#1e222d] border border-[#2a2e39] rounded-lg p-3">
-            <span class="text-[11px] text-[#787b86] font-medium block">Win Rate</span>
-            <span class="text-base font-bold font-mono {report.win_rate_percent >= 50 ? 'text-[#089981]' : 'text-[#f23645]'}">
-              {report.win_rate_percent.toFixed(1)}%
+            <div class="flex items-center justify-between">
+              <span class="text-[11px] text-[#787b86] font-medium block">Win Rate (Decisive)</span>
+              <span class="text-[9px] font-mono px-1.5 py-0.2 rounded bg-[#089981]/20 text-[#089981] font-bold">
+                W vs L
+              </span>
+            </div>
+            <span class="text-base font-bold font-mono {decisiveWinRate >= 50 || report.profit_factor >= 1.5 ? 'text-[#089981]' : 'text-[#f23645]'}">
+              {decisiveWinRate.toFixed(1)}%
             </span>
-            <span class="text-[10px] text-[#787b86] block mt-0.5">
-              {report.winning_trades} Wins / {report.losing_trades} Losses
+            <span class="text-[10px] text-[#787b86] block mt-0.5" title="Total Sample: {report.winning_trades} Wins ({report.win_rate_percent.toFixed(1)}%), {report.losing_trades} Losses, {beTrades} Breakeven">
+              {report.winning_trades} W / {report.losing_trades} L • {beTrades} BE
             </span>
           </div>
 

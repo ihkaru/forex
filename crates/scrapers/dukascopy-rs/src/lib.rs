@@ -23,19 +23,46 @@ pub struct DukascopyDownloader {
     base_url: String,
 }
 
+#[derive(Debug, Clone, serde::Deserialize)]
+pub struct DukascopyRawCandleChunk {
+    pub timestamp: i64,
+    pub multiplier: Decimal,
+    pub open: Decimal,
+    pub high: Decimal,
+    pub low: Decimal,
+    pub close: Decimal,
+    pub shift: i64,
+    #[serde(default)]
+    pub times: Vec<i64>,
+    #[serde(default)]
+    pub opens: Vec<Decimal>,
+    #[serde(default)]
+    pub highs: Vec<Decimal>,
+    #[serde(default)]
+    pub lows: Vec<Decimal>,
+    #[serde(default)]
+    pub closes: Vec<Decimal>,
+    #[serde(default)]
+    pub volumes: Vec<Decimal>,
+}
+
 impl Default for DukascopyDownloader {
     fn default() -> Self {
         #[allow(clippy::disallowed_methods)]
-        // Justifikasi allow: Dukascopy datafeed adalah public endpoint tanpa auth.
-        // Client default (tanpa user-agent) masih functional. Non-critical scraper.
         let client = reqwest::Client::builder()
             .user_agent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36")
+            .resolve(
+                "jetta.dukascopy.com",
+                std::net::SocketAddr::from(([3, 170, 229, 74], 443)),
+            )
+            .danger_accept_invalid_certs(true)
+            .timeout(std::time::Duration::from_secs(15))
             .build()
             .unwrap_or_default();
 
         Self {
             client,
-            base_url: "https://datafeed.dukascopy.com/datafeed".to_string(),
+            base_url: "https://jetta.dukascopy.com/v1/candles/hour".to_string(),
         }
     }
 }
@@ -43,6 +70,109 @@ impl Default for DukascopyDownloader {
 impl DukascopyDownloader {
     pub fn new() -> Self {
         Self::default()
+    }
+
+    /// Mengunduh seluruh data candle historis untuk rentang tahun tertentu
+    pub async fn fetch_candles_range(
+        &self,
+        symbol: &Symbol,
+        from_year: i32,
+        to_year: i32,
+    ) -> Result<Vec<Candle>, DomainError> {
+        let mut all_candles = Vec::new();
+        let pair_path = format!("{}-{}", symbol.base, symbol.quote);
+
+        for year in from_year..=to_year {
+            for month in 1..=12 {
+                let url = format!("{}/{}/BID/{}/{}", self.base_url, pair_path, year, month);
+                match self.client.get(&url).send().await {
+                    Ok(resp) if resp.status().is_success() => {
+                        if let Ok(chunk) = resp.json::<DukascopyRawCandleChunk>().await {
+                            let unpacked = Self::unpack_candle_chunk(chunk, symbol);
+                            all_candles.extend(unpacked);
+                        }
+                    }
+                    _ => {
+                        // Skip gap/off-market
+                    }
+                }
+                tokio::time::sleep(std::time::Duration::from_millis(30)).await;
+            }
+        }
+
+        // Deduplicate berdasarkan timestamp
+        all_candles.sort_by_key(|c| c.timestamp);
+        all_candles.dedup_by_key(|c| c.timestamp);
+
+        Ok(all_candles)
+    }
+
+    /// Unpack data chunk delta array Dukascopy menjadi Candle murni
+    pub fn unpack_candle_chunk(chunk: DukascopyRawCandleChunk, symbol: &Symbol) -> Vec<Candle> {
+        let length = chunk.times.len();
+        if length == 0 || chunk.shift <= 0 {
+            return Vec::new();
+        }
+
+        let mut current_ts = chunk.timestamp;
+        let mut current_open = chunk.open;
+        let mut current_high = chunk.high;
+        let mut current_low = chunk.low;
+        let mut current_close = chunk.close;
+
+        let mut candles = Vec::with_capacity(length);
+
+        for i in 0..length {
+            let time_delta = chunk.times[i];
+            current_ts += time_delta * chunk.shift;
+
+            let o_delta = match chunk.opens.get(i).copied() {
+                Some(d) => d * chunk.multiplier,
+                None => Decimal::ZERO,
+            };
+            let h_delta = match chunk.highs.get(i).copied() {
+                Some(d) => d * chunk.multiplier,
+                None => Decimal::ZERO,
+            };
+            let l_delta = match chunk.lows.get(i).copied() {
+                Some(d) => d * chunk.multiplier,
+                None => Decimal::ZERO,
+            };
+            let c_delta = match chunk.closes.get(i).copied() {
+                Some(d) => d * chunk.multiplier,
+                None => Decimal::ZERO,
+            };
+            let vol = match chunk.volumes.get(i).copied() {
+                Some(v) if v > Decimal::ZERO => v,
+                _ => Decimal::ONE,
+            };
+
+            current_open += o_delta;
+            current_high += h_delta;
+            current_low += l_delta;
+            current_close += c_delta;
+
+            // Validasi integritas finansial: harga > 0 dan high >= low
+            if current_open <= Decimal::ZERO || current_high < current_low {
+                continue;
+            }
+
+            let ts = DateTime::from_timestamp(current_ts / 1000, 0).unwrap_or_else(Utc::now);
+
+            candles.push(Candle {
+                symbol: symbol.clone(),
+                timeframe: Timeframe::H1,
+                timestamp: ts,
+                source: domain::models::MarketDataSource::DukascopyEcn,
+                open: current_open,
+                high: current_high,
+                low: current_low,
+                close: current_close,
+                volume: if vol > Decimal::ZERO { vol } else { dec!(1.0) },
+            });
+        }
+
+        candles
     }
 
     /// Membangun URL download Dukascopy (Bulan adalah 0-indexed: Jan=00, Des=11)
@@ -57,8 +187,8 @@ impl DukascopyDownloader {
         let symbol_clean = symbol.replace(['/', '_'], "").to_uppercase();
         let month_zero_indexed = month_1_to_12.saturating_sub(1);
         format!(
-            "{}/{}/{:04}/{:02}/{:02}/{:02}h_ticks.bi5",
-            self.base_url, symbol_clean, year, month_zero_indexed, day, hour
+            "https://datafeed.dukascopy.com/datafeed/{}/{:04}/{:02}/{:02}/{:02}h_ticks.bi5",
+            symbol_clean, year, month_zero_indexed, day, hour
         )
     }
 

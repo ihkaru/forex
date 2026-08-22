@@ -34,7 +34,7 @@ impl Default for PolaNFormationEngine {
     fn default() -> Self {
         Self {
             pip_buffer: dec!(0.00020), // 2.0 pips buffer untuk 5-digit pair
-            min_rr_ratio: dec!(2.0),   // Minimum 1:2 R:R
+            min_rr_ratio: dec!(1.49),  // User requested R:R 1:1.49
         }
     }
 }
@@ -47,11 +47,13 @@ impl PolaNFormationEngine {
         }
     }
 
-    /// Evaluasi apakah 3 titik swing berurutan membentuk Pola N yang valid
+    /// Evaluasi apakah 3 titik swing berurutan membentuk Pola N yang valid.
+    /// `pip_size` dipakai untuk kalkulasi SL struktural presisi berbasis L2/H2.
     pub fn evaluate_swings(
         &self,
         swings: &[SwingPoint],
         _current_price: Decimal,
+        pip_size: Decimal,
     ) -> Option<PolaNFormation> {
         if swings.len() < 3 {
             return None;
@@ -73,19 +75,26 @@ impl PolaNFormationEngine {
                 let impulse = h1 - l1;
                 let retracement_ratio = (h1 - l2) / impulse;
 
-                if retracement_ratio >= dec!(0.25) && retracement_ratio <= dec!(0.80) {
-                    let entry = l2.max(l1 + (impulse * dec!(0.382)));
-                    let sl = l1 - self.pip_buffer;
+                // Pullback di area Fibonacci retracement yang valid (38% – 85%)
+                // 38% = shallow pullback (strong trend), 85% = deep discount (golden pocket)
+                if retracement_ratio >= dec!(0.38) && retracement_ratio <= dec!(0.85) {
+                    let pullback_range = h1 - l2;
+                    // Golden Pullback Entry: Entry Limit di 25% di atas swing low L2
+                    // Keunggulan matematis: SL sangat ketat di bawah L2 (10-18 pips),
+                    // sehingga TP1 (RR 1:1.5) sudah tercapai SEBELUM harga menyentuh H1!
+                    let entry = l2 + (pullback_range * dec!(0.25));
+                    // SL Struktural: Tepat di bawah Higher Low (L2) dengan 2 pips buffer
+                    let sl = l2 - (pip_size * dec!(2.0));
                     let risk_distance = entry - sl;
 
                     if risk_distance > Decimal::ZERO {
                         let target_rr = self.min_rr_ratio.clamp(dec!(1.0), dec!(3.0));
-                        let tp1 = h1.max(entry + (risk_distance * target_rr));
+                        let tp1 = entry + (risk_distance * target_rr);
                         let reward_distance = tp1 - entry;
 
                         if reward_distance > Decimal::ZERO {
                             let rr = (reward_distance / risk_distance).clamp(dec!(1.0), dec!(3.0));
-                            let tp2 = tp1 + (impulse * dec!(0.272));
+                            let tp2 = entry + (risk_distance * dec!(2.8));
 
                             return Some(PolaNFormation {
                                 pattern_type: PolaNType::BullishN,
@@ -115,19 +124,23 @@ impl PolaNFormationEngine {
                 let impulse = h1 - l1;
                 let retracement_ratio = (h2 - l1) / impulse;
 
-                if retracement_ratio >= dec!(0.25) && retracement_ratio <= dec!(0.80) {
-                    let entry = h2.min(h1 - (impulse * dec!(0.382)));
-                    let sl = h1 + self.pip_buffer;
+                // Pullback di area Fibonacci retracement yang valid (38% – 85%)
+                if retracement_ratio >= dec!(0.38) && retracement_ratio <= dec!(0.85) {
+                    let pullback_range = h2 - l1;
+                    // Golden Pullback Entry: Entry Limit di 25% di bawah swing high H2
+                    let entry = h2 - (pullback_range * dec!(0.25));
+                    // SL Struktural: Tepat di atas Lower High (H2) dengan 2 pips buffer
+                    let sl = h2 + (pip_size * dec!(2.0));
                     let risk_distance = sl - entry;
 
                     if risk_distance > Decimal::ZERO {
                         let target_rr = self.min_rr_ratio.clamp(dec!(1.0), dec!(3.0));
-                        let tp1 = l1.min(entry - (risk_distance * target_rr));
+                        let tp1 = entry - (risk_distance * target_rr);
                         let reward_distance = entry - tp1;
 
                         if reward_distance > Decimal::ZERO {
                             let rr = (reward_distance / risk_distance).clamp(dec!(1.0), dec!(3.0));
-                            let tp2 = tp1 - (impulse * dec!(0.272));
+                            let tp2 = entry - (risk_distance * dec!(2.8));
 
                             return Some(PolaNFormation {
                                 pattern_type: PolaNType::BearishN,

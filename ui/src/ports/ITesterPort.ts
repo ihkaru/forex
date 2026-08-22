@@ -71,5 +71,5 @@ export interface DetailedBacktestReport {
 }
 
 export interface ITesterPort {
-  getDetailedBacktestReport(symbol: string): Promise<DetailedBacktestReport>;
+  getDetailedBacktestReport(symbol: string, strategyId?: string): Promise<DetailedBacktestReport>;
 }

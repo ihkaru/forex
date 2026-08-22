@@ -87,4 +87,7 @@ pub(crate) struct SimulatedOrder {
     pub(crate) order: Order,
     pub(crate) status: SimulatedOrderStatus,
     pub(crate) expires_at: DateTime<Utc>,
+    /// Flag otomatis: SL telah dipindah ke breakeven ketika MFE mencapai 50% dari TP distance.
+    /// Ini adalah mekanisme sistematis (bukan intervensi manual) untuk melindungi profit.
+    pub(crate) sl_moved_to_breakeven: bool,
 }

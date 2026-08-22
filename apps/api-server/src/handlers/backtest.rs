@@ -1,13 +1,21 @@
 use crate::state::AppState;
 use application::services::{BacktestReport, BacktestService};
-use axum::extract::{Path as AxumPath, State};
+use axum::extract::{Path as AxumPath, Query, State};
 use axum::http::StatusCode;
 use axum::Json;
 use chrono::{TimeZone, Utc};
-use domain::models::{RiskProfile, Symbol, TfPairSpec, Timeframe};
+use domain::models::{PolaNStrategy, RiskProfile, Symbol, TfPairSpec, Timeframe};
+use domain::ports::StrategyPort;
+use domain::strategies::SmcLiquiditySweepStrategy;
 use rust_decimal::Decimal;
-use serde::Serialize;
+use rust_decimal_macros::dec;
+use serde::{Deserialize, Serialize};
 use std::sync::Arc;
+
+#[derive(Debug, Deserialize, Default)]
+pub struct BacktestQuery {
+    pub strategy: Option<String>,
+}
 
 #[derive(Serialize)]
 pub struct BacktestApiResponse {
@@ -36,20 +44,41 @@ pub struct SimulatedTradeDto {
     pub exit_reason: String,
 }
 
-pub async fn backtest_handler(State(state): State<Arc<AppState>>) -> Json<BacktestApiResponse> {
-    let pairs = ["NZDUSD", "AUDUSD", "EURGBP", "USDCHF", "EURUSD", "GBPUSD"];
+fn resolve_strategy(query_strat: Option<&str>) -> Arc<dyn StrategyPort> {
+    match query_strat {
+        Some("pola-n-v2") | Some("pola-n-adaptive") => Arc::new(PolaNStrategy::v2_adaptive()),
+        Some("dual-ema-trend") => Arc::new(PolaNStrategy::with_params(
+            "TF-DualEMA-Trend",
+            3,
+            2,
+            dec!(0.00015),
+            dec!(1.5),
+        )),
+        Some("liquidity-order-block") => Arc::new(SmcLiquiditySweepStrategy::default()),
+        _ => Arc::new(PolaNStrategy::v1_production()),
+    }
+}
+
+pub async fn backtest_handler(
+    Query(query): Query<BacktestQuery>,
+    State(state): State<Arc<AppState>>,
+) -> Json<BacktestApiResponse> {
+    let pairs = [
+        "NZDUSD", "AUDUSD", "EURGBP", "USDCHF", "EURUSD", "GBPUSD", "XAUUSD", "USDJPY",
+    ];
     let mut reports = Vec::new();
     let mut total_vp = Decimal::ZERO;
     let mut total_trades = 0;
     let mut total_wins = 0;
 
+    let strategy = resolve_strategy(query.strategy.as_deref());
     let service = BacktestService::new(
         state.market_adapter.clone(),
-        state.strategy.clone(),
+        strategy,
         RiskProfile::default(),
     );
 
-    let from_dt = Utc.with_ymd_and_hms(2023, 1, 1, 0, 0, 0).unwrap();
+    let from_dt = Utc.with_ymd_and_hms(2015, 1, 1, 0, 0, 0).unwrap();
     let to_dt = Utc.with_ymd_and_hms(2026, 8, 1, 0, 0, 0).unwrap();
 
     for p in &pairs {
@@ -91,13 +120,15 @@ pub struct DetailedBacktestApiResponse {
 
 pub async fn backtest_trades_handler(
     AxumPath(symbol): AxumPath<String>,
+    Query(query): Query<BacktestQuery>,
     State(state): State<Arc<AppState>>,
 ) -> Result<Json<Vec<SimulatedTradeDto>>, StatusCode> {
     let sym_str = symbol.to_uppercase();
     if let Some(sym) = Symbol::from_symbol_str(&sym_str) {
+        let strategy = resolve_strategy(query.strategy.as_deref());
         let service = BacktestService::new(
             state.market_adapter.clone(),
-            state.strategy.clone(),
+            strategy,
             RiskProfile::default(),
         );
 
@@ -151,17 +182,19 @@ pub async fn backtest_trades_handler(
 
 pub async fn backtest_detailed_handler(
     AxumPath(symbol): AxumPath<String>,
+    Query(query): Query<BacktestQuery>,
     State(state): State<Arc<AppState>>,
 ) -> Result<Json<DetailedBacktestApiResponse>, StatusCode> {
     let sym_str = symbol.to_uppercase();
     if let Some(sym) = Symbol::from_symbol_str(&sym_str) {
+        let strategy = resolve_strategy(query.strategy.as_deref());
         let service = BacktestService::new(
             state.market_adapter.clone(),
-            state.strategy.clone(),
+            strategy,
             RiskProfile::default(),
         );
 
-        let from_dt = Utc.with_ymd_and_hms(2023, 1, 1, 0, 0, 0).unwrap();
+        let from_dt = Utc.with_ymd_and_hms(2015, 1, 1, 0, 0, 0).unwrap();
         let to_dt = Utc.with_ymd_and_hms(2026, 8, 1, 0, 0, 0).unwrap();
         let spec = TfPairSpec::from_symbol(&sym);
 

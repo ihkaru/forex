@@ -2,56 +2,66 @@ import type { IChartLayer, ChartLayerContext } from '../../ports/layers';
 
 export class ActiveSignalOverlayLayer implements IChartLayer {
   public readonly id = 'signal-overlay';
-  public readonly name = 'Active Signal R:R Overlay (Entry/SL/TP)';
-  public readonly description = 'Menampilkan garis batas harga pesanan tunda, Stop Loss, dan Take Profit';
+  public readonly name = 'Signal Execution Overlay (Entry/SL/TP)';
+  public readonly shortLabel = 'Signal';
+  public readonly description = 'Menampilkan garis batas level Entry, Stop Loss, dan Take Profit sinyal aktif';
+  public readonly isUniversal = true;
   public visible = true;
 
   private priceLines: any[] = [];
 
-  render(context: ChartLayerContext): void {
-    this.clear(context);
-    if (!this.visible || !context.signal) return;
+  isApplicableForStrategy(_strategyId: string, _category?: string): boolean {
+    return true; // Universal layer: Wajib ada di seluruh strategi
+  }
 
-    const signal = context.signal;
+  render(context: ChartLayerContext): void {
+    this.clear();
+    if (!this.visible || !context || !context.signal || !context.candleSeries) return;
+
+    const sig = context.signal;
 
     try {
+      // 1. Entry Line
       const entryLine = context.candleSeries.createPriceLine({
-        price: signal.entryPrice,
-        color: '#06b6d4',
+        price: sig.entryPrice,
+        color: '#2962ff',
         lineWidth: 2,
         lineStyle: 0,
         axisLabelVisible: true,
-        title: `ENTRY (${signal.action})`,
+        title: `ENTRY (${sig.action})`,
       });
+      this.priceLines.push(entryLine);
+
+      // 2. Stop Loss Line
       const slLine = context.candleSeries.createPriceLine({
-        price: signal.stopLoss,
-        color: '#f43f5e',
+        price: sig.stopLoss,
+        color: '#f23645',
         lineWidth: 2,
         lineStyle: 2,
         axisLabelVisible: true,
-        title: 'STOP LOSS',
+        title: 'STOP LOSS (SL)',
       });
-      const tpLine = context.candleSeries.createPriceLine({
-        price: signal.takeProfit1,
-        color: '#10b981',
-        lineWidth: 2,
-        lineStyle: 0,
-        axisLabelVisible: true,
-        title: 'TAKE PROFIT 1',
-      });
+      this.priceLines.push(slLine);
 
-      this.priceLines.push({ series: context.candleSeries, line: entryLine });
-      this.priceLines.push({ series: context.candleSeries, line: slLine });
-      this.priceLines.push({ series: context.candleSeries, line: tpLine });
+      // 3. Take Profit 1 Line
+      const tpLine = context.candleSeries.createPriceLine({
+        price: sig.takeProfit1,
+        color: '#089981',
+        lineWidth: 2,
+        lineStyle: 2,
+        axisLabelVisible: true,
+        title: 'TAKE PROFIT (TP)',
+      });
+      this.priceLines.push(tpLine);
     } catch (e) {
-      console.warn('[ActiveSignalOverlayLayer] warn:', e);
+      console.warn('[ActiveSignalOverlayLayer] createPriceLine warn:', e);
     }
   }
 
-  clear(context?: ChartLayerContext): void {
-    for (const pl of this.priceLines) {
+  clear(): void {
+    for (const line of this.priceLines) {
       try {
-        pl.series.removePriceLine(pl.line);
+        line.applyOptions({ axisLabelVisible: false });
       } catch (e) {}
     }
     this.priceLines = [];
@@ -59,10 +69,10 @@ export class ActiveSignalOverlayLayer implements IChartLayer {
 
   toggle(context: ChartLayerContext): boolean {
     this.visible = !this.visible;
-    if (this.visible) {
+    if (this.visible && context) {
       this.render(context);
     } else {
-      this.clear(context);
+      this.clear();
     }
     return this.visible;
   }

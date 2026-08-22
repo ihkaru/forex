@@ -12,18 +12,19 @@
   import type { StrategyDescriptor, MonteCarloReport } from './ports';
   import type { DetailedBacktestReport } from './ports/ITesterPort';
   import { TfComplianceGuard, TfPairSpec } from './domain/specs';
-  import { Cpu, Dices } from '@lucide/svelte';
+  import { Cpu, Dices, Search, Layers } from '@lucide/svelte';
 
   const composition = new AppCompositionRoot();
 
   // Reactive State (Svelte 5 Runes)
   let activeNav = $state('terminal');
-  let activeSymbol = $state('EURGBP');
+  let activeSymbol = $state('XAUUSD');
   let activePairs = $state<Array<{ symbol: string; base: string; quote: string; tier: number; multiplier: number }>>([
-    { symbol: 'EURGBP', base: 'EUR', quote: 'GBP', tier: 1, multiplier: 2.0 },
+    { symbol: 'XAUUSD', base: 'XAU', quote: 'USD', tier: 4, multiplier: 0.5 },
     { symbol: 'USDCHF', base: 'USD', quote: 'CHF', tier: 1, multiplier: 2.0 },
     { symbol: 'GBPUSD', base: 'GBP', quote: 'USD', tier: 2, multiplier: 1.5 },
     { symbol: 'EURUSD', base: 'EUR', quote: 'USD', tier: 2, multiplier: 1.5 },
+    { symbol: 'EURGBP', base: 'EUR', quote: 'GBP', tier: 1, multiplier: 2.0 },
     { symbol: 'NZDUSD', base: 'NZD', quote: 'USD', tier: 1, multiplier: 2.0 },
     { symbol: 'AUDUSD', base: 'AUD', quote: 'USD', tier: 1, multiplier: 2.0 },
   ]);
@@ -106,13 +107,14 @@
     }
   }
 
-  async function loadMarketData(symbol: string) {
+  async function loadMarketData(symbol: string, strategyId?: string) {
     activeSymbol = symbol;
+    const stratId = strategyId || selectedStrategyId;
     try {
       const [candleData, tradeData, detailedData] = await Promise.all([
         composition.marketDataPort.getCandles(symbol),
-        composition.backtestPort.getTrades(symbol),
-        composition.testerPort.getDetailedBacktestReport(symbol).catch(() => null),
+        composition.backtestPort.getTrades(symbol, stratId),
+        composition.testerPort.getDetailedBacktestReport(symbol, stratId).catch(() => null),
       ]);
       if (candleData && candleData.length > 0) {
         candles = candleData;
@@ -251,7 +253,7 @@
 </script>
 
 <div class="min-h-screen bg-[#131722] text-[#d1d4dc] p-3 sm:p-5 flex flex-col gap-4 font-sans">
-  <!-- Top Bento Bar Header -->
+  <!-- Unified Top Master Bar Header -->
   <TopBentoBar
     {valuedPips}
     {currentMonthVp}
@@ -263,46 +265,24 @@
     {wferPct}
     {totalBars}
     {isTfQualified}
-    activeStrategyName={selectedStrategy.name}
+    {strategies}
+    {selectedStrategyId}
+    onSelectStrategy={(stratId) => {
+      selectedStrategyId = stratId;
+      const strat = strategies.find((s) => s.id === stratId);
+      let targetSym = activeSymbol;
+      if (strat?.supportedSymbols && strat.supportedSymbols.length > 0 && !strat.supportedSymbols.includes(activeSymbol)) {
+        targetSym = strat.supportedSymbols[0];
+      }
+      loadMarketData(targetSym, stratId);
+    }}
+    onOpenModelHub={() => handleNavClick('multi-strategy')}
+    onOpenMonteCarlo={() => handleNavClick('monte-carlo')}
   />
 
-  <!-- Multi-Strategy Selector Bar -->
-  <div class="flex flex-wrap items-center justify-between gap-3 bg-[#1e222d] px-4 py-2.5 rounded-xl border border-[#2a2e39]">
-    <div class="flex items-center gap-2">
-      <div class="flex items-center gap-1.5 text-xs font-bold text-[#787b86] font-mono mr-2">
-        <Cpu class="w-4 h-4 text-[#2962ff]" /> Active Quantitative Strategy:
-      </div>
-
-      <div class="flex flex-wrap items-center gap-1.5">
-        {#each strategies as strat}
-          <button
-            onclick={() => {
-              selectedStrategyId = strat.id;
-              if (candles.length > 0) generateSignal(activeSymbol, candles);
-            }}
-            class="flex items-center gap-2 px-3 py-1 rounded-lg text-xs font-mono font-bold transition-all {selectedStrategyId === strat.id ? 'bg-[#2962ff] text-white shadow-sm' : 'bg-[#131722] text-[#787b86] hover:text-[#d1d4dc] hover:bg-[#2a2e39]'}"
-          >
-            <span>{strat.name}</span>
-            <span class="text-[9px] px-1 py-0.2 rounded {selectedStrategyId === strat.id ? 'bg-white/20 text-white' : 'bg-[#2a2e39] text-[#089981]'}">
-              {strat.winRatePct.toFixed(1)}% WR
-            </span>
-          </button>
-        {/each}
-      </div>
-    </div>
-
-    <!-- Quick Monte Carlo Trigger -->
-    <button
-      onclick={() => handleNavClick('monte-carlo')}
-      class="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-[#ab47bc]/20 hover:bg-[#ab47bc]/30 text-[#ab47bc] border border-[#ab47bc]/40 text-xs font-mono font-bold transition-all"
-    >
-      <Dices class="w-3.5 h-3.5" /> Monte Carlo 1,000-Path Sim
-    </button>
-  </div>
-
-  <!-- Main Terminal Layout: Sidebar + Main Canvas Grid -->
+  <!-- Main Terminal Layout: Slim Icon Sidebar + Main Canvas Grid -->
   <div class="flex flex-col lg:flex-row gap-4 items-stretch flex-1">
-    <!-- Left Navigation & Lifecycle Sidebar -->
+    <!-- Left Navigation & Slim Dock Sidebar -->
     <LifecycleSidebar
       {activeNav}
       onNavClick={handleNavClick}
@@ -311,19 +291,21 @@
     <!-- Main Workspace Grid -->
     <main class="flex-1 flex flex-col gap-4 min-w-0">
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        <!-- 2 Cols: TradingView Canvas with Composed Layers -->
+        <!-- 2 Cols: TradingView Canvas with Strategy-Adaptive Layers -->
         <div class="lg:col-span-2 min-w-0">
           <TradingViewCanvas
             {activeSymbol}
             {activePairs}
+            supportedSymbols={selectedStrategy?.supportedSymbols || []}
+            isSpecialist={selectedStrategy?.isSpecialist || false}
+            activeStrategyId={selectedStrategyId}
+            activeStrategyCategory={selectedStrategy?.category}
             {currentPrice}
             {candles}
             {trades}
             signal={activeSignal}
             {syncStatusMessage}
             onSelectSymbol={(sym) => loadMarketData(sym)}
-            onScanSignal={() => loadMarketData(activeSymbol)}
-            onOpenEda={handleOpenEda}
             onSyncDelta={handleSyncDelta}
             onOpenProvenance={handleOpenProvenance}
           />
@@ -334,6 +316,8 @@
           <SignalHud
             signal={activeSignal}
             {activeSymbol}
+            activeStrategyName={selectedStrategy.name}
+            onScanSignal={() => loadMarketData(activeSymbol, selectedStrategyId)}
           />
         </div>
       </div>
@@ -351,12 +335,22 @@
     isOpen={isModalOpen}
     {modalType}
     {activeSymbol}
+    {selectedStrategyId}
     {edaReport}
     {backtestData}
     {scorecardData}
     {strategies}
     {monteCarloData}
     {candles}
+    onSelectStrategy={(id) => {
+      selectedStrategyId = id;
+      const s = strategies.find(x => x.id === id);
+      let targetSym = activeSymbol;
+      if (s && s.supportedSymbols && s.supportedSymbols.length > 0 && !s.supportedSymbols.includes(activeSymbol)) {
+        targetSym = s.supportedSymbols[0];
+      }
+      loadMarketData(targetSym, id);
+    }}
     onClose={() => {
       isModalOpen = false;
       activeNav = 'terminal';

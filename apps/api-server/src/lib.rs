@@ -25,6 +25,11 @@ pub fn create_router(state: Arc<AppState>) -> Router {
         .route("/api/eda/:symbol", get(eda_handler))
         .route("/api/market/candles/:symbol", get(market_candles_handler))
         .route("/api/market/sync/:symbol", get(sync_delta_handler))
+        .route(
+            "/api/market/ingest",
+            axum::routing::post(market_ingest_handler),
+        )
+        .route("/api/market/symbols", get(market_symbols_handler))
         .route("/api/signals/scan", get(signals_scan_handler))
         .route("/api/audit/full", get(audit_full_handler))
         .route("/api/audit/pair/:symbol", get(audit_pair_handler))

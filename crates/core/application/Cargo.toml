@@ -17,10 +17,10 @@ rust_decimal_macros = { workspace = true }
 uuid = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
+dukascopy-rs = { path = "../../scrapers/dukascopy-rs" }
 
 [dev-dependencies]
 storage-db = { workspace = true }
 broker-connector = { path = "../../adapters/broker-connector" }
-dukascopy-rs = { path = "../../scrapers/dukascopy-rs" }
 publisher-traderfamily = { workspace = true }
 rstest = { workspace = true }

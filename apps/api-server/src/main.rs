@@ -17,13 +17,23 @@ async fn main() -> anyhow::Result<()> {
 
     // Composition Root: Instantiate Adapters & Strategies
     let market_adapter = Arc::new(RealHistoricalMarketAdapter::new());
-    let strategy = Arc::new(PolaNStrategy::default());
+    let strategy = Arc::new(PolaNStrategy::with_params(
+        "TF-PolaN-Production",
+        5,
+        3,
+        rust_decimal_macros::dec!(0.00020),
+        rust_decimal_macros::dec!(1.3),
+    ));
     let storage = Arc::new(storage_db::InMemoryStorage::new());
+    let ingestion_service = Arc::new(application::services::MarketIngestionService::new(
+        storage.clone(),
+    ));
 
     let state = Arc::new(AppState {
         market_adapter,
         strategy,
         storage,
+        ingestion_service,
     });
 
     // Wire Routes & Ports via Router Factory

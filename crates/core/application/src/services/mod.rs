@@ -2,6 +2,7 @@ pub mod audit;
 pub mod backtest;
 pub mod benchmark;
 pub mod eda;
+pub mod ingestion;
 pub mod signal_engine;
 pub mod sync;
 
@@ -12,5 +13,6 @@ pub use backtest::{
 };
 pub use benchmark::{StrategyBenchmarkService, StrategyLeaderboardEntry};
 pub use eda::{EdaReport, EdaService};
+pub use ingestion::MarketIngestionService;
 pub use signal_engine::SignalEngineService;
 pub use sync::DeltaSyncService;

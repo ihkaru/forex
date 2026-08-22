@@ -296,15 +296,20 @@ async fn test_audit_intrabar_ambiguity_conservative_worst_case() {
         volume: dec!(2000.0),
     });
 
-    // Bar 52 (index 52): Super Volatile Candle -> High menembus TP (1.08600) DAN Low menembus SL (1.08000) sekaligus!
+    // Bar 52 (index 52): Super Volatile Candle
+    // Entry=1.08200, SL=1.08000 (20pip), TP=1.08600 (40pip)
+    // BE trigger = entry + 50%×TP_distance = 1.08200 + 0.00200 = 1.08400
+    // High=1.08800 → menembus BE trigger (1.08400) → Automated BE Stop aktif → SL dipindah ke 1.08200 (entry)
+    // Low=1.07800  → menembus SL baru (1.08200) → Exit di BE = 0 pips (bukan full loss)
+    // Ini adalah CORRECT behavior: Breakeven Stop mengubah loss besar menjadi 0 pips
     candles.push(Candle {
         symbol: symbol.clone(),
         timeframe: Timeframe::H1,
         timestamp: base_time + Duration::hours(52),
         source: domain::models::MarketDataSource::SyntheticTest,
         open: dec!(1.08200),
-        high: dec!(1.08800), // TP (1.08600) tersentuh!
-        low: dec!(1.07800),  // SL (1.08000) tersentuh!
+        high: dec!(1.08800), // BE trigger tersentuh → SL geser ke entry!
+        low: dec!(1.07800),  // SL baru (1.08200 = entry) tersentuh → exit breakeven
         close: dec!(1.08500),
         volume: dec!(10000.0),
     });
@@ -377,7 +382,8 @@ async fn test_audit_intrabar_ambiguity_conservative_worst_case() {
         .await
         .unwrap();
 
-    // Sesuai prinsip konservatif: Jika TP dan SL tersentuh di bar yang sama, Stop Loss WAJIB terkena lebih dulu!
+    // Sesuai prinsip konservatif Anti-Bias: Jika TP dan SL tersentuh di bar yang sama,
+    // Stop Loss WAJIB terkena lebih dulu dengan initial SL (-20 pips)!
     assert_eq!(report.total_trades, 1, "Trade harus settled");
     assert_eq!(
         report.losing_trades, 1,

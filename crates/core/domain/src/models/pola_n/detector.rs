@@ -1,5 +1,6 @@
 use crate::models::Candle;
 use rust_decimal::Decimal;
+use rust_decimal_macros::dec;
 
 /// Titik Swing High / Swing Low Fraktal
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -108,4 +109,43 @@ pub fn calculate_atr(candles: &[Candle], period: usize) -> Option<Decimal> {
         tr_sum += tr;
     }
     Some(tr_sum / Decimal::from(period))
+}
+
+/// Utilitas Perhitungan Relative Strength Index (RSI) - 100% Decimal Murni
+pub fn calculate_rsi(candles: &[Candle], period: usize) -> Option<Decimal> {
+    if candles.len() < period + 1 || period == 0 {
+        return None;
+    }
+    let mut gains = Decimal::ZERO;
+    let mut losses = Decimal::ZERO;
+
+    for i in (candles.len() - period)..candles.len() {
+        let diff = candles[i].close - candles[i - 1].close;
+        if diff > Decimal::ZERO {
+            gains += diff;
+        } else {
+            losses += diff.abs();
+        }
+    }
+
+    if losses.is_zero() {
+        return Some(dec!(100.0));
+    }
+    if gains.is_zero() {
+        return Some(Decimal::ZERO);
+    }
+
+    let rs = gains / losses;
+    let rsi = dec!(100.0) - (dec!(100.0) / (Decimal::ONE + rs));
+    Some(rsi)
+}
+
+/// Utilitas Perhitungan Kemiringan Trend (Slope) EMA
+pub fn calculate_ema_slope(candles: &[Candle], period: usize, lookback: usize) -> Option<Decimal> {
+    if candles.len() < period + lookback {
+        return None;
+    }
+    let ema_now = calculate_ema(candles, period)?;
+    let ema_prev = calculate_ema(&candles[..candles.len() - lookback], period)?;
+    Some(ema_now - ema_prev)
 }

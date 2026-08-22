@@ -18,6 +18,9 @@ export interface StrategyDescriptor {
   calmarRatio: number;
   wferPct: number;
   isTfCompliant: boolean;
+  supportedSymbols: string[];
+  isSpecialist?: boolean;
+  specialistLabel?: string | null;
 }
 
 export interface MonteCarloPercentilePoint {
@@ -54,14 +57,14 @@ export interface ISignalPublisherPort {
 }
 
 export interface IBacktestPort {
-  runBacktest(): Promise<{
+  runBacktest(strategyId?: string): Promise<{
     reports: BacktestReport[];
     totalValuedPips: number;
     portfolioWinRatePct: number;
     wferPct: number;
     isTfQualified: boolean;
   }>;
-  getTrades(symbol: string): Promise<SimulatedTrade[]>;
+  getTrades(symbol: string, strategyId?: string): Promise<SimulatedTrade[]>;
 }
 
 export interface IStrategyPort {

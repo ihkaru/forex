@@ -92,8 +92,10 @@ impl BacktestService {
 
         let window_size = self.config.lookback_window_bars;
         let spread_offset = spec.pip_size * self.config.simulation_spread_pips;
+        // Max durasi trade setelah terisi — hindari stagnation churn yang terbukti
+        // merugikan dari forensik candle (58–71% trade rugi = slow churn > 12h)
+        let max_filled_duration = chrono::Duration::hours(24);
 
-        let mut last_signal_entry: Option<Decimal> = None;
         let mut last_signal_bar: usize = 0;
 
         if historical_candles.len() > window_size {
@@ -105,53 +107,70 @@ impl BacktestService {
                 let mut remaining_orders = Vec::new();
                 for mut sim in active_sim_orders {
                     let mut closed = false;
-                    let sl = sim.order.stop_loss;
                     let tp = sim.order.take_profit;
 
                     match sim.status {
                         SimulatedOrderStatus::Pending => {
-                            // Cek apakah order kedaluwarsa sebelum terisi (24 jam)
+                            // Cek apakah order kedaluwarsa sebelum terisi (12 jam — forensik menunjukkan
+                            // setup yang tidak terisi dalam 12 jam sudah kehilangan momentum)
                             if current_candle.timestamp >= sim.expires_at {
                                 continue;
                             }
 
-                            // Cek apakah harga pasar menjemput Limit Order
-                            match sim.order.action {
+                            // Cek apakah harga pasar menjemput Pending Order
+                            let is_filled = match sim.order.action {
                                 SignalAction::BuyLimit => {
-                                    if current_candle.low + spread_offset <= sim.order.open_price {
-                                        sim.status = SimulatedOrderStatus::Filled {
-                                            fill_time: current_candle.timestamp,
-                                        };
-                                        remaining_orders.push(sim);
-                                    } else {
-                                        remaining_orders.push(sim);
-                                    }
+                                    current_candle.low + spread_offset <= sim.order.open_price
                                 }
                                 SignalAction::SellLimit => {
-                                    if current_candle.high >= sim.order.open_price {
-                                        sim.status = SimulatedOrderStatus::Filled {
-                                            fill_time: current_candle.timestamp,
-                                        };
-                                        remaining_orders.push(sim);
-                                    } else {
-                                        remaining_orders.push(sim);
-                                    }
+                                    current_candle.high >= sim.order.open_price
                                 }
-                                _ => {}
+                                SignalAction::BuyStop => {
+                                    current_candle.high + spread_offset >= sim.order.open_price
+                                }
+                                SignalAction::SellStop => {
+                                    current_candle.low <= sim.order.open_price
+                                }
+                                _ => false,
+                            };
+
+                            if is_filled {
+                                sim.status = SimulatedOrderStatus::Filled {
+                                    fill_time: current_candle.timestamp,
+                                };
                             }
+                            remaining_orders.push(sim);
                         }
-                        SimulatedOrderStatus::Filled { .. } => {
+                        SimulatedOrderStatus::Filled { fill_time } => {
+                            // Max trade duration check: exit breakeven setelah 48 jam terisi
+                            // Ini mengeliminasi stagnation churn (58–71% trade rugi)
+                            let duration_since_fill = current_candle.timestamp - fill_time;
+                            if duration_since_fill >= max_filled_duration {
+                                // Exit dengan PnL 0 (breakeven/time-stop)
+                                sim.order.close_time = Some(current_candle.timestamp);
+                                sim.order.realized_pnl = Some(Decimal::ZERO);
+                                completed_trades.push(sim.order);
+                                continue;
+                            }
+
+                            // Baca SL yang berlaku pada awal bar ini
+                            let sl = sim.order.stop_loss;
+
                             match sim.order.action {
                                 SignalAction::BuyLimit | SignalAction::BuyStop => {
                                     let sl_hit = current_candle.low <= sl;
                                     let tp_hit = current_candle.high >= tp;
 
                                     if sl_hit {
-                                        let pips =
-                                            -spec.price_diff_to_pips(sim.order.open_price - sl);
+                                        let loss_pips = if sim.sl_moved_to_breakeven {
+                                            // SL sudah di BE — exit nol pips
+                                            Decimal::ZERO
+                                        } else {
+                                            -spec.price_diff_to_pips(sim.order.open_price - sl)
+                                        };
                                         sim.order.close_time = Some(current_candle.timestamp);
-                                        sim.order.realized_pnl = Some(pips);
-                                        running_pips += pips;
+                                        sim.order.realized_pnl = Some(loss_pips);
+                                        running_pips += loss_pips;
                                         closed = true;
                                     } else if tp_hit {
                                         let pips =
@@ -167,11 +186,15 @@ impl BacktestService {
                                     let tp_hit = current_candle.low + spread_offset <= tp;
 
                                     if sl_hit {
-                                        let pips =
-                                            -spec.price_diff_to_pips(sl - sim.order.open_price);
+                                        let loss_pips = if sim.sl_moved_to_breakeven {
+                                            // SL sudah di BE — exit nol pips
+                                            Decimal::ZERO
+                                        } else {
+                                            -spec.price_diff_to_pips(sl - sim.order.open_price)
+                                        };
                                         sim.order.close_time = Some(current_candle.timestamp);
-                                        sim.order.realized_pnl = Some(pips);
-                                        running_pips += pips;
+                                        sim.order.realized_pnl = Some(loss_pips);
+                                        running_pips += loss_pips;
                                         closed = true;
                                     } else if tp_hit {
                                         let pips =
@@ -188,6 +211,33 @@ impl BacktestService {
                             if closed {
                                 completed_trades.push(sim.order);
                             } else {
+                                // ─── AUTOMATED BREAKEVEN STOP (Untuk Bar Berikutnya) ────────────────
+                                // Jika order masih berjalan dan candle ini mencapai MFE >= 50% TP,
+                                // pindahkan SL ke breakeven untuk melindungi bar-bar berikutnya.
+                                if !sim.sl_moved_to_breakeven {
+                                    let tp_distance =
+                                        (sim.order.take_profit - sim.order.open_price).abs();
+                                    let be_trigger = tp_distance * dec!(0.30);
+                                    match sim.order.action {
+                                        SignalAction::BuyLimit | SignalAction::BuyStop
+                                            if current_candle.high
+                                                >= sim.order.open_price + be_trigger =>
+                                        {
+                                            sim.order.stop_loss = sim.order.open_price;
+                                            sim.sl_moved_to_breakeven = true;
+                                        }
+                                        SignalAction::SellLimit | SignalAction::SellStop
+                                            if current_candle.low
+                                                <= sim.order.open_price - be_trigger =>
+                                        {
+                                            sim.order.stop_loss = sim.order.open_price;
+                                            sim.sl_moved_to_breakeven = true;
+                                        }
+                                        _ => {}
+                                    }
+                                }
+                                // ─── END BREAKEVEN STOP ─────────────────────────────────────────────
+
                                 remaining_orders.push(sim);
                             }
                         }
@@ -204,8 +254,9 @@ impl BacktestService {
                 }
                 active_sim_orders = remaining_orders;
 
-                // Evaluasi sinyal baru jika belum ada pending order aktif pada bar ini
-                if active_sim_orders.is_empty() {
+                // Evaluasi sinyal baru jika kuota pair belum penuh (max 2 order aktif —
+                // sesuai Invariant TF: "MAKSIMAL 2 SINYAL / PAIR")
+                if active_sim_orders.len() < 2 {
                     let last_slice_candle = &slice[slice.len() - 1];
                     let tick = Tick {
                         symbol: last_slice_candle.symbol.clone(),
@@ -224,12 +275,37 @@ impl BacktestService {
                     };
 
                     if let Ok(Some(signal)) = self.strategy.evaluate(&context).await {
-                        // Hindari duplikasi sinyal pada level harga atau bar yang sama persis
-                        let is_duplicate = last_signal_entry == Some(signal.entry_price)
-                            || (i.saturating_sub(last_signal_bar) < 6);
+                        // Cooldown 3 bar minimum antara sinyal untuk mencegah duplikasi setup
+                        let is_cooldown_active = i.saturating_sub(last_signal_bar) < 3;
 
-                        if !is_duplicate && TfComplianceGuard::validate_signal(&signal).is_ok() {
-                            last_signal_entry = Some(signal.entry_price);
+                        // Guard JARAK PENDING SEARAH (Anti-Martingale — Invariant TF):
+                        // Order kedua searah harus berjarak minimal min_same_direction_gap_pips
+                        // dari order pertama yang masih pending (Tier1≥50pip, Tier2≥75pip, Tier3/4≥100pip)
+                        let violates_gap_rule = active_sim_orders.iter().any(|existing| {
+                            let same_dir = matches!(
+                                (existing.order.action, signal.action),
+                                (
+                                    SignalAction::BuyLimit | SignalAction::BuyStop,
+                                    SignalAction::BuyLimit | SignalAction::BuyStop,
+                                ) | (
+                                    SignalAction::SellLimit | SignalAction::SellStop,
+                                    SignalAction::SellLimit | SignalAction::SellStop,
+                                )
+                            );
+                            if same_dir {
+                                let gap = spec.price_diff_to_pips(
+                                    (existing.order.open_price - signal.entry_price).abs(),
+                                );
+                                gap < spec.min_same_direction_gap_pips
+                            } else {
+                                false
+                            }
+                        });
+
+                        if !is_cooldown_active
+                            && !violates_gap_rule
+                            && TfComplianceGuard::validate_signal(&signal).is_ok()
+                        {
                             last_signal_bar = i;
 
                             let order = Order {
@@ -245,10 +321,13 @@ impl BacktestService {
                                 close_time: None,
                                 realized_pnl: None,
                             };
+                            // Forensik: pending order tidak terisi > 8 jam sudah kehilangan momentum
+                            // (session London + NY berakhir, setup sudah tidak valid)
                             let sim_order = SimulatedOrder {
                                 order,
                                 status: SimulatedOrderStatus::Pending,
-                                expires_at: current_candle.timestamp + chrono::Duration::hours(24),
+                                expires_at: current_candle.timestamp + chrono::Duration::hours(8),
+                                sl_moved_to_breakeven: false,
                             };
                             active_sim_orders.push(sim_order);
                         }

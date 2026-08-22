@@ -25,6 +25,7 @@ mod tests {
     #[test]
     fn test_bullish_pola_n_detection() {
         let engine = PolaNFormationEngine::default();
+        let pip_size = dec!(0.00010); // Standard 5-digit forex pip size
         let swings = vec![
             SwingPoint {
                 index: 0,
@@ -38,25 +39,34 @@ mod tests {
             },
             SwingPoint {
                 index: 15,
-                price: dec!(1.1040), // L2 Higher Low (Retest 60% retracement)
+                // L2 = 65% retracement dari impulse 100 pips → 1.1100 - 0.0065 = 1.1035
+                // Berada dalam window 38%-85% (retracement = 65%)
+                price: dec!(1.1035),
                 is_high: false,
             },
         ];
 
-        let result = engine.evaluate_swings(&swings, dec!(1.1045));
-        assert!(result.is_some());
+        let result = engine.evaluate_swings(&swings, dec!(1.1040), pip_size);
+        assert!(
+            result.is_some(),
+            "Formasi bullish pada 65% retracement harus terdeteksi"
+        );
         let formation = result.unwrap();
         assert_eq!(formation.pattern_type, PolaNType::BullishN);
         assert_eq!(formation.point_1, dec!(1.1000));
         assert_eq!(formation.point_2, dec!(1.1100));
-        assert_eq!(formation.point_3, dec!(1.1040));
-        assert_eq!(formation.take_profit_1, dec!(1.11240));
-        assert_eq!(formation.risk_reward_ratio, dec!(2.0));
+        assert_eq!(formation.point_3, dec!(1.1035));
+        // Golden Pullback Entry: L2 + 25% of pullback = 1.1035 + 0.001625 = 1.105125
+        assert_eq!(formation.suggested_entry, dec!(1.105125));
+        // SL Struktural: L2 - 2 pip = 1.1035 - 0.0002 = 1.1033
+        assert_eq!(formation.stop_loss, dec!(1.1033));
+        assert_eq!(formation.risk_reward_ratio, dec!(1.49));
     }
 
     #[test]
     fn test_bearish_pola_n_detection() {
         let engine = PolaNFormationEngine::default();
+        let pip_size = dec!(0.00010);
         let swings = vec![
             SwingPoint {
                 index: 0,
@@ -70,25 +80,34 @@ mod tests {
             },
             SwingPoint {
                 index: 15,
-                price: dec!(1.1960), // H2 Lower High (Retest 40% discount)
+                // H2 = 65% retracement dari impulse 100 pips → 1.1900 + 0.0065 = 1.1965
+                // Berada dalam window 38%-85% (retracement = 65%)
+                price: dec!(1.1965),
                 is_high: true,
             },
         ];
 
-        let result = engine.evaluate_swings(&swings, dec!(1.1955));
-        assert!(result.is_some());
+        let result = engine.evaluate_swings(&swings, dec!(1.1960), pip_size);
+        assert!(
+            result.is_some(),
+            "Formasi bearish pada 65% retracement harus terdeteksi"
+        );
         let formation = result.unwrap();
         assert_eq!(formation.pattern_type, PolaNType::BearishN);
         assert_eq!(formation.point_1, dec!(1.2000));
         assert_eq!(formation.point_2, dec!(1.1900));
-        assert_eq!(formation.point_3, dec!(1.1960));
-        assert_eq!(formation.take_profit_1, dec!(1.18760));
-        assert_eq!(formation.risk_reward_ratio, dec!(2.0));
+        assert_eq!(formation.point_3, dec!(1.1965));
+        // Golden Pullback Entry: H2 - 25% of pullback = 1.1965 - 0.001625 = 1.194875
+        assert_eq!(formation.suggested_entry, dec!(1.194875));
+        // SL Struktural: H2 + 2 pip = 1.1965 + 0.0002 = 1.1967
+        assert_eq!(formation.stop_loss, dec!(1.1967));
+        assert_eq!(formation.risk_reward_ratio, dec!(1.49));
     }
 
     #[test]
     fn test_invalid_pola_n_rejected() {
         let engine = PolaNFormationEngine::default();
+        let pip_size = dec!(0.00010);
         // L2 lebih rendah dari L1 (Bukan Higher Low, melainkan Lower Low -> Gagal Struktur Pola N)
         let invalid_swings = vec![
             SwingPoint {
@@ -108,7 +127,7 @@ mod tests {
             },
         ];
 
-        let result = engine.evaluate_swings(&invalid_swings, dec!(1.0960));
+        let result = engine.evaluate_swings(&invalid_swings, dec!(1.0960), pip_size);
         assert!(result.is_none());
     }
 

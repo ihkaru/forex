@@ -32,7 +32,7 @@ export class TfPairSpec {
       case 'EURNZD':
         return { tier: 3, multiplier: 1.0, pipSize: 0.010, minPips: 20.0, maxPips: 400.0, name: 'Tier 3' };
       case 'XAUUSD':
-        return { tier: 4, multiplier: 0.5, pipSize: 0.010, minPips: 30.0, maxPips: 500.0, name: 'Tier 4' };
+        return { tier: 4, multiplier: 0.5, pipSize: 0.10, minPips: 30.0, maxPips: 500.0, name: 'Tier 4' };
       default:
         return { tier: 2, multiplier: 1.5, pipSize: 0.00010, minPips: 15.0, maxPips: 300.0, name: 'Tier 2' };
     }

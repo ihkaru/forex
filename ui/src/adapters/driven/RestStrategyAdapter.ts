@@ -24,6 +24,9 @@ export class RestStrategyAdapter implements IStrategyPort {
       calmarRatio: Number(s.calmar_ratio),
       wferPct: Number(s.wfer_pct),
       isTfCompliant: s.is_tf_compliant,
+      supportedSymbols: s.supported_symbols || [],
+      isSpecialist: s.is_specialist || false,
+      specialistLabel: s.specialist_label || null,
     }));
   }
 }

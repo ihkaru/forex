@@ -8,8 +8,10 @@ use rust_decimal_macros::dec;
 use std::collections::HashMap;
 use std::sync::Arc;
 
+use std::sync::RwLock;
+
 pub struct RealHistoricalMarketAdapter {
-    pub candles_map: HashMap<String, Vec<Candle>>,
+    pub candles_map: RwLock<HashMap<String, Vec<Candle>>>,
 }
 
 #[derive(serde::Deserialize)]
@@ -36,19 +38,35 @@ impl Default for RealHistoricalMarketAdapter {
 impl RealHistoricalMarketAdapter {
     pub fn new() -> Self {
         let mut map = HashMap::new();
-        let pairs = ["EURGBP", "USDCHF", "GBPUSD", "EURUSD", "NZDUSD", "AUDUSD"];
+        let default_pairs = [
+            "EURGBP", "USDCHF", "GBPUSD", "EURUSD", "NZDUSD", "AUDUSD", "XAUUSD", "USDCAD",
+            "USDJPY", "EURJPY", "GBPJPY",
+        ];
 
-        for p in &pairs {
+        for p in &default_pairs {
             if let Some(sym) = Symbol::from_symbol_str(p) {
-                let candles = Self::load_real_market_candles(&sym).unwrap_or_else(|e| {
-                    eprintln!("⚠️ Gagal memuat data nyata untuk {}: {}", p, e);
-                    Vec::new()
-                });
-                map.insert(sym.to_compact_string(), candles);
+                if let Ok(candles) = Self::load_real_market_candles(&sym) {
+                    if !candles.is_empty() {
+                        map.insert(sym.to_compact_string(), candles);
+                    }
+                }
             }
         }
 
-        Self { candles_map: map }
+        Self {
+            candles_map: RwLock::new(map),
+        }
+    }
+
+    /// Reload data simbol tertentu ke memori secara live
+    pub fn reload_symbol(&self, symbol: &Symbol) -> Result<usize, DomainError> {
+        let candles = Self::load_real_market_candles(symbol)
+            .map_err(|e| DomainError::AdapterError(e.to_string()))?;
+        let count = candles.len();
+        if let Ok(mut map) = self.candles_map.write() {
+            map.insert(symbol.to_compact_string(), candles);
+        }
+        Ok(count)
     }
 
     /// Memuat data pasar historis 100% nyata dari disk cache
@@ -121,7 +139,12 @@ impl RealHistoricalMarketAdapter {
 #[async_trait]
 impl MarketDataPort for RealHistoricalMarketAdapter {
     async fn get_latest_tick(&self, symbol: &Symbol) -> Result<Tick, DomainError> {
-        if let Some(candles) = self.candles_map.get(&symbol.to_compact_string()) {
+        let map = self
+            .candles_map
+            .read()
+            .map_err(|_| DomainError::AdapterError("Failed to acquire read lock".to_string()))?;
+
+        if let Some(candles) = map.get(&symbol.to_compact_string()) {
             if let Some(last) = candles.last() {
                 return Ok(Tick {
                     symbol: symbol.clone(),
@@ -144,7 +167,12 @@ impl MarketDataPort for RealHistoricalMarketAdapter {
         _timeframe: Timeframe,
         limit: usize,
     ) -> Result<Vec<Candle>, DomainError> {
-        if let Some(candles) = self.candles_map.get(&symbol.to_compact_string()) {
+        let map = self
+            .candles_map
+            .read()
+            .map_err(|_| DomainError::AdapterError("Failed to acquire read lock".to_string()))?;
+
+        if let Some(candles) = map.get(&symbol.to_compact_string()) {
             let start = if candles.len() > limit {
                 candles.len() - limit
             } else {
@@ -165,7 +193,12 @@ impl MarketDataPort for RealHistoricalMarketAdapter {
         _from: DateTime<Utc>,
         _to: DateTime<Utc>,
     ) -> Result<Vec<Candle>, DomainError> {
-        if let Some(candles) = self.candles_map.get(&symbol.to_compact_string()) {
+        let map = self
+            .candles_map
+            .read()
+            .map_err(|_| DomainError::AdapterError("Failed to acquire read lock".to_string()))?;
+
+        if let Some(candles) = map.get(&symbol.to_compact_string()) {
             return Ok(candles.clone());
         }
         Err(DomainError::AdapterError(format!(
@@ -179,4 +212,5 @@ pub struct AppState {
     pub market_adapter: Arc<RealHistoricalMarketAdapter>,
     pub strategy: Arc<PolaNStrategy>,
     pub storage: Arc<storage_db::InMemoryStorage>,
+    pub ingestion_service: Arc<application::services::MarketIngestionService>,
 }

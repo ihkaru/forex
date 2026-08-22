@@ -25,7 +25,9 @@ pub struct SystemConfigResponse {
 }
 
 pub async fn config_handler() -> Json<SystemConfigResponse> {
-    let pairs = ["EURGBP", "USDCHF", "GBPUSD", "EURUSD", "NZDUSD", "AUDUSD"];
+    let pairs = [
+        "EURGBP", "USDCHF", "GBPUSD", "EURUSD", "NZDUSD", "AUDUSD", "XAUUSD",
+    ];
     let mut active_pairs = Vec::new();
 
     for p in &pairs {
@@ -54,7 +56,7 @@ pub async fn config_handler() -> Json<SystemConfigResponse> {
         active_pairs,
         tf_monthly_goal_vp: Decimal::from(300),
         tf_point_cash_value_idr: 10_000,
-        min_settled_trades_monthly: 5,
+        min_settled_trades_monthly: 20,
         max_rr_ratio: Decimal::from(3),
     })
 }

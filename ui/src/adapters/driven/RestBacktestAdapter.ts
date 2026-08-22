@@ -36,9 +36,10 @@ export class RestBacktestAdapter implements IBacktestPort {
     };
   }
 
-  async getTrades(symbol: string): Promise<any[]> {
+  async getTrades(symbol: string, strategyId?: string): Promise<any[]> {
     try {
-      const res = await fetch(`${this.baseUrl}/backtest/trades/${symbol}`);
+      const query = strategyId ? `?strategy=${strategyId}` : '';
+      const res = await fetch(`${this.baseUrl}/backtest/trades/${symbol}${query}`);
       if (res.ok) {
         return await res.json();
       }

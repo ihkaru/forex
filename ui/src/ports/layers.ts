@@ -24,13 +24,29 @@ export interface ChartLayerContext {
   trades: SimulatedTrade[];
   signal: Signal | null;
   activeSymbol: string;
+  activeStrategyId?: string;
+  activeStrategyCategory?: string;
 }
 
+/**
+ * Interface-First Strategy-Adaptive Chart Layer Contract.
+ * Memisahkan layer universal (wajib di semua strategi) vs layer khusus strategi.
+ */
 export interface IChartLayer {
   readonly id: string;
   readonly name: string;
+  readonly shortLabel: string;
   readonly description: string;
+  readonly isUniversal: boolean; // True jika wajib ada di seluruh strategi (Trades, Signal R:R)
+  readonly supportedCategories?: string[];
+  readonly supportedStrategyIds?: string[];
   visible: boolean;
+
+  /**
+   * Mengevaluasi apakah layer ini relevan untuk strategi yang aktif saat ini.
+   */
+  isApplicableForStrategy(strategyId: string, category?: string): boolean;
+
   render(context: ChartLayerContext): void;
   clear(): void;
   toggle(context: ChartLayerContext): boolean;

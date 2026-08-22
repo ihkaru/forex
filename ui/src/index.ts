@@ -47,6 +47,6 @@ export class AppCompositionRoot {
   async start(): Promise<void> {
     console.log('🚀 Hexagonal App Composition Root Initialized.');
     this.chartAdapter.init();
-    await this.chartAdapter.renderSymbol('EURGBP');
+    await this.chartAdapter.renderSymbol('XAUUSD');
   }
 }

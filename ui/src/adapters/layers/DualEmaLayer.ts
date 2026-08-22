@@ -1,56 +1,73 @@
-import { LineSeries, type ISeriesApi, type LineData } from 'lightweight-charts';
+import { LineSeries, type ISeriesApi } from 'lightweight-charts';
 import type { IChartLayer, ChartLayerContext } from '../../ports/layers';
 import type { Candle } from '../../domain/models';
 
 export class DualEmaLayer implements IChartLayer {
   public readonly id = 'dual-ema';
-  public readonly name = 'Dual EMA Trend (20 / 50)';
-  public readonly description = 'Indikator tren Exponential Moving Average periode 20 (Cyan) dan 50 (Amber)';
+  public readonly name = 'Dual EMA Trend (EMA 20 / EMA 50)';
+  public readonly shortLabel = 'EMA';
+  public readonly description = 'Menampilkan kurva tren Fast EMA 20 (Cyan) dan Slow EMA 50 (Orange)';
+  public readonly isUniversal = false;
+  public readonly supportedCategories = ['MARKET_STRUCTURE', 'GOLD_SPECIALIST', 'TREND_FOLLOWING'];
+  public readonly supportedStrategyIds = ['pola-n-core', 'pola-n-v2', 'dual-ema-trend'];
   public visible = true;
 
-  private ema20Series: ISeriesApi<'Line'> | null = null;
-  private ema50Series: ISeriesApi<'Line'> | null = null;
+  private emaFastSeries: ISeriesApi<'Line'> | null = null;
+  private emaSlowSeries: ISeriesApi<'Line'> | null = null;
+  private chartRef: any = null;
+
+  isApplicableForStrategy(strategyId: string, category?: string): boolean {
+    if (this.supportedStrategyIds.includes(strategyId)) return true;
+    if (category && this.supportedCategories.includes(category)) return true;
+    return false;
+  }
 
   render(context: ChartLayerContext): void {
-    if (!this.visible) {
-      this.clear();
-      return;
-    }
-    if (!context.candles || context.candles.length === 0) return;
+    this.clear();
+    if (!this.visible || !context || !context.chart || !context.candles || context.candles.length < 50) return;
 
-    if (!this.ema20Series) {
-      this.ema20Series = context.chart.addSeries(LineSeries, {
-        color: '#06b6d4',
+    this.chartRef = context.chart;
+
+    try {
+      const emaFastData = this.calculateEmaData(context.candles, 20);
+      const emaSlowData = this.calculateEmaData(context.candles, 50);
+
+      this.emaFastSeries = context.chart.addSeries(LineSeries, {
+        color: '#2962ff',
         lineWidth: 2,
         title: 'EMA 20',
         priceLineVisible: false,
         lastValueVisible: true,
       });
-    }
+      this.emaFastSeries.setData(emaFastData as any);
 
-    if (!this.ema50Series) {
-      this.ema50Series = context.chart.addSeries(LineSeries, {
-        color: '#f59e0b',
+      this.emaSlowSeries = context.chart.addSeries(LineSeries, {
+        color: '#f5c344',
         lineWidth: 2,
         title: 'EMA 50',
         priceLineVisible: false,
         lastValueVisible: true,
       });
+      this.emaSlowSeries.setData(emaSlowData as any);
+    } catch (e) {
+      console.warn('[DualEmaLayer] addSeries(LineSeries) warn:', e);
     }
-
-    const ema20 = this.computeEma(context.candles, 20);
-    const ema50 = this.computeEma(context.candles, 50);
-
-    this.ema20Series.setData(ema20);
-    this.ema50Series.setData(ema50);
   }
 
   clear(): void {
-    if (this.ema20Series) {
-      this.ema20Series.setData([]);
-    }
-    if (this.ema50Series) {
-      this.ema50Series.setData([]);
+    if (this.chartRef) {
+      if (this.emaFastSeries) {
+        try {
+          this.chartRef.removeSeries(this.emaFastSeries);
+        } catch (e) {}
+        this.emaFastSeries = null;
+      }
+      if (this.emaSlowSeries) {
+        try {
+          this.chartRef.removeSeries(this.emaSlowSeries);
+        } catch (e) {}
+        this.emaSlowSeries = null;
+      }
     }
   }
 
@@ -64,20 +81,23 @@ export class DualEmaLayer implements IChartLayer {
     return this.visible;
   }
 
-  private computeEma(data: Candle[], period: number): LineData[] {
-    if (data.length < period) return [];
+  private calculateEmaData(candles: Candle[], period: number): Array<{ time: number; value: number }> {
     const k = 2 / (period + 1);
-    const emaList: LineData[] = [];
-    let ema = data[0].close;
+    let ema = candles[0].close;
+    const result: Array<{ time: number; value: number }> = [];
 
-    for (let i = 0; i < data.length; i++) {
+    for (let i = 0; i < candles.length; i++) {
+      const c = candles[i];
       if (i === 0) {
-        ema = data[i].close;
+        ema = c.close;
       } else {
-        ema = data[i].close * k + ema * (1 - k);
+        ema = c.close * k + ema * (1 - k);
       }
-      emaList.push({ time: data[i].time as any, value: ema });
+      if (i >= period - 1) {
+        result.push({ time: c.time, value: ema });
+      }
     }
-    return emaList;
+
+    return result;
   }
 }

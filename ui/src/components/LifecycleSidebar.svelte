@@ -5,15 +5,14 @@
     DollarSign,
     LineChart,
     Stethoscope,
-    Database,
-    Activity,
-    GitBranch,
-    TrendingUp,
-    ShieldCheck,
-    Radio,
     Dices,
     Cpu,
-    Zap
+    Zap,
+    ChevronLeft,
+    ChevronRight,
+    ShieldCheck,
+    Radio,
+    Activity
   } from '@lucide/svelte';
 
   interface Props {
@@ -23,100 +22,122 @@
 
   let { activeNav = 'terminal', onNavClick }: Props = $props();
 
-  const navItems = [
-    { id: 'terminal', label: 'TradingView Chart', icon: LayoutDashboard },
-    { id: 'monte-carlo', label: 'Monte Carlo Lab (1K)', icon: Dices },
-    { id: 'multi-strategy', label: 'Multi-Strategy Matrix', icon: Cpu },
-    { id: 'lifecycle', label: '6-Stage Provenance', icon: GitPullRequest },
-    { id: 'tf-hub', label: 'TF Monetization HUD', icon: DollarSign },
-    { id: 'wfa-lab', label: 'Walk-Forward WFA Lab', icon: LineChart },
-    { id: 'eda', label: 'EDA Data Health Audit', icon: Stethoscope },
-  ];
+  let isExpanded = $state(false);
 
-  const pipelineStages = [
-    { id: 1, title: '1. Market Ingestion', desc: '100% Dukascopy Real Swiss TickFeed (UTC Norm)', icon: Database },
-    { id: 2, title: '2. EDA Health Check', desc: '0 Math Violation • Max Spread < 5.0 Pips', icon: Activity },
-    { id: 3, title: '3. Multi-Strategy Core', desc: 'Pola N • Dual EMA • ICT Order Block', icon: GitBranch },
-    { id: 4, title: '4. Anti-Bias WFA', desc: 'WFER 94.8% • Zero Look-Ahead Rolling Matrix', icon: TrendingUp },
-    { id: 5, title: '5. TF Compliance Guard', desc: 'Pending Limit Only • RR <= 1:3.00 • 0-Penalty', icon: ShieldCheck },
-    { id: 6, title: '6. Priority Broadcast', desc: 'Auto-Dispatched to Traders Family VIP', icon: Radio },
+  const navItems = [
+    { id: 'terminal', label: 'TradingView Chart', icon: LayoutDashboard, tag: 'H1' },
+    { id: 'monte-carlo', label: 'Monte Carlo Lab', icon: Dices, tag: '1K' },
+    { id: 'multi-strategy', label: 'Multi-Strategy Matrix', icon: Cpu, tag: 'HUB' },
+    { id: 'lifecycle', label: '6-Stage Provenance', icon: GitPullRequest, tag: 'AUDIT' },
+    { id: 'tf-hub', label: 'TF Monetization HUD', icon: DollarSign, tag: 'VP' },
+    { id: 'wfa-lab', label: 'Walk-Forward WFA Lab', icon: LineChart, tag: 'WFER' },
+    { id: 'eda', label: 'EDA Data Health Audit', icon: Stethoscope, tag: 'TICK' },
   ];
 </script>
 
-<aside class="w-full lg:w-72 bg-[#1e222d] border border-[#2a2e39] rounded-xl p-4 flex flex-col justify-between shadow-md gap-5 font-sans">
-  <div class="flex flex-col gap-4">
-    <!-- Brand Logo Header (TradingView Style) -->
-    <div class="flex items-center gap-3 pb-3 border-b border-[#2a2e39]">
-      <div class="p-2 rounded-xl bg-[#2962ff] text-white shadow-md">
-        <Zap class="w-5 h-5 fill-current" />
+<!-- TradingView-Standard Sleek Left Dock (Slim Icon Rail) -->
+<aside
+  class="bg-[#1e222d] border border-[#2a2e39] rounded-xl flex flex-col justify-between shadow-lg transition-all duration-300 select-none z-20 {isExpanded ? 'w-64 p-3' : 'w-16 p-2'} shrink-0 font-sans"
+>
+  <div class="flex flex-col gap-3">
+    <!-- Brand Header & Collapse Toggle -->
+    <div class="flex items-center {isExpanded ? 'justify-between pb-2 border-b border-[#2a2e39]' : 'justify-center pb-2 border-b border-[#2a2e39]'}">
+      <div class="flex items-center gap-2.5">
+        <div class="p-2 rounded-xl bg-gradient-to-br from-[#2962ff] to-[#1e4bd8] text-white shadow-md shadow-[#2962ff]/20">
+          <Zap class="w-4 h-4 fill-current" />
+        </div>
+        {#if isExpanded}
+          <div class="overflow-hidden whitespace-nowrap">
+            <div class="text-xs font-black font-mono tracking-wider text-[#d1d4dc]">HEXAGON QUANT</div>
+            <div class="text-[9px] font-mono text-[#2962ff] font-bold tracking-tight">TRADINGVIEW 2026</div>
+          </div>
+        {/if}
       </div>
-      <div>
-        <div class="text-sm font-black font-mono tracking-wider text-[#d1d4dc]">HEXAGON QUANT</div>
-        <div class="text-[10px] font-mono text-[#2962ff] font-semibold tracking-tight">TRADINGVIEW ENGINE • 2026</div>
-      </div>
+
+      {#if isExpanded}
+        <button
+          onclick={() => isExpanded = false}
+          class="p-1 rounded-lg text-[#787b86] hover:text-white hover:bg-[#2a2e39] transition-colors"
+          title="Collapse Sidebar"
+        >
+          <ChevronLeft class="w-4 h-4" />
+        </button>
+      {/if}
     </div>
 
-    <!-- Navigation Menu -->
-    <nav class="flex flex-col gap-1">
+    <!-- Navigation Buttons -->
+    <nav class="flex flex-col gap-1.5">
       {#each navItems as item}
         {@const IconComponent = item.icon}
-        <button
-          onclick={() => onNavClick(item.id)}
-          class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-semibold font-mono transition-all text-left {activeNav === item.id ? 'bg-[#2962ff]/20 text-[#2962ff] border border-[#2962ff]/40 shadow-sm' : 'text-[#787b86] hover:text-[#d1d4dc] hover:bg-[#2a2e39] border border-transparent'}"
-        >
-          <IconComponent class="w-4 h-4 {activeNav === item.id ? 'text-[#2962ff]' : 'text-[#787b86]'}" />
-          <span>{item.label}</span>
-        </button>
+        {@const isActive = activeNav === item.id}
+        <div class="relative group">
+          <button
+            onclick={() => onNavClick(item.id)}
+            class="w-full flex items-center {isExpanded ? 'gap-3 px-3 py-2' : 'justify-center p-2.5'} rounded-xl text-xs font-semibold font-mono transition-all {isActive ? 'bg-[#2962ff] text-white shadow-md shadow-[#2962ff]/30 font-bold' : 'text-[#787b86] hover:text-[#d1d4dc] hover:bg-[#2a2e39]'}"
+          >
+            <IconComponent class="w-4 h-4 shrink-0 {isActive ? 'text-white' : 'text-[#787b86] group-hover:text-white'}" />
+
+            {#if isExpanded}
+              <span class="truncate flex-1 text-left">{item.label}</span>
+              <span class="text-[9px] px-1.5 py-0.5 rounded font-mono font-bold {isActive ? 'bg-white/20 text-white' : 'bg-[#131722] text-[#787b86]'}">
+                {item.tag}
+              </span>
+            {/if}
+          </button>
+
+          <!-- Floating Tooltip when collapsed -->
+          {#if !isExpanded}
+            <div class="fixed left-20 z-50 pointer-events-none hidden group-hover:flex items-center gap-2 px-2.5 py-1.5 rounded-lg bg-[#1e222d] border border-[#2a2e39] text-[#d1d4dc] text-xs font-mono font-bold shadow-2xl whitespace-nowrap animate-in fade-in zoom-in-95 duration-150">
+              <span>{item.label}</span>
+              <span class="text-[9px] px-1.5 py-0.2 rounded bg-[#2962ff]/20 text-[#2962ff] border border-[#2962ff]/40">
+                {item.tag}
+              </span>
+            </div>
+          {/if}
+        </div>
       {/each}
     </nav>
-
-    <!-- 6-Stage Signal Provenance Stepper -->
-    <div class="bg-[#131722] p-3 rounded-xl border border-[#2a2e39]">
-      <div class="flex items-center justify-between pb-2 mb-2 border-b border-[#2a2e39]">
-        <span class="text-[11px] font-bold font-mono text-[#d1d4dc] flex items-center gap-1.5">
-          <GitPullRequest class="w-3.5 h-3.5 text-[#2962ff]" /> 6-Stage Provenance
-        </span>
-        <span class="text-[9px] font-mono px-1.5 py-0.5 rounded bg-[#089981]/20 text-[#089981] font-bold">
-          LIVE AUDIT
-        </span>
-      </div>
-
-      <div class="space-y-2">
-        {#each pipelineStages as stage}
-          {@const StageIcon = stage.icon}
-          <div class="flex items-start gap-2">
-            <div class="p-1 rounded bg-[#089981]/10 text-[#089981] border border-[#089981]/30 shrink-0 mt-0.5">
-              <StageIcon class="w-3 h-3" />
-            </div>
-            <div>
-              <div class="text-[11px] font-bold font-mono text-[#d1d4dc]">{stage.title}</div>
-              <div class="text-[9px] text-[#787b86] leading-tight">{stage.desc}</div>
-            </div>
-          </div>
-        {/each}
-      </div>
-    </div>
   </div>
 
-  <!-- Telemetry Card -->
-  <div class="bg-[#131722] p-3 rounded-xl border border-[#2a2e39] text-[11px] font-mono space-y-1.5">
-    <div class="flex items-center justify-between text-[#787b86]">
-      <span class="flex items-center gap-1.5">
-        <span class="w-1.5 h-1.5 rounded-full bg-[#089981] animate-ping"></span> MT5 Bridge IPC:
-      </span>
-      <span class="text-[#d1d4dc] font-bold">0.4ms</span>
-    </div>
-    <div class="flex items-center justify-between text-[#787b86]">
-      <span class="flex items-center gap-1.5">
-        <span class="w-1.5 h-1.5 rounded-full bg-[#2962ff]"></span> Dukascopy Feed:
-      </span>
-      <span class="text-[#2962ff] font-bold">100% Real</span>
-    </div>
-    <div class="flex items-center justify-between text-[#787b86]">
-      <span class="flex items-center gap-1.5">
-        <span class="w-1.5 h-1.5 rounded-full bg-[#089981]"></span> Compliance Guard:
-      </span>
-      <span class="text-[#089981] font-bold">0-Penalty</span>
-    </div>
+  <!-- Bottom Telemetry Status -->
+  <div class="flex flex-col gap-2 pt-2 border-t border-[#2a2e39]">
+    {#if !isExpanded}
+      <button
+        onclick={() => isExpanded = true}
+        class="w-full flex items-center justify-center p-2 rounded-lg text-[#787b86] hover:text-white hover:bg-[#2a2e39] transition-colors"
+        title="Expand Sidebar"
+      >
+        <ChevronRight class="w-4 h-4" />
+      </button>
+
+      <!-- Mini Status Dot Indicators with Tooltip -->
+      <div class="flex flex-col items-center gap-1.5 py-1" title="System Telemetry: IPC 0.4ms • 100% Dukascopy • 0-Penalty">
+        <span class="w-2 h-2 rounded-full bg-[#089981] animate-pulse" title="MT5 IPC: 0.4ms"></span>
+        <span class="w-2 h-2 rounded-full bg-[#2962ff]" title="Dukascopy Feed: Real"></span>
+        <span class="w-2 h-2 rounded-full bg-[#089981]" title="Compliance: 0-Penalty"></span>
+      </div>
+    {:else}
+      <!-- Expanded Full Telemetry Card -->
+      <div class="bg-[#131722] p-2.5 rounded-xl border border-[#2a2e39] text-[10px] font-mono space-y-1">
+        <div class="flex items-center justify-between text-[#787b86]">
+          <span class="flex items-center gap-1.5">
+            <span class="w-1.5 h-1.5 rounded-full bg-[#089981] animate-ping"></span> MT5 Bridge IPC:
+          </span>
+          <span class="text-[#d1d4dc] font-bold">0.4ms</span>
+        </div>
+        <div class="flex items-center justify-between text-[#787b86]">
+          <span class="flex items-center gap-1.5">
+            <span class="w-1.5 h-1.5 rounded-full bg-[#2962ff]"></span> Dukascopy Feed:
+          </span>
+          <span class="text-[#2962ff] font-bold">100% Real</span>
+        </div>
+        <div class="flex items-center justify-between text-[#787b86]">
+          <span class="flex items-center gap-1.5">
+            <span class="w-1.5 h-1.5 rounded-full bg-[#089981]"></span> TF Compliance:
+          </span>
+          <span class="text-[#089981] font-bold">0-Penalty</span>
+        </div>
+      </div>
+    {/if}
   </div>
 </aside>
