@@ -75,3 +75,7 @@ export interface IMonteCarloPort {
 export interface IEdaHealthPort {
   getEdaHealth(symbol: string): Promise<EdaReport>;
 }
+
+export interface IDeltaSyncPort {
+  syncPairDelta(symbol: string, timeframe?: string, source?: MarketDataSource): Promise<DeltaSyncReport>;
+}

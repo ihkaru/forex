@@ -8,8 +8,16 @@ import { RestBacktestAdapter } from './adapters/driven/RestBacktestAdapter';
 import { RestEdaAdapter } from './adapters/driven/RestEdaAdapter';
 import { RestStrategyAdapter, RestMonteCarloAdapter } from './adapters/driven/RestStrategyAdapter';
 import { RestTesterAdapter } from './adapters/driven/RestTesterAdapter';
+import { RestDeltaSyncAdapter } from './adapters/driven/RestDeltaSyncAdapter';
 import { TradingViewChartAdapter } from './adapters/driving/TradingViewChartAdapter';
-import type { IMarketDataPort, IBacktestPort, IEdaHealthPort, IStrategyPort, IMonteCarloPort } from './ports';
+import type {
+  IMarketDataPort,
+  IBacktestPort,
+  IEdaHealthPort,
+  IStrategyPort,
+  IMonteCarloPort,
+  IDeltaSyncPort,
+} from './ports';
 import type { ITesterPort } from './ports/ITesterPort';
 
 export class AppCompositionRoot {
@@ -19,6 +27,7 @@ export class AppCompositionRoot {
   public readonly strategyPort: IStrategyPort;
   public readonly monteCarloPort: IMonteCarloPort;
   public readonly testerPort: ITesterPort;
+  public readonly deltaSyncPort: IDeltaSyncPort;
   public readonly chartAdapter: TradingViewChartAdapter;
 
   constructor(apiBaseUrl: string = 'http://127.0.0.1:5000/api') {
@@ -29,6 +38,7 @@ export class AppCompositionRoot {
     this.strategyPort = new RestStrategyAdapter(apiBaseUrl);
     this.monteCarloPort = new RestMonteCarloAdapter(apiBaseUrl);
     this.testerPort = new RestTesterAdapter(apiBaseUrl);
+    this.deltaSyncPort = new RestDeltaSyncAdapter(apiBaseUrl);
 
     // 2. Instantiate Driving Adapters via Composition
     this.chartAdapter = new TradingViewChartAdapter('tv-chart', this.marketDataPort);

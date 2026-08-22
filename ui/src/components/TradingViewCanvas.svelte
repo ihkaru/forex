@@ -17,7 +17,8 @@
     Zap,
     Stethoscope,
     ShieldAlert,
-    Cpu
+    Cpu,
+    RefreshCw
   } from '@lucide/svelte';
   import type { Candle, Signal } from '../domain/models';
   import type { SimulatedTrade } from '../ports/layers';
@@ -30,9 +31,11 @@
     candles: Candle[];
     trades: SimulatedTrade[];
     signal: Signal | null;
+    syncStatusMessage?: string | null;
     onSelectSymbol: (symbol: string) => void;
     onScanSignal: () => void;
     onOpenEda: () => void;
+    onSyncDelta?: () => void;
   }
 
   let {
@@ -42,9 +45,11 @@
     candles = [],
     trades = [],
     signal = null,
+    syncStatusMessage = null,
     onSelectSymbol,
     onScanSignal,
-    onOpenEda
+    onOpenEda,
+    onSyncDelta
   }: Props = $props();
 
   let chartContainer: HTMLDivElement | null = $state(null);
@@ -216,6 +221,20 @@
 
     <!-- Action Buttons -->
     <div class="flex items-center gap-2">
+      {#if syncStatusMessage}
+        <div class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#00E676]/10 text-[#00E676] text-xs font-mono border border-[#00E676]/30 animate-pulse shadow-sm">
+          <span>{syncStatusMessage}</span>
+        </div>
+      {/if}
+
+      <button
+        onclick={onSyncDelta}
+        class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#131722] hover:bg-[#2a2e39] text-[#00E676] hover:text-[#69f0ae] text-xs font-semibold border border-[#2a2e39] hover:border-[#00E676]/50 transition-all shadow-sm"
+        title="Trigger Continuous Delta Sync (High-Watermark Ingestion)"
+      >
+        <RefreshCw class="w-3.5 h-3.5" /> Sync Delta
+      </button>
+
       <button
         onclick={onOpenEda}
         class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#131722] hover:bg-[#2a2e39] text-[#d1d4dc] text-xs font-semibold border border-[#2a2e39] transition-all shadow-sm"

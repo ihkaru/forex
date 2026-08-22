@@ -175,6 +175,22 @@
     }
   }
 
+  let syncStatusMessage = $state<string | null>(null);
+
+  async function handleSyncDelta() {
+    try {
+      syncStatusMessage = '⏳ Menghubungi node Dukascopy...';
+      const report = await composition.deltaSyncPort.syncPairDelta(activeSymbol);
+      syncStatusMessage = `⚡ Sync ${report.symbol}: ${report.message || '100% Up-to-Date'}`;
+      await loadMarketData(activeSymbol);
+      setTimeout(() => {
+        syncStatusMessage = null;
+      }, 4000);
+    } catch (e) {
+      syncStatusMessage = `⚠️ Gagal sync: ${e}`;
+    }
+  }
+
   async function handleOpenEda() {
     try {
       edaReport = await composition.edaPort.getEdaHealth(activeSymbol);
@@ -266,9 +282,11 @@
             {candles}
             {trades}
             signal={activeSignal}
+            {syncStatusMessage}
             onSelectSymbol={(sym) => loadMarketData(sym)}
             onScanSignal={() => loadMarketData(activeSymbol)}
             onOpenEda={handleOpenEda}
+            onSyncDelta={handleSyncDelta}
           />
         </div>
 

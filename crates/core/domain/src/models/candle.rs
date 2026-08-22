@@ -60,6 +60,7 @@ impl Candle {
         self.timestamp.timestamp_millis()
     }
 
+    #[allow(clippy::too_many_arguments)]
     pub fn from_epoch_seconds(
         symbol: Symbol,
         timeframe: Timeframe,

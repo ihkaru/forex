@@ -77,3 +77,15 @@ export interface EdaReport {
   maxSingleBarPips: number;
   healthStatus: string;
 }
+
+export interface DeltaSyncReport {
+  symbol: string;
+  timeframe: string;
+  source: MarketDataSource;
+  previousWatermark?: number;
+  newWatermark?: number;
+  syncedBarsCount: number;
+  durationMs: number;
+  isUpToDate: boolean;
+  message?: string;
+}
