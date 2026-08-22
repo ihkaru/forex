@@ -115,7 +115,8 @@ pub async fn monte_carlo_handler(
                     }
                 }
 
-                if max_dd > 150.0 {
+                // Risk of Ruin threshold: severe drawdown exceeding 3,500 Valued Pips (catastrophic account ruin)
+                if max_dd > 3500.0 {
                     ruin_count += 1;
                 }
 
