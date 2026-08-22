@@ -221,8 +221,9 @@ Contoh:
         console.log('═════════════════════════════════════════════════════════════════════════');
         console.log(`🎲 MONTE CARLO 1,000-PATH RESAMPLING: ${sym}`);
         console.log('═════════════════════════════════════════════════════════════════════════');
+        const ruinLabel = data.risk_of_ruin_pct === 0 ? 'Zero Ruin Guarantee' : (data.risk_of_ruin_pct < 5 ? 'Low Sequence Risk' : 'Elevated Sequence Risk');
         console.log(`Iterations          : ${data.iterations} paths`);
-        console.log(`Risk of Ruin (DD>20): ${data.risk_of_ruin_pct.toFixed(2)}% (Zero Ruin Guarantee)`);
+        console.log(`Risk of Ruin (DD>20): ${data.risk_of_ruin_pct.toFixed(2)}% (${ruinLabel})`);
         console.log(`Worst-Case Max DD   : -${data.worst_case_max_dd_pct.toFixed(1)} VP (5th Percentile Floor)`);
         console.log(`Median Expected VP  : +${data.median_ending_vp.toFixed(1)} VP (50th Percentile)`);
         console.log(`95% Confidence Int  : [${data.confidence_interval_95[0].toFixed(1)}, ${data.confidence_interval_95[1].toFixed(1)}] VP`);
