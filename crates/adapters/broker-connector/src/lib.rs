@@ -54,7 +54,10 @@ impl DataIntegrityValidator {
         let spread = ask - bid;
         // Misal spread > 50 pips (0.00500 pada pair 5 digit) dianggap outlier / anomaly
         if spread > dec!(0.00500) {
-            warn!("⚠️ Peringatan Anomali Pasar: Spread melebar drastis ({})", spread);
+            warn!(
+                "⚠️ Peringatan Anomali Pasar: Spread melebar drastis ({})",
+                spread
+            );
         }
         Ok(())
     }
@@ -94,8 +97,8 @@ impl BrokerConnector {
                 time_gmt,
                 ..
             } => {
-                let symbol_obj = Symbol::from_symbol_str(&symbol)
-                    .ok_or(DomainError::InvalidSymbol(symbol))?;
+                let symbol_obj =
+                    Symbol::from_symbol_str(&symbol).ok_or(DomainError::InvalidSymbol(symbol))?;
 
                 // 1. Validasi Integritas Harga
                 DataIntegrityValidator::validate_tick(bid, ask)?;
@@ -123,8 +126,8 @@ impl BrokerConnector {
                 time_gmt,
                 ..
             } => {
-                let symbol_obj = Symbol::from_symbol_str(&symbol)
-                    .ok_or(DomainError::InvalidSymbol(symbol))?;
+                let symbol_obj =
+                    Symbol::from_symbol_str(&symbol).ok_or(DomainError::InvalidSymbol(symbol))?;
                 let utc_time = DataIntegrityValidator::normalize_to_utc(time_gmt);
 
                 let candle = Candle {
@@ -222,7 +225,11 @@ pub struct CtraderOpenApiConnector {
 }
 
 impl CtraderOpenApiConnector {
-    pub fn new(client_id: impl Into<String>, client_secret: impl Into<String>, is_live: bool) -> Self {
+    pub fn new(
+        client_id: impl Into<String>,
+        client_secret: impl Into<String>,
+        is_live: bool,
+    ) -> Self {
         Self {
             client_id: client_id.into(),
             client_secret: client_secret.into(),

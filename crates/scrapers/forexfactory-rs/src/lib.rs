@@ -13,18 +13,21 @@ pub struct ForexFactoryScraper {
 
 impl Default for ForexFactoryScraper {
     fn default() -> Self {
-        Self::new()
+        // Fallback ke Client::new() jika builder gagal — non-fatal untuk scraper publik
+        // (tidak seperti TF Publisher, ForexFactory tidak memerlukan user-agent spesifik untuk auth)
+        #[allow(clippy::disallowed_methods)]
+        // Justifikasi: ForexFactory scraper menggunakan public endpoint, client default acceptable
+        let client = Client::builder()
+            .user_agent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36")
+            .build()
+            .unwrap_or_default();
+        Self { client }
     }
 }
 
 impl ForexFactoryScraper {
     pub fn new() -> Self {
-        let client = Client::builder()
-            .user_agent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36")
-            .build()
-            .unwrap_or_default();
-
-        Self { client }
+        Self::default()
     }
 }
 

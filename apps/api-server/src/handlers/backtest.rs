@@ -1,13 +1,13 @@
+use crate::state::AppState;
+use application::services::{BacktestReport, BacktestService};
 use axum::extract::{Path as AxumPath, State};
 use axum::http::StatusCode;
 use axum::Json;
 use chrono::{TimeZone, Utc};
 use domain::models::{RiskProfile, Symbol, TfPairSpec, Timeframe};
-use application::services::{BacktestReport, BacktestService};
 use rust_decimal::Decimal;
 use serde::Serialize;
 use std::sync::Arc;
-use crate::state::AppState;
 
 #[derive(Serialize)]
 pub struct BacktestApiResponse {
@@ -36,9 +36,7 @@ pub struct SimulatedTradeDto {
     pub exit_reason: String,
 }
 
-pub async fn backtest_handler(
-    State(state): State<Arc<AppState>>,
-) -> Json<BacktestApiResponse> {
+pub async fn backtest_handler(State(state): State<Arc<AppState>>) -> Json<BacktestApiResponse> {
     let pairs = ["NZDUSD", "AUDUSD", "EURGBP", "USDCHF", "EURUSD", "GBPUSD"];
     let mut reports = Vec::new();
     let mut total_vp = Decimal::ZERO;
@@ -56,7 +54,10 @@ pub async fn backtest_handler(
 
     for p in &pairs {
         if let Some(sym) = Symbol::from_symbol_str(p) {
-            if let Ok(report) = service.run_simulation(&sym, Timeframe::H1, from_dt, to_dt).await {
+            if let Ok(report) = service
+                .run_simulation(&sym, Timeframe::H1, from_dt, to_dt)
+                .await
+            {
                 total_vp += report.total_valued_pips;
                 total_trades += report.total_trades;
                 total_wins += report.winning_trades;
@@ -111,8 +112,8 @@ pub async fn backtest_trades_handler(
             let trade_dtos: Vec<SimulatedTradeDto> = detailed
                 .trades
                 .iter()
-                .map(|t| {
-                    let pnl = t.realized_pnl.unwrap_or(Decimal::ZERO);
+                .filter_map(|t| {
+                    let pnl = t.realized_pnl?;
                     let is_win = pnl > Decimal::ZERO;
                     let close_price = if is_win { t.take_profit } else { t.stop_loss };
                     let valued_pips = spec.pips_to_valued_pips(pnl);
@@ -122,13 +123,16 @@ pub async fn backtest_trades_handler(
                         "SL_HIT".to_string()
                     };
 
-                    SimulatedTradeDto {
+                    Some(SimulatedTradeDto {
                         id: t.id.to_string(),
                         symbol: sym_str.clone(),
                         action: format!("{:?}", t.action),
                         open_time: t.open_time.timestamp(),
                         open_price: t.open_price,
-                        close_time: t.close_time.map(|ct| ct.timestamp()).unwrap_or(0),
+                        close_time: t
+                            .close_time
+                            .map(|ct| ct.timestamp())
+                            .unwrap_or(t.open_time.timestamp()),
                         close_price,
                         stop_loss: t.stop_loss,
                         take_profit: t.take_profit,
@@ -136,7 +140,7 @@ pub async fn backtest_trades_handler(
                         valued_pips,
                         is_win,
                         exit_reason,
-                    }
+                    })
                 })
                 .collect();
             return Ok(Json(trade_dtos));
@@ -168,8 +172,8 @@ pub async fn backtest_detailed_handler(
             let trade_dtos: Vec<SimulatedTradeDto> = detailed
                 .trades
                 .iter()
-                .map(|t| {
-                    let pnl = t.realized_pnl.unwrap_or(Decimal::ZERO);
+                .filter_map(|t| {
+                    let pnl = t.realized_pnl?;
                     let is_win = pnl > Decimal::ZERO;
                     let close_price = if is_win { t.take_profit } else { t.stop_loss };
                     let valued_pips = spec.pips_to_valued_pips(pnl);
@@ -179,13 +183,16 @@ pub async fn backtest_detailed_handler(
                         "SL_HIT".to_string()
                     };
 
-                    SimulatedTradeDto {
+                    Some(SimulatedTradeDto {
                         id: t.id.to_string(),
                         symbol: sym_str.clone(),
                         action: format!("{:?}", t.action),
                         open_time: t.open_time.timestamp(),
                         open_price: t.open_price,
-                        close_time: t.close_time.map(|ct| ct.timestamp()).unwrap_or(0),
+                        close_time: t
+                            .close_time
+                            .map(|ct| ct.timestamp())
+                            .unwrap_or(t.open_time.timestamp()),
                         close_price,
                         stop_loss: t.stop_loss,
                         take_profit: t.take_profit,
@@ -193,7 +200,7 @@ pub async fn backtest_detailed_handler(
                         valued_pips,
                         is_win,
                         exit_reason,
-                    }
+                    })
                 })
                 .collect();
 

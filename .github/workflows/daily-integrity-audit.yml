@@ -1,0 +1,37 @@
+# .github/workflows/daily-integrity-audit.yml
+# Scheduled Daily Integrity Audit — Forex Quant System
+#
+# Berjalan setiap hari pukul 00:00 UTC (saat New York market close & rollover)
+# Memverifikasi integritas data historis, absence of data corruption, dan ketersediaan feed.
+
+name: Daily Data Integrity Audit
+
+on:
+  schedule:
+    # 00:00 UTC setiap hari
+    - cron: '0 0 * * *'
+  workflow_dispatch: # Memungkinkan trigger manual dari UI GitHub
+
+jobs:
+  integrity-audit:
+    name: "🛡️ Daily Market Data & Code Integrity Audit"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy, rustfmt
+
+      - name: Cache Rust dependencies
+        uses: Swatinem/rust-cache@v2
+
+      - name: Run Deterministic Fallback Scanner
+        run: python3 .agents/scripts/ast_fallback_scanner.py
+
+      - name: Run Clippy Safety Audit
+        run: cargo clippy --workspace --all-targets -- -D warnings
+
+      - name: Run Integrity Unit Tests
+        run: cargo test --workspace -- --nocapture

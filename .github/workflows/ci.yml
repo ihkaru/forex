@@ -1,0 +1,95 @@
+# .github/workflows/ci.yml
+# CI Pipeline — Forex Hexagonal Trading System
+#
+# 4 gate paralel: fmt → clippy → test → deny
+# Semua harus lulus sebelum merge ke main.
+# Enforcement mekanis — tidak bergantung pada AI "mengingat" aturan.
+
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+env:
+  CARGO_TERM_COLOR: always
+  CARGO_INCREMENTAL: 0
+  # Pastikan clippy.toml dibaca
+  RUSTFLAGS: ""
+
+jobs:
+  # ─── GATE 1: Format Check ──────────────────────────────────────────────
+  fmt:
+    name: "🎨 Format Check"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust (stable + rustfmt)
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt
+
+      - name: Check formatting
+        run: cargo fmt --all -- --check
+
+  # ─── GATE 2: Clippy Enforcement ────────────────────────────────────────
+  clippy:
+    name: "🔍 Clippy Enforcement Gate"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust (stable + clippy)
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy
+
+      - name: Cache Rust dependencies
+        uses: Swatinem/rust-cache@v2
+
+      - name: Run Deterministic Fallback Scanner (Data Integrity)
+        run: python3 .agents/scripts/ast_fallback_scanner.py
+
+      - name: Run Clippy (deny all warnings)
+        # -D warnings → semua warning jadi error → build gagal
+        # Termasuk disallowed-methods dari clippy.toml
+        run: cargo clippy --workspace --all-targets --all-features -- -D warnings
+
+  # ─── GATE 3: Tests ─────────────────────────────────────────────────────
+  test:
+    name: "✅ Tests"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust (stable)
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache Rust dependencies
+        uses: Swatinem/rust-cache@v2
+
+      - name: Install cargo-nextest (parallel test runner)
+        uses: taiki-e/install-action@v2
+        with:
+          tool: nextest
+
+      - name: Run tests
+        run: cargo nextest run --workspace --locked
+
+      - name: Run doc tests
+        run: cargo test --doc --workspace
+
+  # ─── GATE 4: Dependency Audit ──────────────────────────────────────────
+  deny:
+    name: "🔒 Dependency Audit"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run cargo-deny
+        uses: EmbarkStudios/cargo-deny-action@v2
+        with:
+          command: check advisories licenses bans sources

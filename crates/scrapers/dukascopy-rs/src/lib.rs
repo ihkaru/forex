@@ -25,23 +25,35 @@ pub struct DukascopyDownloader {
 
 impl Default for DukascopyDownloader {
     fn default() -> Self {
-        Self::new()
+        #[allow(clippy::disallowed_methods)]
+        // Justifikasi allow: Dukascopy datafeed adalah public endpoint tanpa auth.
+        // Client default (tanpa user-agent) masih functional. Non-critical scraper.
+        let client = reqwest::Client::builder()
+            .user_agent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36")
+            .build()
+            .unwrap_or_default();
+
+        Self {
+            client,
+            base_url: "https://datafeed.dukascopy.com/datafeed".to_string(),
+        }
     }
 }
 
 impl DukascopyDownloader {
     pub fn new() -> Self {
-        Self {
-            client: reqwest::Client::builder()
-                .user_agent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36")
-                .build()
-                .unwrap_or_default(),
-            base_url: "https://datafeed.dukascopy.com/datafeed".to_string(),
-        }
+        Self::default()
     }
 
     /// Membangun URL download Dukascopy (Bulan adalah 0-indexed: Jan=00, Des=11)
-    pub fn build_url(&self, symbol: &str, year: i32, month_1_to_12: u32, day: u32, hour: u32) -> String {
+    pub fn build_url(
+        &self,
+        symbol: &str,
+        year: i32,
+        month_1_to_12: u32,
+        day: u32,
+        hour: u32,
+    ) -> String {
         let symbol_clean = symbol.replace(['/', '_'], "").to_uppercase();
         let month_zero_indexed = month_1_to_12.saturating_sub(1);
         format!(
@@ -70,7 +82,10 @@ impl DukascopyDownloader {
             .map_err(|e| DomainError::ScraperError(format!("HTTP request error: {}", e)))?;
 
         if response.status() == reqwest::StatusCode::NOT_FOUND {
-            warn!("Data tidak tersedia (kemungkinan libur market/weekend): {}", url);
+            warn!(
+                "Data tidak tersedia (kemungkinan libur market/weekend): {}",
+                url
+            );
             return Ok(Vec::new());
         }
 
@@ -115,12 +130,12 @@ impl DukascopyDownloader {
             let time_offset_ms = rdr.read_u32::<BigEndian>().map_err(|e| {
                 DomainError::ScraperError(format!("Read time_offset_ms error: {}", e))
             })?;
-            let ask_raw = rdr.read_u32::<BigEndian>().map_err(|e| {
-                DomainError::ScraperError(format!("Read ask_raw error: {}", e))
-            })?;
-            let bid_raw = rdr.read_u32::<BigEndian>().map_err(|e| {
-                DomainError::ScraperError(format!("Read bid_raw error: {}", e))
-            })?;
+            let ask_raw = rdr
+                .read_u32::<BigEndian>()
+                .map_err(|e| DomainError::ScraperError(format!("Read ask_raw error: {}", e)))?;
+            let bid_raw = rdr
+                .read_u32::<BigEndian>()
+                .map_err(|e| DomainError::ScraperError(format!("Read bid_raw error: {}", e)))?;
             let _ask_vol = rdr.read_f32::<BigEndian>().unwrap_or(0.0);
             let _bid_vol = rdr.read_f32::<BigEndian>().unwrap_or(0.0);
 
@@ -161,7 +176,14 @@ impl DukascopyDownloader {
         };
 
         let mut candles = Vec::new();
-        let mut current_bucket: Option<(DateTime<Utc>, Decimal, Decimal, Decimal, Decimal, Decimal)> = None;
+        let mut current_bucket: Option<(
+            DateTime<Utc>,
+            Decimal,
+            Decimal,
+            Decimal,
+            Decimal,
+            Decimal,
+        )> = None;
 
         for tick in ticks {
             let bucket_timestamp = Utc
@@ -239,9 +261,14 @@ impl DukascopyDownloader {
                 .single()
                 .unwrap_or_else(Utc::now);
 
-            if let Ok(raw_bytes) = self.fetch_hourly_ticks_raw(&sym_str, year, month, day, hour).await {
+            if let Ok(raw_bytes) = self
+                .fetch_hourly_ticks_raw(&sym_str, year, month, day, hour)
+                .await
+            {
                 if !raw_bytes.is_empty() {
-                    if let Ok(mut ticks) = self.parse_bi5_bytes(&raw_bytes, hour_start, point_multiplier) {
+                    if let Ok(mut ticks) =
+                        self.parse_bi5_bytes(&raw_bytes, hour_start, point_multiplier)
+                    {
                         for t in &mut ticks {
                             t.symbol = symbol.clone();
                         }
@@ -251,7 +278,9 @@ impl DukascopyDownloader {
             }
         }
 
-        Ok(Self::aggregate_ticks_to_candles(&all_ticks, timeframe, symbol))
+        Ok(Self::aggregate_ticks_to_candles(
+            &all_ticks, timeframe, symbol,
+        ))
     }
 }
 
@@ -348,7 +377,8 @@ mod tests {
             },
         ];
 
-        let candles = DukascopyDownloader::aggregate_ticks_to_candles(&ticks, Timeframe::M1, &symbol);
+        let candles =
+            DukascopyDownloader::aggregate_ticks_to_candles(&ticks, Timeframe::M1, &symbol);
         assert_eq!(candles.len(), 1);
         assert_eq!(candles[0].open, dec!(1.08500));
         assert_eq!(candles[0].high, dec!(1.08550));

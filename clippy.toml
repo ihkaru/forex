@@ -1,0 +1,54 @@
+# clippy.toml — Forex Workspace Enforcement Gate
+#
+# Tujuan: Mencegah pattern berbahaya masuk ke codebase secara mekanis,
+# tanpa bergantung pada model AI "mengingat" aturan di GEMINI.md.
+# Dieksekusi oleh compiler di setiap `cargo clippy`, di luar context window.
+#
+# Panduan: https://rust-lang.github.io/rust-clippy/master/index.html
+
+# ─── PRESISI FINANSIAL ─────────────────────────────────────────────────────
+# Mencegah penggunaan f64 untuk operasi finansial berbahaya.
+# WAJIB gunakan rust_decimal::Decimal untuk semua harga, pips, SL, TP.
+disallowed-methods = [
+    # f64 operations yang bisa menyebabkan precision loss pada kalkulasi harga
+    { path = "f64::from_bits",       reason = "DILARANG: Gunakan rust_decimal::Decimal. Lihat docs/DATA_INTEGRITY.md" },
+    { path = "f64::to_bits",         reason = "DILARANG: Gunakan rust_decimal::Decimal. Lihat docs/DATA_INTEGRITY.md" },
+    { path = "f64::powi",            reason = "DILARANG untuk kalkulasi finansial: Gunakan Decimal::pow" },
+    { path = "f64::powf",            reason = "DILARANG untuk kalkulasi finansial: Gunakan Decimal::pow" },
+    { path = "f64::sqrt",            reason = "DILARANG untuk kalkulasi finansial: Gunakan Decimal arithmetic" },
+    { path = "f64::abs",             reason = "DILARANG untuk kalkulasi finansial: Gunakan Decimal::abs()" },
+    { path = "f64::round",           reason = "DILARANG: Gunakan Decimal::round() untuk rounding deterministik" },
+    { path = "f64::floor",           reason = "DILARANG: Gunakan Decimal::floor()" },
+    { path = "f64::ceil",            reason = "DILARANG: Gunakan Decimal::ceil()" },
+
+    # Panic-inducing patterns yang tidak boleh ada di production financial code
+    { path = "std::process::abort",  reason = "DILARANG di production: handle error dengan Result/Error" },
+
+    # ─── DANGEROUS SILENT FALLBACK (Data Integrity) ────────────────────────────
+    # Pattern ini BERBAHAYA di domain finansial karena menyembunyikan kegagalan
+    # dengan nilai default yang terlihat valid tapi semantically salah.
+    #
+    # Contoh bahaya nyata yang ditemukan di repo ini:
+    #   .unwrap_or(dec!(1.0850))  → harga EUR/USD hardcoded sebagai fallback!
+    #   .unwrap_or_default()      → Decimal::ZERO sebagai harga = BUY/SELL at 0!
+    #   .parse::<f64>().unwrap_or(0.0) → VP dihitung 0 tanpa ada error logged
+    #
+    # WAJIB DIGANTI dengan:
+    #   .ok_or(DomainError::MissingData("field desc"))? → propagate error
+    #   .ok_or_else(|| anyhow!("context"))? → lazy error dengan context
+    #
+    # PENGECUALIAN YANG DIIZINKAN (harus diberi #[allow] dengan komentar justifikasi):
+    #   - Non-domain fields: environment vars, log strings, metadata
+    #   - Scraper volume fields yang dibuang (_ask_vol, _bid_vol)
+    #   - Test fixtures dengan data mock yang diketahui
+
+    # Option::unwrap_or_default → silent Decimal::ZERO / empty string
+    { path = "core::option::Option::unwrap_or_default", reason = "DILARANG: Silent fallback merusak integritas data finansial. Gunakan .ok_or(DomainError::MissingData(...))? atau .ok_or_else(|| anyhow!(context))?. Lihat docs/DATA_INTEGRITY.md" },
+
+    # Result::unwrap_or_default → sangat berbahaya, swallow error silently
+    { path = "core::result::Result::unwrap_or_default", reason = "DILARANG: Silent error swallowing di financial domain. Propagate dengan ? operator." },
+]
+
+# ─── API SAFETY ────────────────────────────────────────────────────────────
+avoid-breaking-exported-api = true
+

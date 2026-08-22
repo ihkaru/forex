@@ -8,8 +8,8 @@ use uuid::Uuid;
 use application::services::BacktestService;
 use domain::errors::DomainError;
 use domain::models::{
-    Candle, PolaNStrategy, RiskProfile, Signal, SignalAction, SignalStatus,
-    Symbol, TfComplianceGuard, TfPairSpec, Tick, Timeframe,
+    Candle, PolaNStrategy, RiskProfile, Signal, SignalAction, SignalStatus, Symbol,
+    TfComplianceGuard, TfPairSpec, Tick, Timeframe,
 };
 use domain::ports::{MarketContext, MarketDataPort, StrategyPort};
 
@@ -112,18 +112,45 @@ async fn test_audit_lookahead_bias_isolation() {
     let risk = RiskProfile::default();
 
     // Evaluasi bar ke-50 pada kedua dataset
-    let feed_b = Arc::new(AuditMarketFeed { candles: dataset_b, spread_pips: dec!(1.0) });
-    let feed_c = Arc::new(AuditMarketFeed { candles: dataset_c, spread_pips: dec!(1.0) });
+    let feed_b = Arc::new(AuditMarketFeed {
+        candles: dataset_b,
+        spread_pips: dec!(1.0),
+    });
+    let feed_c = Arc::new(AuditMarketFeed {
+        candles: dataset_c,
+        spread_pips: dec!(1.0),
+    });
 
     let backtest_b = BacktestService::new(feed_b, strategy.clone(), risk.clone());
     let backtest_c = BacktestService::new(feed_c, strategy.clone(), risk.clone());
 
-    let report_b = backtest_b.run_simulation(&symbol, Timeframe::H1, base_time, base_time + Duration::days(5)).await.unwrap();
-    let report_c = backtest_c.run_simulation(&symbol, Timeframe::H1, base_time, base_time + Duration::days(5)).await.unwrap();
+    let report_b = backtest_b
+        .run_simulation(
+            &symbol,
+            Timeframe::H1,
+            base_time,
+            base_time + Duration::days(5),
+        )
+        .await
+        .unwrap();
+    let report_c = backtest_c
+        .run_simulation(
+            &symbol,
+            Timeframe::H1,
+            base_time,
+            base_time + Duration::days(5),
+        )
+        .await
+        .unwrap();
 
     // Keputusan di 50 bar pertama tidak boleh terpengaruh oleh pump/crash masa depan
-    println!("🔍 Audit Lookahead: Sinyal 50 bar awal terbukti kebal dari perubahan harga masa depan.");
-    assert_eq!(report_b.winning_trades + report_b.losing_trades, report_c.winning_trades + report_c.losing_trades);
+    println!(
+        "🔍 Audit Lookahead: Sinyal 50 bar awal terbukti kebal dari perubahan harga masa depan."
+    );
+    assert_eq!(
+        report_b.winning_trades + report_b.losing_trades,
+        report_c.winning_trades + report_c.losing_trades
+    );
 }
 
 // ==============================================================================
@@ -155,7 +182,9 @@ async fn test_audit_pending_order_lifecycle_fill_and_expiration() {
     struct UnreachableLimitStrategy;
     #[async_trait]
     impl StrategyPort for UnreachableLimitStrategy {
-        fn name(&self) -> &str { "UnreachableLimit" }
+        fn name(&self) -> &str {
+            "UnreachableLimit"
+        }
         async fn evaluate(&self, ctx: &MarketContext<'_>) -> Result<Option<Signal>, DomainError> {
             if ctx.candles.len() == 50 {
                 Ok(Some(Signal {
@@ -182,16 +211,31 @@ async fn test_audit_pending_order_lifecycle_fill_and_expiration() {
         }
     }
 
-    let feed = Arc::new(AuditMarketFeed { candles, spread_pips: dec!(1.2) });
-    let backtester = BacktestService::new(feed, Arc::new(UnreachableLimitStrategy), RiskProfile::default());
+    let feed = Arc::new(AuditMarketFeed {
+        candles,
+        spread_pips: dec!(1.2),
+    });
+    let backtester = BacktestService::new(
+        feed,
+        Arc::new(UnreachableLimitStrategy),
+        RiskProfile::default(),
+    );
 
     let report = backtester
-        .run_simulation(&symbol, Timeframe::H1, base_time, base_time + Duration::days(5))
+        .run_simulation(
+            &symbol,
+            Timeframe::H1,
+            base_time,
+            base_time + Duration::days(5),
+        )
         .await
         .unwrap();
 
     // Order tidak boleh terisi dan tidak boleh menghasilkan profit palsu!
-    assert_eq!(report.total_trades, 0, "Pending order yang tidak terjemput WAJIB 0 trade / Expired!");
+    assert_eq!(
+        report.total_trades, 0,
+        "Pending order yang tidak terjemput WAJIB 0 trade / Expired!"
+    );
     assert_eq!(report.total_raw_pips, Decimal::ZERO, "Profit WAJIB 0 pips!");
     println!("✅ Invariant 2 Lolos: Pending order yang tidak terjemput resmi Expired tanpa profit palsu.");
 }
@@ -274,7 +318,9 @@ async fn test_audit_intrabar_ambiguity_conservative_worst_case() {
     struct TriggerAndVolatileStrategy;
     #[async_trait]
     impl StrategyPort for TriggerAndVolatileStrategy {
-        fn name(&self) -> &str { "TriggerAndVolatile" }
+        fn name(&self) -> &str {
+            "TriggerAndVolatile"
+        }
         async fn evaluate(&self, ctx: &MarketContext<'_>) -> Result<Option<Signal>, DomainError> {
             if ctx.candles.len() == 50 {
                 Ok(Some(Signal {
@@ -301,18 +347,36 @@ async fn test_audit_intrabar_ambiguity_conservative_worst_case() {
         }
     }
 
-    let feed = Arc::new(AuditMarketFeed { candles, spread_pips: dec!(0.5) });
-    let backtester = BacktestService::new(feed, Arc::new(TriggerAndVolatileStrategy), RiskProfile::default());
+    let feed = Arc::new(AuditMarketFeed {
+        candles,
+        spread_pips: dec!(0.5),
+    });
+    let backtester = BacktestService::new(
+        feed,
+        Arc::new(TriggerAndVolatileStrategy),
+        RiskProfile::default(),
+    );
 
     let report = backtester
-        .run_simulation(&symbol, Timeframe::H1, base_time, base_time + Duration::days(5))
+        .run_simulation(
+            &symbol,
+            Timeframe::H1,
+            base_time,
+            base_time + Duration::days(5),
+        )
         .await
         .unwrap();
 
     // Sesuai prinsip konservatif: Jika TP dan SL tersentuh di bar yang sama, Stop Loss WAJIB terkena lebih dulu!
     assert_eq!(report.total_trades, 1, "Trade harus settled");
-    assert_eq!(report.losing_trades, 1, "WAJIB terhitung sebagai LOSING trade (Worst-case priority)");
-    assert_eq!(report.winning_trades, 0, "TIDAK BOLEH terhitung sebagai WIN");
+    assert_eq!(
+        report.losing_trades, 1,
+        "WAJIB terhitung sebagai LOSING trade (Worst-case priority)"
+    );
+    assert_eq!(
+        report.winning_trades, 0,
+        "TIDAK BOLEH terhitung sebagai WIN"
+    );
     assert_eq!(report.total_raw_pips, dec!(-20.0), "PnL harus -20 pips SL!");
     println!("✅ Invariant 3 Lolos: Intrabar ambiguity terbukti mendahulukan Stop Loss (Konservatif Anti-Overfitting).");
 }
@@ -326,21 +390,39 @@ fn test_audit_traders_family_4tier_valued_pips_precision() {
 
     // Tier 1: Multiplier 2.0x
     let spec_tier1 = TfPairSpec::from_symbol(&Symbol::new("NZD", "USD"));
-    assert_eq!(spec_tier1.pips_to_valued_pips(pips), dec!(200.0), "Tier 1 NZDUSD harus 2.0x");
+    assert_eq!(
+        spec_tier1.pips_to_valued_pips(pips),
+        dec!(200.0),
+        "Tier 1 NZDUSD harus 2.0x"
+    );
 
     // Tier 2: Multiplier 1.5x
     let spec_tier2 = TfPairSpec::from_symbol(&Symbol::new("EUR", "USD"));
-    assert_eq!(spec_tier2.pips_to_valued_pips(pips), dec!(150.0), "Tier 2 EURUSD harus 1.5x");
+    assert_eq!(
+        spec_tier2.pips_to_valued_pips(pips),
+        dec!(150.0),
+        "Tier 2 EURUSD harus 1.5x"
+    );
 
     // Tier 3: Multiplier 1.0x
     let spec_tier3 = TfPairSpec::from_symbol(&Symbol::new("USD", "JPY"));
-    assert_eq!(spec_tier3.pips_to_valued_pips(pips), dec!(100.0), "Tier 3 USDJPY harus 1.0x");
+    assert_eq!(
+        spec_tier3.pips_to_valued_pips(pips),
+        dec!(100.0),
+        "Tier 3 USDJPY harus 1.0x"
+    );
 
     // Tier 4: Multiplier 0.5x
     let spec_tier4 = TfPairSpec::from_symbol(&Symbol::new("XAU", "USD"));
-    assert_eq!(spec_tier4.pips_to_valued_pips(pips), dec!(50.0), "Tier 4 Gold harus 0.5x");
+    assert_eq!(
+        spec_tier4.pips_to_valued_pips(pips),
+        dec!(50.0),
+        "Tier 4 Gold harus 0.5x"
+    );
 
-    println!("✅ Invariant 4 Lolos: 4-Tier Valued Pips Multiplier terbukti 100% presisi matematis.");
+    println!(
+        "✅ Invariant 4 Lolos: 4-Tier Valued Pips Multiplier terbukti 100% presisi matematis."
+    );
 }
 
 // ==============================================================================
@@ -367,7 +449,10 @@ fn test_audit_tf_compliance_guard_rejections() {
         created_at: Utc::now(),
         expires_at: Some(Utc::now() + Duration::hours(24)),
     };
-    assert!(TfComplianceGuard::validate_signal(&instant_signal).is_err(), "Instant execution harus ditolak 100%");
+    assert!(
+        TfComplianceGuard::validate_signal(&instant_signal).is_err(),
+        "Instant execution harus ditolak 100%"
+    );
 
     // 2. Uji Penolakan R:R Melebihi Batas Maksimal 1:3.0
     let greed_signal = Signal {
@@ -388,7 +473,10 @@ fn test_audit_tf_compliance_guard_rejections() {
         created_at: Utc::now(),
         expires_at: Some(Utc::now() + Duration::hours(24)),
     };
-    assert!(TfComplianceGuard::validate_signal(&greed_signal).is_err(), "R:R 1:4.0 harus ditolak (Max legal TF adalah 1:3.0)!");
+    assert!(
+        TfComplianceGuard::validate_signal(&greed_signal).is_err(),
+        "R:R 1:4.0 harus ditolak (Max legal TF adalah 1:3.0)!"
+    );
 
     // 3. Uji Penolakan SL Melebihi 1.5x TP
     let bad_sl_signal = Signal {
@@ -409,7 +497,10 @@ fn test_audit_tf_compliance_guard_rejections() {
         created_at: Utc::now(),
         expires_at: Some(Utc::now() + Duration::hours(24)),
     };
-    assert!(TfComplianceGuard::validate_signal(&bad_sl_signal).is_err(), "SL > 1.5x TP harus ditolak!");
+    assert!(
+        TfComplianceGuard::validate_signal(&bad_sl_signal).is_err(),
+        "SL > 1.5x TP harus ditolak!"
+    );
 
     println!("✅ Invariant 5 Lolos: TfComplianceGuard 100% menolak sinyal ilegal (Zero-Banned Guarantee).");
 }
@@ -429,12 +520,20 @@ fn test_audit_financial_decimal_precision_drift_free() {
 
     // Pada f64 IEEE-754 biasa, 1.08500 + (0.0001 * 10000) akan mengalami precision drift
     // Pada rust_decimal::Decimal murni, hasilnya WAJIB eksak 2.08500!
-    assert_eq!(price, dec!(2.08500), "Decimal arithmetic tidak boleh memiliki floating point drift!");
+    assert_eq!(
+        price,
+        dec!(2.08500),
+        "Decimal arithmetic tidak boleh memiliki floating point drift!"
+    );
 
     // Pengujian pembagian pips
     let pip_diff = dec!(0.00250);
     let pip_size = dec!(0.00010);
-    assert_eq!(pip_diff / pip_size, dec!(25.0), "Perhitungan 25.0 pips harus eksak!");
+    assert_eq!(
+        pip_diff / pip_size,
+        dec!(25.0),
+        "Perhitungan 25.0 pips harus eksak!"
+    );
 
     println!("✅ Invariant 6 Lolos: Aritmatika finansial Decimal murni 100% bebas dari floating point bug.");
 }

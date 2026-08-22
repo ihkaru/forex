@@ -1,5 +1,5 @@
-use rust_decimal::Decimal;
 use crate::models::Candle;
+use rust_decimal::Decimal;
 
 /// Titik Swing High / Swing Low Fraktal
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -82,8 +82,8 @@ pub fn calculate_ema(candles: &[Candle], period: usize) -> Option<Decimal> {
         return None;
     }
     let k = Decimal::from(2) / Decimal::from(period + 1);
-    let initial_sma: Decimal = candles[..period].iter().map(|c| c.close).sum::<Decimal>()
-        / Decimal::from(period);
+    let initial_sma: Decimal =
+        candles[..period].iter().map(|c| c.close).sum::<Decimal>() / Decimal::from(period);
     let mut ema = initial_sma;
     for candle in &candles[period..] {
         ema = (candle.close * k) + (ema * (Decimal::ONE - k));

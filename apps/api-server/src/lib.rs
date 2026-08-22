@@ -18,7 +18,10 @@ pub fn create_router(state: Arc<AppState>) -> Router {
         .route("/api/monte-carlo/:symbol", get(monte_carlo_handler))
         .route("/api/backtest", get(backtest_handler))
         .route("/api/backtest/trades/:symbol", get(backtest_trades_handler))
-        .route("/api/backtest/detailed/:symbol", get(backtest_detailed_handler))
+        .route(
+            "/api/backtest/detailed/:symbol",
+            get(backtest_detailed_handler),
+        )
         .route("/api/eda/:symbol", get(eda_handler))
         .route("/api/market/candles/:symbol", get(market_candles_handler))
         .route("/api/signals/scan", get(signals_scan_handler))

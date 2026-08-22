@@ -31,7 +31,10 @@ async fn main() -> anyhow::Result<()> {
     );
 
     // 3. Inisialisasi Adapters (Composition Root)
-    let broker_name = format!("{}:{}", config.broker.mt5_socket_host, config.broker.mt5_socket_port);
+    let broker_name = format!(
+        "{}:{}",
+        config.broker.mt5_socket_host, config.broker.mt5_socket_port
+    );
     let market_data = Arc::new(BrokerConnector::new(&broker_name));
 
     let tf_config = TraderFamilyConfig {
@@ -41,7 +44,7 @@ async fn main() -> anyhow::Result<()> {
         user_agent: config.traders_family.user_agent.clone(),
     };
     let tf_publisher: Arc<dyn SignalPublisherPort> =
-        Arc::new(TraderFamilyPublisher::new(tf_config));
+        Arc::new(TraderFamilyPublisher::new(tf_config)?);
 
     let mut publishers: Vec<Arc<dyn SignalPublisherPort>> = vec![tf_publisher];
 
@@ -51,8 +54,7 @@ async fn main() -> anyhow::Result<()> {
             bot_token: config.telegram.bot_token.clone(),
             chat_id: config.telegram.chat_id.clone(),
         };
-        let tg_notifier: Arc<dyn SignalPublisherPort> =
-            Arc::new(TelegramNotifier::new(tg_config));
+        let tg_notifier: Arc<dyn SignalPublisherPort> = Arc::new(TelegramNotifier::new(tg_config));
         publishers.push(tg_notifier);
         info!("📢 Notifier Telegram multi-channel diaktifkan.");
     }
@@ -67,13 +69,8 @@ async fn main() -> anyhow::Result<()> {
     let risk_profile = RiskProfile::from_config(&config.risk_management);
 
     // 5. Inisialisasi Application Engine dengan Invariant Kepatuhan TF
-    let engine = SignalEngineService::new(
-        market_data,
-        publishers,
-        storage,
-        strategies,
-        risk_profile,
-    );
+    let engine =
+        SignalEngineService::new(market_data, publishers, storage, strategies, risk_profile);
 
     let watched_symbols: Vec<Symbol> = config
         .active_symbols

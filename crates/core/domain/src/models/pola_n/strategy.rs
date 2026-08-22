@@ -52,7 +52,10 @@ impl PolaNStrategy {
     pub fn from_config(config: &PolaNConfig) -> Self {
         Self {
             name: "TF-Pola-N-Core-v1".to_string(),
-            swing_detector: SwingPointDetector::new(config.swing_left_bars, config.swing_right_bars),
+            swing_detector: SwingPointDetector::new(
+                config.swing_left_bars,
+                config.swing_right_bars,
+            ),
             formation_engine: PolaNFormationEngine::new(
                 config.pip_buffer_pips * dec!(0.00010),
                 config.min_risk_reward,

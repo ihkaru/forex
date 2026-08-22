@@ -128,7 +128,7 @@ async fn test_api_server_monte_carlo_endpoint_guarantees_200_ok() {
     let mc: Value = serde_json::from_slice(&bytes).unwrap();
     assert_eq!(mc["symbol"], "EURGBP");
     assert_eq!(mc["iterations"], 1000);
-    assert!(mc["equity_paths"].as_array().unwrap().len() > 0);
+    assert!(!mc["equity_paths"].as_array().unwrap().is_empty());
 }
 
 #[tokio::test]

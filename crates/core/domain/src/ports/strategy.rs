@@ -1,6 +1,6 @@
-use async_trait::async_trait;
 use crate::errors::DomainError;
 use crate::models::{Candle, RiskProfile, Signal, Symbol, Tick, Timeframe};
+use async_trait::async_trait;
 
 pub struct MarketContext<'a> {
     pub symbol: &'a Symbol,

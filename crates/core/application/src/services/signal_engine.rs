@@ -3,7 +3,9 @@ use tracing::{error, info, warn};
 
 use domain::errors::DomainError;
 use domain::models::{RiskProfile, Signal, Symbol, TfComplianceGuard, Timeframe};
-use domain::ports::{MarketContext, MarketDataPort, SignalPublisherPort, StoragePort, StrategyPort};
+use domain::ports::{
+    MarketContext, MarketDataPort, SignalPublisherPort, StoragePort, StrategyPort,
+};
 
 /// `SignalEngineService` mengorkestrasi pipeline pemindaian pasar,
 /// evaluasi strategi modular, validasi regulasi ketat Traders Family (Zero-Penalty),
@@ -202,7 +204,10 @@ mod tests {
         );
 
         let symbol = Symbol::new("EUR", "USD");
-        let signal_opt = engine.process_symbol(&symbol, Timeframe::M15).await.unwrap();
+        let signal_opt = engine
+            .process_symbol(&symbol, Timeframe::M15)
+            .await
+            .unwrap();
 
         assert!(signal_opt.is_some());
         let signal = signal_opt.unwrap();

@@ -1,13 +1,12 @@
+use crate::state::AppState;
+use application::services::BacktestService;
 use axum::extract::{Path as AxumPath, State};
 use axum::http::StatusCode;
 use axum::Json;
 use chrono::{TimeZone, Utc};
 use domain::models::{RiskProfile, Symbol, TfPairSpec, Timeframe};
-use application::services::BacktestService;
-use rust_decimal::Decimal;
 use serde::Serialize;
 use std::sync::Arc;
-use crate::state::AppState;
 
 #[derive(Serialize)]
 pub struct MonteCarloPercentilePoint {
@@ -58,18 +57,20 @@ pub async fn monte_carlo_handler(
             let mut trades_pnl_vp: Vec<f64> = detailed
                 .trades
                 .iter()
-                .map(|t| {
-                    let pnl = t.realized_pnl.unwrap_or(Decimal::ZERO);
-                    let vp = spec.pips_to_valued_pips(pnl);
-                    vp.to_string().parse::<f64>().unwrap_or(0.0)
+                .filter_map(|t| {
+                    t.realized_pnl.and_then(|pnl| {
+                        use rust_decimal::prelude::ToPrimitive;
+                        let vp = spec.pips_to_valued_pips(pnl);
+                        vp.to_f64()
+                    })
                 })
                 .collect();
 
             if trades_pnl_vp.is_empty() {
                 // Baseline quantitative distribution (68% WR, 1:2 R:R)
                 trades_pnl_vp = vec![
-                    40.0, 40.0, -20.0, 40.0, 40.0, -20.0, 40.0, 40.0, 40.0, -20.0,
-                    40.0, -20.0, 40.0, 40.0, 40.0, -20.0, 40.0, 40.0, -20.0, 40.0,
+                    40.0, 40.0, -20.0, 40.0, 40.0, -20.0, 40.0, 40.0, 40.0, -20.0, 40.0, -20.0,
+                    40.0, 40.0, 40.0, -20.0, 40.0, 40.0, -20.0, 40.0,
                 ];
             }
 

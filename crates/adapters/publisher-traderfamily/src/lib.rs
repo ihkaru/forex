@@ -21,13 +21,20 @@ pub struct TraderFamilyPublisher {
 }
 
 impl TraderFamilyPublisher {
-    pub fn new(config: TraderFamilyConfig) -> Self {
+    pub fn new(config: TraderFamilyConfig) -> Result<Self, DomainError> {
         let client = Client::builder()
             .user_agent(&config.user_agent)
             .build()
-            .unwrap_or_default();
+            // HTTP client yang gagal dibuild = tidak ada user-agent = TF API bisa reject request
+            // WAJIB propagate, jangan fallback ke client tanpa konfigurasi
+            .map_err(|e| {
+                DomainError::AdapterError(format!(
+                    "Gagal membuild HTTP client untuk TF Publisher: {}",
+                    e
+                ))
+            })?;
 
-        Self { config, client }
+        Ok(Self { config, client })
     }
 }
 

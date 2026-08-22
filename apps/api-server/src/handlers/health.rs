@@ -1,8 +1,8 @@
+use crate::state::AppState;
 use axum::extract::State;
 use axum::Json;
 use serde::Serialize;
 use std::sync::Arc;
-use crate::state::AppState;
 
 #[derive(Serialize)]
 pub struct HealthResponse {

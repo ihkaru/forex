@@ -1,14 +1,14 @@
+use crate::state::AppState;
+use application::services::{EdaReport, EdaService};
 use axum::extract::{Path as AxumPath, State};
 use axum::http::StatusCode;
 use axum::Json;
 use domain::models::{RiskProfile, Signal, Symbol, Tick, Timeframe};
 use domain::ports::{MarketContext, StrategyPort};
-use application::services::{EdaReport, EdaService};
 use rust_decimal::Decimal;
 use rust_decimal_macros::dec;
 use serde::Serialize;
 use std::sync::Arc;
-use crate::state::AppState;
 
 #[derive(Serialize)]
 pub struct CandleDto {
@@ -26,7 +26,11 @@ pub async fn market_candles_handler(
 ) -> Result<Json<Vec<CandleDto>>, StatusCode> {
     let sym_str = symbol.to_uppercase();
     if let Some(sym) = Symbol::from_symbol_str(&sym_str) {
-        if let Some(candles) = state.market_adapter.candles_map.get(&sym.to_compact_string()) {
+        if let Some(candles) = state
+            .market_adapter
+            .candles_map
+            .get(&sym.to_compact_string())
+        {
             let dtos: Vec<CandleDto> = candles
                 .iter()
                 .map(|c| CandleDto {
@@ -50,7 +54,11 @@ pub async fn eda_handler(
 ) -> Result<Json<EdaReport>, StatusCode> {
     let sym_str = symbol.to_uppercase();
     if let Some(sym) = Symbol::from_symbol_str(&sym_str) {
-        if let Some(candles) = state.market_adapter.candles_map.get(&sym.to_compact_string()) {
+        if let Some(candles) = state
+            .market_adapter
+            .candles_map
+            .get(&sym.to_compact_string())
+        {
             let report = EdaService::analyze(&sym, candles);
             return Ok(Json(report));
         }
@@ -66,7 +74,11 @@ pub async fn signals_scan_handler(
 
     for p in &pairs {
         if let Some(sym) = Symbol::from_symbol_str(p) {
-            if let Some(candles) = state.market_adapter.candles_map.get(&sym.to_compact_string()) {
+            if let Some(candles) = state
+                .market_adapter
+                .candles_map
+                .get(&sym.to_compact_string())
+            {
                 if let Some(last) = candles.last() {
                     let tick = Tick {
                         symbol: sym.clone(),

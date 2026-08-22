@@ -11,21 +11,21 @@ pub struct EdaReport {
     pub start_time: Option<DateTime<Utc>>,
     pub end_time: Option<DateTime<Utc>>,
     pub total_duration_days: f64,
-    
+
     // Integritas Matematika OHLCV
     pub invalid_candle_count: usize,
     pub mathematical_integrity_pct: f64,
-    
+
     // Statistik Harga & Volatilitas (dalam pips)
     pub min_price: Decimal,
     pub max_price: Decimal,
     pub avg_bar_range_pips: Decimal,
     pub max_single_bar_pips: Decimal,
-    
+
     // Deteksi Gap & Outlier
     pub weekday_gaps_count: usize,
     pub zero_volume_bars_count: usize,
-    
+
     // Status Kelayakan Data
     pub health_score: f64,
     pub health_status: String,
@@ -61,7 +61,8 @@ impl EdaService {
         let start_time = Some(candles.first().unwrap().timestamp);
         let end_time = Some(candles.last().unwrap().timestamp);
 
-        let duration_hours = (candles.last().unwrap().timestamp - candles.first().unwrap().timestamp).num_hours();
+        let duration_hours =
+            (candles.last().unwrap().timestamp - candles.first().unwrap().timestamp).num_hours();
         let total_duration_days = duration_hours as f64 / 24.0;
 
         let mut invalid_candle_count = 0;

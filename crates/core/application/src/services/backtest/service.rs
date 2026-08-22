@@ -147,13 +147,15 @@ impl BacktestService {
                                     let tp_hit = current_candle.high >= tp;
 
                                     if sl_hit {
-                                        let pips = -spec.price_diff_to_pips(sim.order.open_price - sl);
+                                        let pips =
+                                            -spec.price_diff_to_pips(sim.order.open_price - sl);
                                         sim.order.close_time = Some(current_candle.timestamp);
                                         sim.order.realized_pnl = Some(pips);
                                         running_pips += pips;
                                         closed = true;
                                     } else if tp_hit {
-                                        let pips = spec.price_diff_to_pips(tp - sim.order.open_price);
+                                        let pips =
+                                            spec.price_diff_to_pips(tp - sim.order.open_price);
                                         sim.order.close_time = Some(current_candle.timestamp);
                                         sim.order.realized_pnl = Some(pips);
                                         running_pips += pips;
@@ -165,13 +167,15 @@ impl BacktestService {
                                     let tp_hit = current_candle.low + spread_offset <= tp;
 
                                     if sl_hit {
-                                        let pips = -spec.price_diff_to_pips(sl - sim.order.open_price);
+                                        let pips =
+                                            -spec.price_diff_to_pips(sl - sim.order.open_price);
                                         sim.order.close_time = Some(current_candle.timestamp);
                                         sim.order.realized_pnl = Some(pips);
                                         running_pips += pips;
                                         closed = true;
                                     } else if tp_hit {
-                                        let pips = spec.price_diff_to_pips(sim.order.open_price - tp);
+                                        let pips =
+                                            spec.price_diff_to_pips(sim.order.open_price - tp);
                                         sim.order.close_time = Some(current_candle.timestamp);
                                         sim.order.realized_pnl = Some(pips);
                                         running_pips += pips;
@@ -310,7 +314,8 @@ impl BacktestService {
                     drawdown_percent: dd_pct,
                 });
 
-                let is_long = matches!(trade.action, SignalAction::BuyLimit | SignalAction::BuyStop);
+                let is_long =
+                    matches!(trade.action, SignalAction::BuyLimit | SignalAction::BuyStop);
                 if is_long {
                     long_trades += 1;
                     long_net += pnl;

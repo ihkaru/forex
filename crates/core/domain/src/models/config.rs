@@ -96,7 +96,6 @@ pub struct TelegramSettings {
     pub chat_id: String,
 }
 
-
 /// Pengaturan Koneksi Broker (MetaTrader 5 Bridge EA Socket)
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct BrokerSettings {
@@ -202,7 +201,10 @@ impl AppConfig {
                     return config;
                 }
                 Err(e) => {
-                    eprintln!("⚠️ Gagal mem-parse file config di '{}': {}. Menggunakan Default config.", path, e);
+                    eprintln!(
+                        "⚠️ Gagal mem-parse file config di '{}': {}. Menggunakan Default config.",
+                        path, e
+                    );
                 }
             }
         }

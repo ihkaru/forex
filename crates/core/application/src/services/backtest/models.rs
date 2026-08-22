@@ -75,7 +75,11 @@ pub struct DetailedBacktestResult {
 #[derive(Debug, Clone)]
 pub(crate) enum SimulatedOrderStatus {
     Pending,
-    Filled { fill_time: DateTime<Utc> },
+    // fill_time dipakai untuk future trade log & PnL audit trail
+    #[allow(dead_code)]
+    Filled {
+        fill_time: DateTime<Utc>,
+    },
 }
 
 #[derive(Debug, Clone)]

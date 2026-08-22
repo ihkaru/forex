@@ -1,7 +1,7 @@
-use async_trait::async_trait;
-use chrono::{DateTime, Utc};
 use crate::errors::DomainError;
 use crate::models::{Candle, Symbol, Tick, Timeframe};
+use async_trait::async_trait;
+use chrono::{DateTime, Utc};
 
 #[cfg_attr(test, mockall::automock)]
 #[async_trait]

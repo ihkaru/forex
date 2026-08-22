@@ -125,7 +125,9 @@ impl StrategyBenchmarkService {
                 && pf >= rust_decimal_macros::dec!(2.10)
             {
                 "🌟 LEGEND QUALIFIED"
-            } else if strat_valued_pips >= rust_decimal_macros::dec!(300.0) && strat_total_trades >= 5 {
+            } else if strat_valued_pips >= rust_decimal_macros::dec!(300.0)
+                && strat_total_trades >= 5
+            {
                 "🌟 MASTER QUALIFIED"
             } else {
                 "⚠️ REVIEW NEEDED"
@@ -147,7 +149,6 @@ impl StrategyBenchmarkService {
 
         // Urutkan berdasarkan total Valued Pips tertinggi
         entries.sort_by_key(|e| std::cmp::Reverse(e.total_valued_pips));
-
 
         for (idx, entry) in entries.iter_mut().enumerate() {
             entry.rank = idx + 1;

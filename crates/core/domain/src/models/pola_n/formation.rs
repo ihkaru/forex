@@ -1,6 +1,6 @@
+use super::detector::SwingPoint;
 use rust_decimal::Decimal;
 use rust_decimal_macros::dec;
-use super::detector::SwingPoint;
 
 /// Tipe Formasi Pola N
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]

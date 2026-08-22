@@ -1,13 +1,12 @@
 #[cfg(test)]
+#[allow(clippy::module_inception)] // Idiom Rust standard untuk test module di file terpisah
 mod tests {
-    use crate::models::pola_n::{
-        PolaNFormationEngine, PolaNStrategy, PolaNType, SwingPoint,
-    };
+    use crate::models::pola_n::{PolaNFormationEngine, PolaNStrategy, PolaNType, SwingPoint};
+    use crate::models::{Candle, RiskProfile, Symbol, Tick, Timeframe};
+    use crate::ports::{MarketContext, StrategyPort};
     use chrono::Utc;
     use rust_decimal::Decimal;
     use rust_decimal_macros::dec;
-    use crate::models::{Candle, RiskProfile, Symbol, Tick, Timeframe};
-    use crate::ports::{MarketContext, StrategyPort};
 
     fn mock_candle(time_offset_hours: i64, o: f64, h: f64, l: f64, c: f64) -> Candle {
         Candle {
@@ -124,7 +123,13 @@ mod tests {
         }
         candles.push(mock_candle(51, 1.0950, 1.0960, 1.0940, 1.0945));
         for i in 52..65 {
-            candles.push(mock_candle(i, 1.0950 + (i as f64 - 51.0) * 0.001, 1.0960 + (i as f64 - 51.0) * 0.001, 1.0945 + (i as f64 - 51.0) * 0.001, 1.0955 + (i as f64 - 51.0) * 0.001));
+            candles.push(mock_candle(
+                i,
+                1.0950 + (i as f64 - 51.0) * 0.001,
+                1.0960 + (i as f64 - 51.0) * 0.001,
+                1.0945 + (i as f64 - 51.0) * 0.001,
+                1.0955 + (i as f64 - 51.0) * 0.001,
+            ));
         }
 
         let tick = Tick {

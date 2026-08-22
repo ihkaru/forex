@@ -1,0 +1,14 @@
+# rustfmt.toml — Forex Workspace Format Config (Stable Channel)
+#
+# Hanya menggunakan fitur rustfmt stable.
+# Jalankan: cargo fmt --all
+# Gate CI: cargo fmt --all -- --check
+
+edition = "2021"
+max_width = 100
+tab_spaces = 4
+newline_style = "Unix"
+
+# Reorder imports dan modules (stable)
+reorder_imports = true
+reorder_modules = true

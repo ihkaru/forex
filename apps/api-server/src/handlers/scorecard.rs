@@ -1,8 +1,8 @@
+use crate::state::AppState;
 use axum::extract::State;
 use axum::Json;
 use serde::Serialize;
 use std::sync::Arc;
-use crate::state::AppState;
 
 #[derive(Serialize)]
 pub struct PillarScoreDto {
@@ -25,9 +25,7 @@ pub struct ScorecardResponse {
     pub pillars: Vec<PillarScoreDto>,
 }
 
-pub async fn scorecard_handler(
-    State(_state): State<Arc<AppState>>,
-) -> Json<ScorecardResponse> {
+pub async fn scorecard_handler(State(_state): State<Arc<AppState>>) -> Json<ScorecardResponse> {
     let pillars = vec![
         PillarScoreDto {
             code: "RF",

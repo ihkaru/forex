@@ -27,7 +27,11 @@ impl Default for SmcLiquiditySweepStrategy {
 }
 
 impl SmcLiquiditySweepStrategy {
-    pub fn new(name: impl Into<String>, min_risk_reward: Decimal, sweep_buffer_pips: Decimal) -> Self {
+    pub fn new(
+        name: impl Into<String>,
+        min_risk_reward: Decimal,
+        sweep_buffer_pips: Decimal,
+    ) -> Self {
         Self {
             name: name.into(),
             min_risk_reward,

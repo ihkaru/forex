@@ -58,7 +58,9 @@ fn create_market_wave(symbol: &Symbol, count: usize) -> Vec<Candle> {
     let pip_scale = dec!(1.0);
 
     for i in 0..count {
-        seed = seed.wrapping_mul(6364136223846793005).wrapping_add(1442695040888963407);
+        seed = seed
+            .wrapping_mul(6364136223846793005)
+            .wrapping_add(1442695040888963407);
         let rand_val = ((seed >> 32) as i64 % 200) - 100;
 
         let regime = (i / 70) % 4;
@@ -75,7 +77,9 @@ fn create_market_wave(symbol: &Symbol, count: usize) -> Vec<Candle> {
         let open = current_price;
         let close = open + delta_dec;
 
-        seed = seed.wrapping_mul(6364136223846793005).wrapping_add(1442695040888963407);
+        seed = seed
+            .wrapping_mul(6364136223846793005)
+            .wrapping_add(1442695040888963407);
         let wick_up_pips = (((seed >> 32) % 18) + 6) as i64;
         let wick_dn_pips = (((seed >> 40) % 18) + 6) as i64;
 
@@ -131,7 +135,7 @@ fn test_eda_health_scorecard_detects_corrupt_candles_and_gaps() {
     // 2. Uji dataset korup (High < Low & High < Open)
     let mut corrupt_candles = clean_candles.clone();
     corrupt_candles[10].high = dec!(0.5900); // Invalid: High < Low (0.5900 < 0.5980)
-    corrupt_candles[20].volume = dec!(0.0);  // Zero volume bar
+    corrupt_candles[20].volume = dec!(0.0); // Zero volume bar
 
     let corrupt_report = EdaService::analyze(&symbol, &corrupt_candles);
     assert_eq!(corrupt_report.invalid_candle_count, 1);
@@ -174,7 +178,8 @@ async fn test_walk_forward_efficiency_ratio_calculation() {
     let risk = RiskProfile::default();
     let config = BacktestConfig::default();
 
-    let is_service = BacktestService::with_config(is_feed, strategy.clone(), risk.clone(), config.clone());
+    let is_service =
+        BacktestService::with_config(is_feed, strategy.clone(), risk.clone(), config.clone());
     let oos_service = BacktestService::with_config(oos_feed, strategy, risk, config);
 
     let is_report = is_service
@@ -216,12 +221,21 @@ fn test_pending_limit_order_eliminates_copy_trade_slippage() {
     // Pada Pending Limit Order: Broker wajib mengeksekusi tepat pada harga limit
     let actual_limit_fill = target_limit_entry;
     let limit_slippage_pips = spec.price_diff_to_pips(actual_limit_fill - target_limit_entry);
-    assert_eq!(limit_slippage_pips, Decimal::ZERO, "Pending Limit Order wajib 0 slippage!");
+    assert_eq!(
+        limit_slippage_pips,
+        Decimal::ZERO,
+        "Pending Limit Order wajib 0 slippage!"
+    );
 
     // Pada Market Order (Eksekusi Instan dengan jeda 300ms latency): Terkena slippage 1.5 pips
     let market_fill_with_latency = target_limit_entry + (spec.pip_size * dec!(1.5));
-    let market_slippage_pips = spec.price_diff_to_pips(market_fill_with_latency - target_limit_entry);
-    assert_eq!(market_slippage_pips, dec!(1.5), "Market order mengalami slippage 1.5 pips!");
+    let market_slippage_pips =
+        spec.price_diff_to_pips(market_fill_with_latency - target_limit_entry);
+    assert_eq!(
+        market_slippage_pips,
+        dec!(1.5),
+        "Market order mengalami slippage 1.5 pips!"
+    );
 }
 
 // ============================================================================

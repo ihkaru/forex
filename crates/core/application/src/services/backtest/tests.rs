@@ -1,4 +1,5 @@
 #[cfg(test)]
+#[allow(clippy::module_inception)] // Idiom Rust standard untuk test module di file terpisah
 mod tests {
     use super::super::service::BacktestService;
     use async_trait::async_trait;

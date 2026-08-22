@@ -33,7 +33,12 @@ impl MarketDataPort for HistoricalMarketFeed {
             .get(&symbol.to_compact_string())
             .and_then(|c| c.last())
             .map(|c| c.close)
-            .unwrap_or(dec!(1.0850));
+            .ok_or_else(|| {
+                domain::errors::DomainError::AdapterError(format!(
+                    "Tidak ada data candle untuk symbol {}",
+                    symbol.to_compact_string()
+                ))
+            })?;
 
         Ok(Tick {
             symbol: symbol.clone(),
@@ -49,11 +54,15 @@ impl MarketDataPort for HistoricalMarketFeed {
         _timeframe: Timeframe,
         _limit: usize,
     ) -> Result<Vec<Candle>, domain::errors::DomainError> {
-        Ok(self
-            .candles
+        self.candles
             .get(&symbol.to_compact_string())
             .cloned()
-            .unwrap_or_default())
+            .ok_or_else(|| {
+                domain::errors::DomainError::AdapterError(format!(
+                    "Data recent candle tidak ditemukan untuk symbol: {}",
+                    symbol.to_compact_string()
+                ))
+            })
     }
 
     async fn get_historical_candles(
@@ -63,11 +72,15 @@ impl MarketDataPort for HistoricalMarketFeed {
         _from: DateTime<Utc>,
         _to: DateTime<Utc>,
     ) -> Result<Vec<Candle>, domain::errors::DomainError> {
-        Ok(self
-            .candles
+        self.candles
             .get(&symbol.to_compact_string())
             .cloned()
-            .unwrap_or_default())
+            .ok_or_else(|| {
+                domain::errors::DomainError::AdapterError(format!(
+                    "Data historical candle tidak ditemukan untuk symbol: {}",
+                    symbol.to_compact_string()
+                ))
+            })
     }
 }
 
@@ -87,7 +100,10 @@ fn load_real_market_candles(symbol: &Symbol) -> anyhow::Result<Vec<Candle>> {
     let file_path = format!("data/historical/{}_H1.json", sym_str);
 
     if !std::path::Path::new(&file_path).exists() {
-        println!("⚠️ File {} belum ditemukan. Menjalankan downloader data nyata...", file_path);
+        println!(
+            "⚠️ File {} belum ditemukan. Menjalankan downloader data nyata...",
+            file_path
+        );
         let status = std::process::Command::new("python3")
             .arg("scripts/download_real_forex_data.py")
             .status()?;
@@ -106,7 +122,7 @@ fn load_real_market_candles(symbol: &Symbol) -> anyhow::Result<Vec<Candle>> {
         let high = Decimal::from_str(&raw.high)?;
         let low = Decimal::from_str(&raw.low)?;
         let close = Decimal::from_str(&raw.close)?;
-        let volume = Decimal::from_str(&raw.volume).unwrap_or(dec!(1000.0));
+        let volume = Decimal::from_str(&raw.volume)?;
 
         candles.push(Candle {
             symbol: symbol.clone(),
@@ -131,7 +147,10 @@ async fn main() -> anyhow::Result<()> {
 
     // 1. Load Konfigurasi Terpusat (config.toml)
     let config = AppConfig::load_from_file_or_default("config.toml");
-    println!("Memuat Konfigurasi: config.toml (Env: {})", config.environment);
+    println!(
+        "Memuat Konfigurasi: config.toml (Env: {})",
+        config.environment
+    );
     println!("Target Monetisasi: Kualifikasi Analis (>= 300 VP & Scorecard 7-Faktor Max)\n");
 
     let symbols: Vec<Symbol> = config
@@ -145,7 +164,11 @@ async fn main() -> anyhow::Result<()> {
     let mut feed_map = HashMap::new();
     for symbol in &symbols {
         let candles = load_real_market_candles(symbol)?;
-        println!("  ✅ {}: {} real H1 candles termuat.", symbol.to_compact_string(), candles.len());
+        println!(
+            "  ✅ {}: {} real H1 candles termuat.",
+            symbol.to_compact_string(),
+            candles.len()
+        );
         feed_map.insert(symbol.to_compact_string(), candles);
     }
     println!();
@@ -158,19 +181,34 @@ async fn main() -> anyhow::Result<()> {
     let risk_profile = RiskProfile::from_config(&config.risk_management);
 
     // 3. EXPLORATORY DATA ANALYSIS (EDA) & AUDIT KESEHATAN DATASET
-    println!("═════════════════════════════════════════════════════════════════════════════════════════");
-    println!("🔍 1. EXPLORATORY DATA ANALYSIS (EDA) & AUDIT KESEHATAN DATASET");
-    println!("═════════════════════════════════════════════════════════════════════════════════════════");
-    println!("{:<8} {:<8} {:<9} {:<10} {:<10} {:<13} {:<11} {:<24}",
-        "PAIR", "CANDLES", "DURASI", "MIN PRICE", "MAX PRICE", "AVG RANGE(p)", "MAX BAR(p)", "HEALTH SCORECARD"
+    println!(
+        "═════════════════════════════════════════════════════════════════════════════════════════"
     );
-    println!("─────────────────────────────────────────────────────────────────────────────────────────");
+    println!("🔍 1. EXPLORATORY DATA ANALYSIS (EDA) & AUDIT KESEHATAN DATASET");
+    println!(
+        "═════════════════════════════════════════════════════════════════════════════════════════"
+    );
+    println!(
+        "{:<8} {:<8} {:<9} {:<10} {:<10} {:<13} {:<11} {:<24}",
+        "PAIR",
+        "CANDLES",
+        "DURASI",
+        "MIN PRICE",
+        "MAX PRICE",
+        "AVG RANGE(p)",
+        "MAX BAR(p)",
+        "HEALTH SCORECARD"
+    );
+    println!(
+        "─────────────────────────────────────────────────────────────────────────────────────────"
+    );
 
     for symbol in &symbols {
         if let Some(candles) = feed_map.get(&symbol.to_compact_string()) {
             let eda = EdaService::analyze(symbol, candles);
             let dur_str = format!("{:.1} hari", eda.total_duration_days);
-            println!("{:<8} {:<8} {:<9} {:<10.5} {:<10.5} {:<13.1} {:<11.1} {:<24}",
+            println!(
+                "{:<8} {:<8} {:<9} {:<10.5} {:<10.5} {:<13.1} {:<11.1} {:<24}",
                 symbol.to_compact_string(),
                 eda.total_candles,
                 dur_str,
@@ -201,9 +239,13 @@ async fn main() -> anyhow::Result<()> {
     ];
 
     // 5. Jalankan Strategy Tournament Arena
-    println!("═════════════════════════════════════════════════════════════════════════════════════════");
+    println!(
+        "═════════════════════════════════════════════════════════════════════════════════════════"
+    );
     println!("🏆 2. STRATEGY TOURNAMENT LEADERBOARD (KOMPARASI MULTI-STRATEGI KUANTITATIF)");
-    println!("═════════════════════════════════════════════════════════════════════════════════════════");
+    println!(
+        "═════════════════════════════════════════════════════════════════════════════════════════"
+    );
 
     let benchmark_service = StrategyBenchmarkService::new(
         shared_feed.clone(),
@@ -234,10 +276,21 @@ async fn main() -> anyhow::Result<()> {
         )
         .await?;
 
-    println!("{:<4} {:<28} {:<8} {:<8} {:<10} {:<12} {:<8} {:<8} {:<18}",
-        "RANK", "STRATEGY NAME", "TRADES", "WIN(%)", "RAW PIPS", "VALUED PIPS", "PF", "REC.F", "TF STATUS"
+    println!(
+        "{:<4} {:<28} {:<8} {:<8} {:<10} {:<12} {:<8} {:<8} {:<18}",
+        "RANK",
+        "STRATEGY NAME",
+        "TRADES",
+        "WIN(%)",
+        "RAW PIPS",
+        "VALUED PIPS",
+        "PF",
+        "REC.F",
+        "TF STATUS"
     );
-    println!("─────────────────────────────────────────────────────────────────────────────────────────");
+    println!(
+        "─────────────────────────────────────────────────────────────────────────────────────────"
+    );
 
     for entry in &leaderboard {
         let medal = match entry.rank {
@@ -247,7 +300,8 @@ async fn main() -> anyhow::Result<()> {
             _ => "  ",
         };
 
-        println!("{} {:<2} {:<28} {:<8} {:<8.1} {:<10.1} {:<12.1} {:<8.2} {:<8.2} {:<18}",
+        println!(
+            "{} {:<2} {:<28} {:<8} {:<8.1} {:<10.1} {:<12.1} {:<8.2} {:<8.2} {:<18}",
             medal,
             entry.rank,
             entry.strategy_name,
@@ -263,9 +317,13 @@ async fn main() -> anyhow::Result<()> {
     println!("═════════════════════════════════════════════════════════════════════════════════════════\n");
 
     // 6. Rincian Performa Juara 1 (Pola N Strategy) Per-Pair
-    println!("═════════════════════════════════════════════════════════════════════════════════════════");
+    println!(
+        "═════════════════════════════════════════════════════════════════════════════════════════"
+    );
     println!("📊 3. RINCIAN PER-PAIR STRATEGI JUARA: POLA N SIGNATURE TRADERS FAMILY");
-    println!("═════════════════════════════════════════════════════════════════════════════════════════");
+    println!(
+        "═════════════════════════════════════════════════════════════════════════════════════════"
+    );
 
     let backtester = BacktestService::with_config(
         shared_feed.clone(),
@@ -280,12 +338,7 @@ async fn main() -> anyhow::Result<()> {
 
     for symbol in &symbols {
         let report = backtester
-            .run_simulation(
-                symbol,
-                Timeframe::H1,
-                sim_start,
-                sim_end,
-            )
+            .run_simulation(symbol, Timeframe::H1, sim_start, sim_end)
             .await?;
 
         total_portfolio_vp += report.total_valued_pips;
@@ -293,10 +346,22 @@ async fn main() -> anyhow::Result<()> {
         reports.push(report);
     }
 
-    println!("{:<8} {:<7} {:<6} {:<8} {:<8} {:<10} {:<12} {:<8} {:<8} {:<10}",
-        "PAIR", "TIER", "MULT", "TRADES", "WIN(%)", "RAW PIPS", "VALUED PIPS", "PF", "REC.F", "STATUS"
+    println!(
+        "{:<8} {:<7} {:<6} {:<8} {:<8} {:<10} {:<12} {:<8} {:<8} {:<10}",
+        "PAIR",
+        "TIER",
+        "MULT",
+        "TRADES",
+        "WIN(%)",
+        "RAW PIPS",
+        "VALUED PIPS",
+        "PF",
+        "REC.F",
+        "STATUS"
     );
-    println!("─────────────────────────────────────────────────────────────────────────────────────────");
+    println!(
+        "─────────────────────────────────────────────────────────────────────────────────────────"
+    );
 
     for report in &reports {
         let spec = TfPairSpec::from_symbol(&report.symbol);
@@ -313,7 +378,8 @@ async fn main() -> anyhow::Result<()> {
             "⚠️ REVIEW"
         };
 
-        println!("{:<8} {:<7} {:<6.1} {:<8} {:<8.1} {:<10.1} {:<12.1} {:<8.2} {:<8.2} {:<10}",
+        println!(
+            "{:<8} {:<7} {:<6.1} {:<8} {:<8.1} {:<10.1} {:<12.1} {:<8.2} {:<8.2} {:<10}",
             report.symbol.to_compact_string(),
             tier_name,
             spec.value_multiplier,
@@ -327,16 +393,32 @@ async fn main() -> anyhow::Result<()> {
         );
     }
 
-    println!("─────────────────────────────────────────────────────────────────────────────────────────");
-    println!("🏆 TOTAL PORTOFOLIO VALUED PIPS: {:.1} VP | TOTAL TRADES: {}", total_portfolio_vp, total_portfolio_trades);
+    println!(
+        "─────────────────────────────────────────────────────────────────────────────────────────"
+    );
+    println!(
+        "🏆 TOTAL PORTOFOLIO VALUED PIPS: {:.1} VP | TOTAL TRADES: {}",
+        total_portfolio_vp, total_portfolio_trades
+    );
     let target_met = total_portfolio_vp >= dec!(300.0) && total_portfolio_trades >= 5;
-    println!("🎯 KUALIFIKASI TF REWARD POINT (Target >= 300 VP): {}", if target_met { "🌟 MEMENUHI SYARAT REWARD POINT BULANAN!" } else { "❌ BELUM MEMENUHI TARGET" });
+    println!(
+        "🎯 KUALIFIKASI TF REWARD POINT (Target >= 300 VP): {}",
+        if target_met {
+            "🌟 MEMENUHI SYARAT REWARD POINT BULANAN!"
+        } else {
+            "❌ BELUM MEMENUHI TARGET"
+        }
+    );
     println!("═════════════════════════════════════════════════════════════════════════════════════════\n");
 
     // 7. Komparasi Head-to-Head: Backtest (In-Sample 70%) vs Forward Test (Out-of-Sample 30%)
-    println!("═════════════════════════════════════════════════════════════════════════════════════════");
+    println!(
+        "═════════════════════════════════════════════════════════════════════════════════════════"
+    );
     println!("🔬 4. KOMPARASI HEAD-TO-HEAD: BACKTEST (IN-SAMPLE) VS FORWARD TEST (OUT-OF-SAMPLE)");
-    println!("═════════════════════════════════════════════════════════════════════════════════════════");
+    println!(
+        "═════════════════════════════════════════════════════════════════════════════════════════"
+    );
 
     let mut is_feed_map = HashMap::new();
     let mut oos_feed_map = HashMap::new();
@@ -398,28 +480,94 @@ async fn main() -> anyhow::Result<()> {
         oos_wins += oos_rep.winning_trades;
     }
 
-    let is_win_rate = if is_total_trades > 0 { (is_wins as f64 / is_total_trades as f64) * 100.0 } else { 0.0 };
-    let oos_win_rate = if oos_total_trades > 0 { (oos_wins as f64 / oos_total_trades as f64) * 100.0 } else { 0.0 };
+    let is_win_rate = if is_total_trades > 0 {
+        (is_wins as f64 / is_total_trades as f64) * 100.0
+    } else {
+        0.0
+    };
+    let oos_win_rate = if oos_total_trades > 0 {
+        (oos_wins as f64 / oos_total_trades as f64) * 100.0
+    } else {
+        0.0
+    };
 
     // Walk-Forward Efficiency Ratio (WFER)
     // Standar Industri: WFER >= 60% = Robust & Siap Monetisasi, < 50% = Curva Overfitting
-    let wfer_ratio = if is_win_rate > 0.0 { (oos_win_rate / is_win_rate) * 100.0 } else { 0.0 };
+    let wfer_ratio = if is_win_rate > 0.0 {
+        (oos_win_rate / is_win_rate) * 100.0
+    } else {
+        0.0
+    };
 
     let is_bar_count = is_feed_map.values().next().map(|v| v.len()).unwrap_or(0);
     let oos_bar_count = oos_feed_map.values().next().map(|v| v.len()).unwrap_or(0);
-    let is_dur_label = format!("{} Bar (~{:.0} Hari)", is_bar_count, is_bar_count as f64 / 24.0);
-    let oos_dur_label = format!("{} Bar (~{:.0} Hari)", oos_bar_count, oos_bar_count as f64 / 24.0);
+    let is_dur_label = format!(
+        "{} Bar (~{:.0} Hari)",
+        is_bar_count,
+        is_bar_count as f64 / 24.0
+    );
+    let oos_dur_label = format!(
+        "{} Bar (~{:.0} Hari)",
+        oos_bar_count,
+        oos_bar_count as f64 / 24.0
+    );
 
-    println!("{:<28} {:<24} {:<24} {:<12}",
+    println!(
+        "{:<28} {:<24} {:<24} {:<12}",
         "METRIK EVALUASI", "BACKTEST (IN-SAMPLE 70%)", "FORWARD TEST (OOS 30%)", "SELISIH / WFER"
     );
-    println!("─────────────────────────────────────────────────────────────────────────────────────────");
-    println!("{:<28} {:<24} {:<24} {:<12}", "Dataset Bars / Durasi", is_dur_label, oos_dur_label, "Rasio 70:30");
-    println!("{:<28} {:<24} {:<24} {:<12}", "Total Settled Trades", format!("{} Trades", is_total_trades), format!("{} Trades", oos_total_trades), "-");
-    println!("{:<28} {:<24} {:<24} {:<12}", "Win Rate (%)", format!("{:.1}%", is_win_rate), format!("{:.1}%", oos_win_rate), format!("WFER: {:.1}%", wfer_ratio));
-    println!("{:<28} {:<24} {:<24} {:<12}", "Total Valued Pips (VP)", format!("+{:.1} VP", is_total_vp), format!("+{:.1} VP", oos_total_vp), "Konsisten Hijau");
-    println!("{:<28} {:<24} {:<24} {:<12}", "Rata-rata VP / Trade", format!("{:.1} VP/trade", if is_total_trades > 0 { is_total_vp / Decimal::from(is_total_trades) } else { Decimal::ZERO }), format!("{:.1} VP/trade", if oos_total_trades > 0 { oos_total_vp / Decimal::from(oos_total_trades) } else { Decimal::ZERO }), "Stabil");
-    println!("─────────────────────────────────────────────────────────────────────────────────────────");
+    println!(
+        "─────────────────────────────────────────────────────────────────────────────────────────"
+    );
+    println!(
+        "{:<28} {:<24} {:<24} {:<12}",
+        "Dataset Bars / Durasi", is_dur_label, oos_dur_label, "Rasio 70:30"
+    );
+    println!(
+        "{:<28} {:<24} {:<24} {:<12}",
+        "Total Settled Trades",
+        format!("{} Trades", is_total_trades),
+        format!("{} Trades", oos_total_trades),
+        "-"
+    );
+    println!(
+        "{:<28} {:<24} {:<24} {:<12}",
+        "Win Rate (%)",
+        format!("{:.1}%", is_win_rate),
+        format!("{:.1}%", oos_win_rate),
+        format!("WFER: {:.1}%", wfer_ratio)
+    );
+    println!(
+        "{:<28} {:<24} {:<24} {:<12}",
+        "Total Valued Pips (VP)",
+        format!("+{:.1} VP", is_total_vp),
+        format!("+{:.1} VP", oos_total_vp),
+        "Konsisten Hijau"
+    );
+    println!(
+        "{:<28} {:<24} {:<24} {:<12}",
+        "Rata-rata VP / Trade",
+        format!(
+            "{:.1} VP/trade",
+            if is_total_trades > 0 {
+                is_total_vp / Decimal::from(is_total_trades)
+            } else {
+                Decimal::ZERO
+            }
+        ),
+        format!(
+            "{:.1} VP/trade",
+            if oos_total_trades > 0 {
+                oos_total_vp / Decimal::from(oos_total_trades)
+            } else {
+                Decimal::ZERO
+            }
+        ),
+        "Stabil"
+    );
+    println!(
+        "─────────────────────────────────────────────────────────────────────────────────────────"
+    );
     let robustness_verdict = if wfer_ratio >= 60.0 {
         "🟢 SANGAT ROBUST (Walk-Forward Terbukti Tahan Uji di Data Buta)"
     } else if wfer_ratio >= 40.0 {
@@ -431,9 +579,13 @@ async fn main() -> anyhow::Result<()> {
     println!("═════════════════════════════════════════════════════════════════════════════════════════\n");
 
     // 8. Test Validasi Kepatuhan TF Compliance Guard
-    println!("═════════════════════════════════════════════════════════════════════════════════════════");
+    println!(
+        "═════════════════════════════════════════════════════════════════════════════════════════"
+    );
     println!("🛡️ 5. UJI COBA VALIDASI KEPATUHAN TF COMPLIANCE GUARD");
-    println!("═════════════════════════════════════════════════════════════════════════════════════════");
+    println!(
+        "═════════════════════════════════════════════════════════════════════════════════════════"
+    );
 
     let sample_signal = Signal {
         id: Uuid::new_v4(),
@@ -451,11 +603,15 @@ async fn main() -> anyhow::Result<()> {
         rationale: "Retest Higher Low L2 pada key level support H1".to_string(),
         status: SignalStatus::Pending,
         created_at: Utc::now(),
-        expires_at: Some(Utc::now() + chrono::Duration::hours(config.strategy_pola_n.default_expiration_hours)),
+        expires_at: Some(
+            Utc::now() + chrono::Duration::hours(config.strategy_pola_n.default_expiration_hours),
+        ),
     };
 
     match TfComplianceGuard::validate_signal(&sample_signal) {
-        Ok(_) => println!("✅ Sinyal lolos verifikasi TfComplianceGuard 100% (Zero-Penalty Guarantee)"),
+        Ok(_) => {
+            println!("✅ Sinyal lolos verifikasi TfComplianceGuard 100% (Zero-Penalty Guarantee)")
+        }
         Err(e) => println!("❌ Sinyal ditolak: {}", e),
     }
 
@@ -469,7 +625,7 @@ async fn main() -> anyhow::Result<()> {
         auth_token: config.traders_family.auth_token.clone(),
         channel_id: config.traders_family.channel_id.clone(),
         user_agent: config.traders_family.user_agent.clone(),
-    });
+    })?;
 
     let receipt = tf_publisher.publish_signal(&sample_signal).await?;
     println!(

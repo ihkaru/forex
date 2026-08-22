@@ -35,7 +35,10 @@ impl SignalPublisherPort for TelegramNotifier {
 
     async fn publish_signal(&self, signal: &Signal) -> Result<PublishReceipt, DomainError> {
         let _text = signal.formatted_summary();
-        info!("Kirim pesan sinyal ke Telegram Chat [{}]", self.config.chat_id);
+        info!(
+            "Kirim pesan sinyal ke Telegram Chat [{}]",
+            self.config.chat_id
+        );
 
         let receipt = PublishReceipt {
             signal_id: signal.id,

@@ -68,8 +68,8 @@ mod tests {
     use rust_decimal_macros::dec;
 
     #[rstest]
-    #[case(dec!(1.0850), dec!(1.0830), dec!(1.0890), true)]  // R:R 1:2 (Acceptable)
-    #[case(dec!(1.0850), dec!(1.0830), dec!(1.0910), true)]  // R:R 1:3 (Acceptable)
+    #[case(dec!(1.0850), dec!(1.0830), dec!(1.0890), true)] // R:R 1:2 (Acceptable)
+    #[case(dec!(1.0850), dec!(1.0830), dec!(1.0910), true)] // R:R 1:3 (Acceptable)
     #[case(dec!(1.0850), dec!(1.0845), dec!(1.0855), false)] // R:R 1:1 (Rejected < 1:2)
     #[case(dec!(1.0850), dec!(1.0850), dec!(1.0890), false)] // SL == Entry (Division by zero / Rejected)
     fn test_risk_reward_matrix(

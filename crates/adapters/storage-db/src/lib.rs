@@ -162,7 +162,12 @@ impl StoragePort for SqlxStorage {
         match row {
             Some(r) => {
                 let symbol_str: String = r.get("symbol");
-                let symbol = Symbol::from_symbol_str(&symbol_str).unwrap_or_else(|| Symbol::new("EUR", "USD"));
+                let symbol = Symbol::from_symbol_str(&symbol_str).ok_or_else(|| {
+                    DomainError::AdapterError(format!(
+                        "Integritas data korup: Symbol '{}' di database tidak valid",
+                        symbol_str
+                    ))
+                })?;
                 Ok(Some(Signal {
                     id: r.get("id"),
                     symbol,
@@ -197,12 +202,19 @@ impl StoragePort for SqlxStorage {
         let rows = sqlx::query(query)
             .fetch_all(&self.pool)
             .await
-            .map_err(|e| DomainError::AdapterError(format!("SQL get_active_signals error: {}", e)))?;
+            .map_err(|e| {
+                DomainError::AdapterError(format!("SQL get_active_signals error: {}", e))
+            })?;
 
         let mut signals = Vec::new();
         for r in rows {
             let symbol_str: String = r.get("symbol");
-            let symbol = Symbol::from_symbol_str(&symbol_str).unwrap_or_else(|| Symbol::new("EUR", "USD"));
+            let symbol = Symbol::from_symbol_str(&symbol_str).ok_or_else(|| {
+                DomainError::AdapterError(format!(
+                    "Integritas data korup: Symbol '{}' di database tidak valid",
+                    symbol_str
+                ))
+            })?;
             signals.push(Signal {
                 id: r.get("id"),
                 symbol,

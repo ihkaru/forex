@@ -13,6 +13,38 @@ edition = "2021"
 authors = ["Forex Quant Research Team"]
 license = "MIT OR Apache-2.0"
 
+# ─── WORKSPACE LINT ENFORCEMENT ─────────────────────────────────────────────
+# Aturan ini dieksekusi compiler setiap `cargo clippy`.
+# Ini adalah "artifact enforcement" — tidak bergantung pada AI mengingat aturan.
+#
+# Strategi: mulai dengan "warn" untuk audit, naikkan ke "deny" setelah bersih.
+# Untuk eskalasi: ubah "warn" → "deny" setelah `cargo clippy` 0 warning.
+
+[workspace.lints.rust]
+# Keamanan absolut — tidak ada unsafe code tanpa justifikasi eksplisit
+unsafe_code = "deny"
+
+[workspace.lints.clippy]
+# ── Anti-Panic (Financial Reliability) ──────────────────────────────────────
+# Trading system: panic = downtime. Semua error HARUS pakai Result/anyhow.
+panic            = "deny"
+todo             = "deny"        # TODO tidak boleh ada di production code
+unimplemented    = "deny"        # unimplemented!() tidak boleh di production
+unwrap_used      = "warn"        # Audit dulu, naikkan ke deny setelah bersih
+expect_used      = "warn"        # Sama seperti unwrap_used
+
+# ── Presisi Finansial ────────────────────────────────────────────────────────
+# Tangkap arithmetic f64 yang tidak sengaja (Decimal harus dipakai)
+float_arithmetic = "warn"        # Catch accidental f64 arithmetic
+
+# ── Code Quality ─────────────────────────────────────────────────────────────
+undocumented_unsafe_blocks = "deny"
+missing_errors_doc         = "warn"    # Public fn returning Result harus didokumentasi
+
+# ── Pedantic (Best Practices) ────────────────────────────────────────────────
+# Diaktifkan selectively — tidak semua pedantic cocok untuk trading system
+wildcard_imports = "warn"         # Hindari `use module::*`
+
 [workspace.dependencies]
 # Async runtime & networking
 tokio = { version = "1.38", features = ["full"] }

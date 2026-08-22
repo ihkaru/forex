@@ -22,6 +22,12 @@ struct RawCandleJson {
     volume: String,
 }
 
+impl Default for RealHistoricalMarketAdapter {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl RealHistoricalMarketAdapter {
     pub fn new() -> Self {
         let mut map = HashMap::new();
@@ -47,19 +53,26 @@ impl RealHistoricalMarketAdapter {
         let sym_str = symbol.to_compact_string();
         let path1 = format!("data/historical/{}_H1.json", sym_str);
         let path2 = format!("../../data/historical/{}_H1.json", sym_str);
-        
+
         let file_path = if std::path::Path::new(&path1).exists() {
             path1
         } else if std::path::Path::new(&path2).exists() {
             path2
-        } else {
-            let manifest = std::env::var("CARGO_MANIFEST_DIR").unwrap_or_default();
+        } else if let Ok(manifest) = std::env::var("CARGO_MANIFEST_DIR") {
             let p3 = format!("{}/../../data/historical/{}_H1.json", manifest, sym_str);
             if std::path::Path::new(&p3).exists() {
                 p3
             } else {
-                anyhow::bail!("File histori nyata {}_H1.json tidak ditemukan di disk", sym_str);
+                anyhow::bail!(
+                    "File histori nyata {}_H1.json tidak ditemukan di disk",
+                    sym_str
+                );
             }
+        } else {
+            anyhow::bail!(
+                "File histori nyata {}_H1.json tidak ditemukan di disk",
+                sym_str
+            );
         };
 
         let file_content = std::fs::read_to_string(&file_path)?;
@@ -72,7 +85,7 @@ impl RealHistoricalMarketAdapter {
             let high = Decimal::from_str(&raw.high)?;
             let low = Decimal::from_str(&raw.low)?;
             let close = Decimal::from_str(&raw.close)?;
-            let volume = Decimal::from_str(&raw.volume).unwrap_or(dec!(1000.0));
+            let volume = Decimal::from_str(&raw.volume)?;
 
             candles.push(Candle {
                 symbol: symbol.clone(),

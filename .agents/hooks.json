@@ -1,0 +1,26 @@
+{
+  "_comment": "Antigravity IDE Hooks — Forex Workspace Self-Correction System",
+  "_doc": "Dokumentasi: docs/ARCHITECTURE.md#agent-hooks",
+
+  "rust-quality-gate": {
+    "_comment": "Stop Hook: Agen tidak bisa 'selesai' jika cargo clippy masih error.",
+    "_detail": "Setiap kali agen hendak mengakhiri sesi setelah memodifikasi kode Rust, hook ini dijalankan. Jika ada clippy error, agen di-force continue untuk memperbaiki sendiri.",
+    "Stop": [
+      {
+        "command": ".agents/scripts/rust_quality_gate.sh",
+        "timeout": 120
+      }
+    ]
+  },
+
+  "tf-compliance-reminder": {
+    "_comment": "PreInvocation: Ingatkan agen tentang aturan TF Compliance sebelum setiap invocation.",
+    "_detail": "Ephemeral message — tidak masuk ke conversation history, hanya sebagai konteks instan.",
+    "PreInvocation": [
+      {
+        "command": ".agents/scripts/tf_reminder.sh",
+        "timeout": 5
+      }
+    ]
+  }
+}
