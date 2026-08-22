@@ -40,6 +40,18 @@ DANGEROUS_PATTERNS = [
         "severity": "CRITICAL",
         "message": "DILARANG fallback symbol otomatis saat parse gagal. Wajib return Err(DomainError::InvalidSymbol)."
     },
+    {
+        "id": "HARDCODED_METRIC_MOCK",
+        "regex": re.compile(r'total_score:\s*28,\s*max_score:\s*28'),
+        "severity": "CRITICAL",
+        "message": "DILARANG hardcoded skor scorecard 28/28. Skor wajib dihitung secara dinamis dari performa histori trade aktual."
+    },
+    {
+        "id": "STATIC_HANDLER_MOCK",
+        "regex": re.compile(r'PillarScoreDto\s*\{\s*code:\s*"[^"]+",\s*name:\s*"[^"]+",\s*weight_pct:\s*[0-9.]+\s*,\s*score:\s*4'),
+        "severity": "CRITICAL",
+        "message": "DILARANG membuat mock array pilar statis di API handler. Gunakan QuantAuditService untuk kalkulasi dinamis."
+    },
 ]
 
 def scan_file(filepath: Path) -> list:
