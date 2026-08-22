@@ -164,11 +164,16 @@ pub enum TradeExitFilter {
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub enum TradeSortField {
+    Index,
     CloseTime,
     OpenTime,
+    Action,
+    OpenPrice,
+    ClosePrice,
     PnlPips,
     ValuedPips,
     DurationHours,
+    ExitReason,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -180,6 +185,7 @@ pub enum SortDirection {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct TradeFilterQuery {
     pub symbol: Symbol,
+    pub search_query: Option<String>,
     pub action: Option<TradeActionFilter>,
     pub result: Option<TradeResultFilter>,
     pub exit_reason: Option<TradeExitFilter>,

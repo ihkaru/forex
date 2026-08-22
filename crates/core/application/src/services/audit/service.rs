@@ -389,6 +389,24 @@ impl QuantAuditPort for QuantAuditService {
         let pair_audit = self.get_pair_audit(&query.symbol).await?;
         let mut filtered: Vec<TradeAuditItem> = pair_audit.trades;
 
+        // 0. Search Query Text Filter (ID, Action, Price, Reason, Date, PnL)
+        if let Some(ref q) = query.search_query {
+            let clean_q = q.trim().to_lowercase();
+            if !clean_q.is_empty() {
+                filtered.retain(|t| {
+                    t.id.to_lowercase().contains(&clean_q)
+                        || t.action.to_lowercase().contains(&clean_q)
+                        || t.exit_reason.to_lowercase().contains(&clean_q)
+                        || t.entry_price.to_string().contains(&clean_q)
+                        || t.exit_price.to_string().contains(&clean_q)
+                        || t.pnl_pips.to_string().contains(&clean_q)
+                        || t.valued_pips.to_string().contains(&clean_q)
+                        || t.open_time.to_rfc3339().to_lowercase().contains(&clean_q)
+                        || t.close_time.to_rfc3339().to_lowercase().contains(&clean_q)
+                });
+            }
+        }
+
         // 1. Filter by Action / Direction
         if let Some(ref action_filter) = query.action {
             match action_filter {
@@ -518,11 +536,16 @@ impl QuantAuditPort for QuantAuditService {
 
         filtered.sort_by(|a, b| {
             let ordering = match sort_field {
+                TradeSortField::Index => a.open_epoch.cmp(&b.open_epoch),
                 TradeSortField::CloseTime => a.close_time.cmp(&b.close_time),
                 TradeSortField::OpenTime => a.open_time.cmp(&b.open_time),
+                TradeSortField::Action => a.action.cmp(&b.action),
+                TradeSortField::OpenPrice => a.entry_price.cmp(&b.entry_price),
+                TradeSortField::ClosePrice => a.exit_price.cmp(&b.exit_price),
                 TradeSortField::PnlPips => a.pnl_pips.cmp(&b.pnl_pips),
                 TradeSortField::ValuedPips => a.valued_pips.cmp(&b.valued_pips),
                 TradeSortField::DurationHours => a.duration_hours.cmp(&b.duration_hours),
+                TradeSortField::ExitReason => a.exit_reason.cmp(&b.exit_reason),
             };
             if is_desc {
                 ordering.reverse()
@@ -535,7 +558,7 @@ impl QuantAuditPort for QuantAuditService {
         let page_size = query.page_size.clamp(1, 500);
         let current_page = query.page.max(1);
         let total_pages = if matched_count > 0 {
-            (matched_count + page_size - 1) / page_size
+            matched_count.div_ceil(page_size)
         } else {
             1
         };

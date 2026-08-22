@@ -16,6 +16,8 @@ use crate::state::AppState;
 
 #[derive(serde::Deserialize)]
 pub struct TradeQueryParam {
+    pub q: Option<String>,
+    pub search: Option<String>,
     pub action: Option<String>,
     pub result: Option<String>,
     pub exit_reason: Option<String>,
@@ -90,54 +92,62 @@ pub async fn audit_trades_paginated_handler(
         let action = params
             .action
             .as_deref()
-            .and_then(|a| match a.to_uppercase().as_str() {
-                "BUY" | "BUY_LIMIT" | "LONG" => Some(TradeActionFilter::Buy),
-                "SELL" | "SELL_LIMIT" | "SHORT" => Some(TradeActionFilter::Sell),
-                _ => Some(TradeActionFilter::All),
+            .map(|a| match a.to_uppercase().as_str() {
+                "BUY" | "BUY_LIMIT" | "LONG" => TradeActionFilter::Buy,
+                "SELL" | "SELL_LIMIT" | "SHORT" => TradeActionFilter::Sell,
+                _ => TradeActionFilter::All,
             });
 
         let result = params
             .result
             .as_deref()
-            .and_then(|r| match r.to_uppercase().as_str() {
-                "WIN" | "PROFIT" => Some(TradeResultFilter::Win),
-                "LOSS" | "LOSE" => Some(TradeResultFilter::Loss),
-                _ => Some(TradeResultFilter::All),
+            .map(|r| match r.to_uppercase().as_str() {
+                "WIN" | "PROFIT" => TradeResultFilter::Win,
+                "LOSS" | "LOSE" => TradeResultFilter::Loss,
+                _ => TradeResultFilter::All,
             });
 
-        let exit_reason =
-            params
-                .exit_reason
-                .as_deref()
-                .and_then(|e| match e.to_uppercase().as_str() {
-                    "TP" | "TAKE_PROFIT" => Some(TradeExitFilter::TakeProfit),
-                    "SL" | "STOP_LOSS" => Some(TradeExitFilter::StopLoss),
-                    "EXPIRED" | "EXPIRY" => Some(TradeExitFilter::Expired),
-                    _ => Some(TradeExitFilter::All),
-                });
+        let exit_reason = params
+            .exit_reason
+            .as_deref()
+            .map(|e| match e.to_uppercase().as_str() {
+                "TP" | "TAKE_PROFIT" => TradeExitFilter::TakeProfit,
+                "SL" | "STOP_LOSS" => TradeExitFilter::StopLoss,
+                "EXPIRED" | "EXPIRY" => TradeExitFilter::Expired,
+                _ => TradeExitFilter::All,
+            });
+
+        let search_query = params.search.or(params.q).filter(|s| !s.trim().is_empty());
 
         let sort_by = params
             .sort_by
             .as_deref()
-            .and_then(|s| match s.to_lowercase().as_str() {
-                "open" | "open_time" => Some(TradeSortField::OpenTime),
-                "pnl" | "pnl_pips" => Some(TradeSortField::PnlPips),
-                "vp" | "valued_pips" => Some(TradeSortField::ValuedPips),
-                "duration" | "duration_hours" => Some(TradeSortField::DurationHours),
-                _ => Some(TradeSortField::CloseTime),
+            .map(|s| match s.to_lowercase().as_str() {
+                "#" | "idx" | "index" => TradeSortField::Index,
+                "open" | "open_time" | "date_in" => TradeSortField::OpenTime,
+                "close" | "close_time" | "date_out" => TradeSortField::CloseTime,
+                "action" | "type" | "dir" | "direction" => TradeSortField::Action,
+                "open_price" | "price_in" | "entry" => TradeSortField::OpenPrice,
+                "close_price" | "price_out" | "exit" => TradeSortField::ClosePrice,
+                "pnl" | "pnl_pips" | "net" => TradeSortField::PnlPips,
+                "vp" | "valued_pips" => TradeSortField::ValuedPips,
+                "duration" | "duration_hours" | "hours" => TradeSortField::DurationHours,
+                "status" | "reason" | "exit_reason" => TradeSortField::ExitReason,
+                _ => TradeSortField::CloseTime,
             });
 
         let sort_direction =
             params
                 .sort_direction
                 .as_deref()
-                .and_then(|d| match d.to_lowercase().as_str() {
-                    "asc" | "ascending" => Some(SortDirection::Asc),
-                    _ => Some(SortDirection::Desc),
+                .map(|d| match d.to_lowercase().as_str() {
+                    "asc" | "ascending" => SortDirection::Asc,
+                    _ => SortDirection::Desc,
                 });
 
         let query = TradeFilterQuery {
             symbol: sym,
+            search_query,
             action,
             result,
             exit_reason,

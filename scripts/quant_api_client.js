@@ -140,6 +140,7 @@ Contoh:
       const params = new URLSearchParams();
       const page = getArg('--page') || '1';
       const limit = getArg('--limit') || '25';
+      const search = getArg('--search') || getArg('-q');
       const action = getArg('--action');
       const result = getArg('--result');
       const exitReason = getArg('--exit');
@@ -150,6 +151,7 @@ Contoh:
 
       params.set('page', page);
       params.set('limit', limit);
+      if (search) params.set('search', search);
       if (action) params.set('action', action);
       if (result) params.set('result', result);
       if (exitReason) params.set('exit_reason', exitReason);

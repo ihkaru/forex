@@ -1,5 +1,13 @@
 <script lang="ts">
-  import { ChevronLeft, ChevronRight } from 'lucide-svelte';
+  import { 
+    ChevronLeft, 
+    ChevronRight, 
+    Search, 
+    X, 
+    ArrowUp, 
+    ArrowDown, 
+    ArrowUpDown 
+  } from 'lucide-svelte';
 
   let { 
     trades = [], 
@@ -11,12 +19,30 @@
 
   let filterResult = $state<'ALL' | 'WIN' | 'LOSS'>('ALL');
   let filterDirection = $state<'ALL' | 'BUY' | 'SELL'>('ALL');
+  let searchQuery = $state<string>('');
   let pageSize = $state<number>(25);
   let currentPage = $state<number>(1);
   let selectedId = $state<string | null>(null);
 
-  const filteredTrades = $derived(
-    trades.filter((t) => {
+  // Column Sorting State
+  type SortKey = 'idx' | 'action' | 'open_time' | 'open_price' | 'close_time' | 'close_price' | 'pnl_pips' | 'valued_pips' | 'status';
+  let sortKey = $state<SortKey>('close_time');
+  let sortAsc = $state<boolean>(false);
+
+  function toggleSort(key: SortKey) {
+    if (sortKey === key) {
+      sortAsc = !sortAsc;
+    } else {
+      sortKey = key;
+      sortAsc = (key === 'open_time' || key === 'close_time' || key === 'pnl_pips' || key === 'valued_pips') ? false : true;
+    }
+  }
+
+  const filteredAndSortedTrades = $derived.by(() => {
+    const q = searchQuery.trim().toLowerCase();
+    
+    // 1. Filter
+    const list = trades.filter((t) => {
       const isWin = (t.pnl_pips || 0) > 0 || t.is_win;
       if (filterResult === 'WIN' && !isWin) return false;
       if (filterResult === 'LOSS' && isWin) return false;
@@ -25,33 +51,84 @@
       if (filterDirection === 'BUY' && !act.includes('BUY')) return false;
       if (filterDirection === 'SELL' && !act.includes('SELL')) return false;
 
+      if (q) {
+        const idMatch = String(t.id || '').toLowerCase().includes(q);
+        const actMatch = act.toLowerCase().includes(q);
+        const reasonMatch = String(t.exit_reason || '').toLowerCase().includes(q);
+        const priceInMatch = String(t.open_price || '').includes(q);
+        const priceOutMatch = String(t.close_price || '').includes(q);
+        const pnlMatch = String(t.pnl_pips || '').includes(q);
+        const dateInMatch = formatDate(t.open_time).toLowerCase().includes(q);
+        const dateOutMatch = formatDate(t.close_time).toLowerCase().includes(q);
+
+        if (!idMatch && !actMatch && !reasonMatch && !priceInMatch && !priceOutMatch && !pnlMatch && !dateInMatch && !dateOutMatch) {
+          return false;
+        }
+      }
+
       return true;
-    })
-  );
+    });
+
+    // 2. Sort
+    list.sort((a, b) => {
+      let cmp = 0;
+      switch (sortKey) {
+        case 'action':
+          cmp = String(a.action || '').localeCompare(String(b.action || ''));
+          break;
+        case 'open_time':
+          cmp = (Number(a.open_time) || 0) - (Number(b.open_time) || 0);
+          break;
+        case 'open_price':
+          cmp = (Number(a.open_price) || 0) - (Number(b.open_price) || 0);
+          break;
+        case 'close_time':
+          cmp = (Number(a.close_time) || 0) - (Number(b.close_time) || 0);
+          break;
+        case 'close_price':
+          cmp = (Number(a.close_price) || 0) - (Number(b.close_price) || 0);
+          break;
+        case 'pnl_pips':
+          cmp = (Number(a.pnl_pips) || 0) - (Number(b.pnl_pips) || 0);
+          break;
+        case 'valued_pips':
+          cmp = (Number(a.valued_pips) || 0) - (Number(b.valued_pips) || 0);
+          break;
+        case 'status':
+          cmp = Number(a.is_win || 0) - Number(b.is_win || 0);
+          break;
+        default:
+          cmp = 0;
+      }
+      return sortAsc ? cmp : -cmp;
+    });
+
+    return list;
+  });
 
   const totalPages = $derived(
-    Math.max(1, Math.ceil(filteredTrades.length / pageSize))
+    Math.max(1, Math.ceil(filteredAndSortedTrades.length / pageSize))
   );
 
   const pagedTrades = $derived(
-    filteredTrades.slice((currentPage - 1) * pageSize, currentPage * pageSize)
+    filteredAndSortedTrades.slice((currentPage - 1) * pageSize, currentPage * pageSize)
   );
 
   const filterSummary = $derived.by(() => {
     let winCount = 0;
     let netPnl = 0;
     let netVp = 0;
-    for (const t of filteredTrades) {
+    for (const t of filteredAndSortedTrades) {
       const pnl = Number(t.pnl_pips || 0);
       const vp = Number(t.valued_pips || 0);
       netPnl += pnl;
       netVp += vp;
       if (pnl > 0 || t.is_win) winCount++;
     }
-    const winRate = filteredTrades.length > 0 ? (winCount / filteredTrades.length) * 100 : 0;
+    const winRate = filteredAndSortedTrades.length > 0 ? (winCount / filteredAndSortedTrades.length) * 100 : 0;
     return {
       winCount,
-      lossCount: filteredTrades.length - winCount,
+      lossCount: filteredAndSortedTrades.length - winCount,
       winRate,
       netPnl,
       netVp
@@ -72,9 +149,30 @@
 </script>
 
 <div class="flex flex-col w-full h-full text-xs">
-  <!-- Rich Filter & Controls Bar -->
+  <!-- Rich Filter, Search & Controls Bar -->
   <div class="flex flex-wrap items-center justify-between gap-3 px-4 py-2 border-b border-[#2a2e39] bg-[#1e222d]">
     <div class="flex flex-wrap items-center gap-3">
+      <!-- Search Input -->
+      <div class="relative flex items-center">
+        <Search class="w-3.5 h-3.5 text-[#787b86] absolute left-2.5 pointer-events-none" />
+        <input
+          type="text"
+          bind:value={searchQuery}
+          oninput={() => (currentPage = 1)}
+          placeholder="Search price, date, ID..."
+          class="bg-[#131722] text-[#d1d4dc] placeholder-[#787b86] text-[11px] pl-8 pr-7 py-1 rounded-md border border-[#2a2e39] focus:outline-none focus:border-[#2962ff] w-48 font-mono"
+        />
+        {#if searchQuery}
+          <button
+            onclick={() => { searchQuery = ''; currentPage = 1; }}
+            class="absolute right-2 text-[#787b86] hover:text-white"
+            title="Clear search"
+          >
+            <X class="w-3 h-3" />
+          </button>
+        {/if}
+      </div>
+
       <!-- Result Filter Pills -->
       <div class="flex items-center gap-1 bg-[#131722] p-1 rounded-md border border-[#2a2e39]">
         <button
@@ -121,7 +219,7 @@
 
       <!-- Filtered Aggregate Summary Badge -->
       <div class="hidden xl:flex items-center gap-3 text-[11px] text-[#787b86] font-mono border-l border-[#2a2e39] pl-3">
-        <span>Matched: <strong class="text-white">{filteredTrades.length}</strong></span>
+        <span>Matched: <strong class="text-white">{filteredAndSortedTrades.length}</strong></span>
         <span>Win Rate: <strong class="{filterSummary.winRate >= 50 ? 'text-[#089981]' : 'text-[#f23645]'}">{filterSummary.winRate.toFixed(1)}%</strong></span>
         <span>Filtered PnL: <strong class="{filterSummary.netPnl >= 0 ? 'text-[#089981]' : 'text-[#f23645]'}">{filterSummary.netPnl >= 0 ? '+' : ''}{filterSummary.netPnl.toFixed(1)} pips ({filterSummary.netVp >= 0 ? '+' : ''}{filterSummary.netVp.toFixed(1)} VP)</strong></span>
       </div>
@@ -129,7 +227,7 @@
 
     <!-- Pagination Controls -->
     <div class="flex items-center gap-2 text-[11px]">
-      <span class="text-[#787b86]">Rows per page:</span>
+      <span class="text-[#787b86]">Rows:</span>
       <select 
         bind:value={pageSize}
         onchange={() => (currentPage = 1)}
@@ -166,26 +264,138 @@
     </div>
   </div>
 
-  <!-- Table Body -->
+  <!-- Table Body with Interactive Sortable Headers -->
   <div class="overflow-y-auto max-h-72 w-full">
     <table class="w-full text-xs text-left border-collapse">
-      <thead class="sticky top-0 bg-[#1e222d] text-[#787b86] font-medium border-b border-[#2a2e39] z-10">
+      <thead class="sticky top-0 bg-[#1e222d] text-[#787b86] font-medium border-b border-[#2a2e39] z-10 select-none">
         <tr>
           <th class="py-2 px-3">#</th>
-          <th class="py-2 px-3">Type</th>
-          <th class="py-2 px-3">Date/Time In</th>
-          <th class="py-2 px-3 text-right">Price In</th>
-          <th class="py-2 px-3">Date/Time Out</th>
-          <th class="py-2 px-3 text-right">Price Out</th>
-          <th class="py-2 px-3 text-right">P&L (Pips)</th>
-          <th class="py-2 px-3 text-right">Valued Pips</th>
-          <th class="py-2 px-3 text-center">Status</th>
+          
+          <!-- Column: Type -->
+          <th 
+            onclick={() => toggleSort('action')}
+            class="py-2 px-3 cursor-pointer hover:text-white transition-colors"
+          >
+            <div class="flex items-center gap-1">
+              <span>Type</span>
+              {#if sortKey === 'action'}
+                {#if sortAsc}<ArrowUp class="w-3 h-3 text-[#2962ff]" />{:else}<ArrowDown class="w-3 h-3 text-[#2962ff]" />{/if}
+              {:else}
+                <ArrowUpDown class="w-3 h-3 opacity-30" />
+              {/if}
+            </div>
+          </th>
+
+          <!-- Column: Date/Time In -->
+          <th 
+            onclick={() => toggleSort('open_time')}
+            class="py-2 px-3 cursor-pointer hover:text-white transition-colors"
+          >
+            <div class="flex items-center gap-1">
+              <span>Date/Time In</span>
+              {#if sortKey === 'open_time'}
+                {#if sortAsc}<ArrowUp class="w-3 h-3 text-[#2962ff]" />{:else}<ArrowDown class="w-3 h-3 text-[#2962ff]" />{/if}
+              {:else}
+                <ArrowUpDown class="w-3 h-3 opacity-30" />
+              {/if}
+            </div>
+          </th>
+
+          <!-- Column: Price In -->
+          <th 
+            onclick={() => toggleSort('open_price')}
+            class="py-2 px-3 text-right cursor-pointer hover:text-white transition-colors"
+          >
+            <div class="flex items-center justify-end gap-1">
+              <span>Price In</span>
+              {#if sortKey === 'open_price'}
+                {#if sortAsc}<ArrowUp class="w-3 h-3 text-[#2962ff]" />{:else}<ArrowDown class="w-3 h-3 text-[#2962ff]" />{/if}
+              {:else}
+                <ArrowUpDown class="w-3 h-3 opacity-30" />
+              {/if}
+            </div>
+          </th>
+
+          <!-- Column: Date/Time Out -->
+          <th 
+            onclick={() => toggleSort('close_time')}
+            class="py-2 px-3 cursor-pointer hover:text-white transition-colors"
+          >
+            <div class="flex items-center gap-1">
+              <span>Date/Time Out</span>
+              {#if sortKey === 'close_time'}
+                {#if sortAsc}<ArrowUp class="w-3 h-3 text-[#2962ff]" />{:else}<ArrowDown class="w-3 h-3 text-[#2962ff]" />{/if}
+              {:else}
+                <ArrowUpDown class="w-3 h-3 opacity-30" />
+              {/if}
+            </div>
+          </th>
+
+          <!-- Column: Price Out -->
+          <th 
+            onclick={() => toggleSort('close_price')}
+            class="py-2 px-3 text-right cursor-pointer hover:text-white transition-colors"
+          >
+            <div class="flex items-center justify-end gap-1">
+              <span>Price Out</span>
+              {#if sortKey === 'close_price'}
+                {#if sortAsc}<ArrowUp class="w-3 h-3 text-[#2962ff]" />{:else}<ArrowDown class="w-3 h-3 text-[#2962ff]" />{/if}
+              {:else}
+                <ArrowUpDown class="w-3 h-3 opacity-30" />
+              {/if}
+            </div>
+          </th>
+
+          <!-- Column: P&L (Pips) -->
+          <th 
+            onclick={() => toggleSort('pnl_pips')}
+            class="py-2 px-3 text-right cursor-pointer hover:text-white transition-colors"
+          >
+            <div class="flex items-center justify-end gap-1">
+              <span>P&L (Pips)</span>
+              {#if sortKey === 'pnl_pips'}
+                {#if sortAsc}<ArrowUp class="w-3 h-3 text-[#2962ff]" />{:else}<ArrowDown class="w-3 h-3 text-[#2962ff]" />{/if}
+              {:else}
+                <ArrowUpDown class="w-3 h-3 opacity-30" />
+              {/if}
+            </div>
+          </th>
+
+          <!-- Column: Valued Pips -->
+          <th 
+            onclick={() => toggleSort('valued_pips')}
+            class="py-2 px-3 text-right cursor-pointer hover:text-white transition-colors"
+          >
+            <div class="flex items-center justify-end gap-1">
+              <span>Valued Pips</span>
+              {#if sortKey === 'valued_pips'}
+                {#if sortAsc}<ArrowUp class="w-3 h-3 text-[#2962ff]" />{:else}<ArrowDown class="w-3 h-3 text-[#2962ff]" />{/if}
+              {:else}
+                <ArrowUpDown class="w-3 h-3 opacity-30" />
+              {/if}
+            </div>
+          </th>
+
+          <!-- Column: Status -->
+          <th 
+            onclick={() => toggleSort('status')}
+            class="py-2 px-3 text-center cursor-pointer hover:text-white transition-colors"
+          >
+            <div class="flex items-center justify-center gap-1">
+              <span>Status</span>
+              {#if sortKey === 'status'}
+                {#if sortAsc}<ArrowUp class="w-3 h-3 text-[#2962ff]" />{:else}<ArrowDown class="w-3 h-3 text-[#2962ff]" />{/if}
+              {:else}
+                <ArrowUpDown class="w-3 h-3 opacity-30" />
+              {/if}
+            </div>
+          </th>
         </tr>
       </thead>
       <tbody class="divide-y divide-[#2a2e39]/40 font-mono text-[11px]">
         {#if pagedTrades.length === 0}
           <tr>
-            <td colspan="9" class="py-8 text-center text-[#787b86]">No trades match the selected filters.</td>
+            <td colspan="9" class="py-8 text-center text-[#787b86]">No trades match the selected search & filter criteria.</td>
           </tr>
         {:else}
           {#each pagedTrades as trade, idx}
@@ -200,7 +410,7 @@
               </td>
               <td class="py-1.5 px-3 text-[#d1d4dc]">{formatDate(trade.open_time)}</td>
               <td class="py-1.5 px-3 text-right text-[#d1d4dc]">{Number(trade.open_price).toFixed(5)}</td>
-              <td class="py-1.5 px-3 text-right text-[#d1d4dc]">{formatDate(trade.close_time)}</td>
+              <td class="py-1.5 px-3 text-[#d1d4dc]">{formatDate(trade.close_time)}</td>
               <td class="py-1.5 px-3 text-right text-[#d1d4dc]">{Number(trade.close_price).toFixed(5)}</td>
               <td class="py-1.5 px-3 text-right font-bold {isWin ? 'text-[#089981]' : 'text-[#f23645]'}">
                 {Number(trade.pnl_pips) >= 0 ? '+' : ''}{Number(trade.pnl_pips).toFixed(1)}
