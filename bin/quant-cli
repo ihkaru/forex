@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+# Official Hexagon Quant Terminal CLI & API Tool (2026)
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
+
+node "$PROJECT_ROOT/scripts/quant_api_client.js" "$@"

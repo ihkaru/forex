@@ -12,7 +12,8 @@
     ChevronUp, 
     ShieldCheck, 
     Layers,
-    Award
+    Award,
+    Download
   } from 'lucide-svelte';
 
   let { 
@@ -31,6 +32,17 @@
   function fmtPips(val: number): string {
     const prefix = val > 0 ? '+' : '';
     return `${prefix}${val.toFixed(1)} pips`;
+  }
+
+  function downloadJsonReport() {
+    if (!report) return;
+    const dataStr = 'data:text/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(report, null, 2));
+    const downloadAnchor = document.createElement('a');
+    downloadAnchor.setAttribute('href', dataStr);
+    downloadAnchor.setAttribute('download', `${activeSymbol}_H1_backtest_report.json`);
+    document.body.appendChild(downloadAnchor);
+    downloadAnchor.click();
+    downloadAnchor.remove();
   }
 </script>
 
@@ -105,6 +117,14 @@
             <span class="text-[#787b86]">PF:</span>
             <span class="font-bold ml-1 text-[#2962ff]">{report.profit_factor.toFixed(2)}</span>
           </div>
+
+          <button
+            onclick={downloadJsonReport}
+            class="flex items-center gap-1 px-2.5 py-1 rounded bg-[#131722] hover:bg-[#2a2e39] text-[#d1d4dc] hover:text-white border border-[#2a2e39] transition-all font-mono text-[11px] ml-2"
+            title="Download Full Backtest & Trades JSON"
+          >
+            <Download class="w-3 h-3 text-[#2962ff]" /> Export JSON
+          </button>
         </div>
       {/if}
 

@@ -1,0 +1,20 @@
+{
+  "symbol": {
+    "base": "USD",
+    "quote": "CHF"
+  },
+  "total_candles": 33118,
+  "start_time": "2015-02-01T22:00:00Z",
+  "end_time": "2026-08-21T20:00:00Z",
+  "total_duration_days": 4218.916666666667,
+  "invalid_candle_count": 0,
+  "mathematical_integrity_pct": 100,
+  "min_price": 0.77599,
+  "max_price": 1.01472,
+  "avg_bar_range_pips": 13.554003864967692,
+  "max_single_bar_pips": 160.8,
+  "weekday_gaps_count": 12,
+  "zero_volume_bars_count": 0,
+  "health_score": 80,
+  "health_status": "🟡 GOOD (Data Cukup Baik dengan Sedikit Gap Wajar)"
+}

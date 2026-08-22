@@ -1,0 +1,20 @@
+{
+  "symbol": {
+    "base": "GBP",
+    "quote": "USD"
+  },
+  "total_candles": 33609,
+  "start_time": "2015-01-01T22:00:00Z",
+  "end_time": "2026-08-21T20:00:00Z",
+  "total_duration_days": 4249.916666666667,
+  "invalid_candle_count": 0,
+  "mathematical_integrity_pct": 100,
+  "min_price": 1.09227,
+  "max_price": 1.59294,
+  "avg_bar_range_pips": 20.53896872861436,
+  "max_single_bar_pips": 958.9,
+  "weekday_gaps_count": 13,
+  "zero_volume_bars_count": 0,
+  "health_score": 80,
+  "health_status": "🟡 GOOD (Data Cukup Baik dengan Sedikit Gap Wajar)"
+}

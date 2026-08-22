@@ -1,0 +1,72 @@
+{
+  "total_score": 28,
+  "max_score": 28,
+  "channel_level": "LEGEND",
+  "partnership_status": "PRIORITY",
+  "revenue_sharing_eligible": true,
+  "pillars": [
+    {
+      "code": "RF",
+      "name": "Recovery Factor",
+      "weight_pct": 23.53,
+      "score": 4,
+      "max_score": 4,
+      "status": "PASSED",
+      "value_label": "RF >= 8.00 (Max Drawdown Containment)"
+    },
+    {
+      "code": "PF",
+      "name": "Profit Factor",
+      "weight_pct": 17.65,
+      "score": 4,
+      "max_score": 4,
+      "status": "PASSED",
+      "value_label": "PF >= 2.10 (6 Bulan Terakhir)"
+    },
+    {
+      "code": "PR",
+      "name": "Status Kemitraan",
+      "weight_pct": 17.65,
+      "score": 4,
+      "max_score": 4,
+      "status": "PASSED",
+      "value_label": "Priority Channel"
+    },
+    {
+      "code": "LG",
+      "name": "Level Channel",
+      "weight_pct": 17.65,
+      "score": 4,
+      "max_score": 4,
+      "status": "PASSED",
+      "value_label": "Legend Analyst Tier"
+    },
+    {
+      "code": "LR",
+      "name": "Monthly Loss Ratio",
+      "weight_pct": 11.76,
+      "score": 4,
+      "max_score": 4,
+      "status": "PASSED",
+      "value_label": "0% - 10% Drawdown Containment"
+    },
+    {
+      "code": "PM",
+      "name": "Profit Months",
+      "weight_pct": 5.88,
+      "score": 4,
+      "max_score": 4,
+      "status": "PASSED",
+      "value_label": "6/6 Bulan Berturut-turut"
+    },
+    {
+      "code": "SB",
+      "name": "Subscriber Base",
+      "weight_pct": 5.88,
+      "score": 4,
+      "max_score": 4,
+      "status": "PASSED",
+      "value_label": ">= 501 Priority VIPs"
+    }
+  ]
+}
