@@ -243,10 +243,13 @@
         <span class="text-[10px] font-semibold px-2 py-0.5 rounded bg-[#131722] text-[#787b86] border border-[#2a2e39] font-mono">
           H1 Candlestick
         </span>
+        <span class="text-[10px] font-bold px-2 py-0.5 rounded bg-[#089981]/20 text-[#089981] border border-[#089981]/40 font-mono flex items-center gap-1">
+          🇨🇭 DUKASCOPY ECN (SWISS BANK)
+        </span>
         <span class="text-base font-black font-mono text-[#089981]">
           {currentPrice.toFixed(5)}
         </span>
-        <span class="text-xs text-[#787b86] font-mono">Spread: 1.2 pips</span>
+        <span class="text-xs text-[#787b86] font-mono">Spread: 0.8 pips</span>
 
         <!-- Range Zoom Selectors -->
         <div class="flex items-center gap-1 bg-[#131722] p-1 rounded-lg border border-[#2a2e39] ml-2">
@@ -255,7 +258,7 @@
               onclick={() => handleZoom(range)}
               class="px-2 py-0.5 rounded text-[10px] font-mono font-bold transition-all {activeRange === range ? 'bg-[#2962ff] text-white' : 'text-[#787b86] hover:text-[#d1d4dc]'}"
             >
-              {range === 'ALL' ? 'ALL (2.8Y)' : range}
+              {range === 'ALL' ? 'ALL (10Y)' : range}
             </button>
           {/each}
         </div>

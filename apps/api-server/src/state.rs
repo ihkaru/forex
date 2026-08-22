@@ -91,6 +91,7 @@ impl RealHistoricalMarketAdapter {
                 symbol: symbol.clone(),
                 timeframe: Timeframe::H1,
                 timestamp: ts,
+                source: domain::models::MarketDataSource::DukascopyEcn,
                 open,
                 high,
                 low,
@@ -110,6 +111,7 @@ impl MarketDataPort for RealHistoricalMarketAdapter {
             if let Some(last) = candles.last() {
                 return Ok(Tick {
                     symbol: symbol.clone(),
+                    source: last.source,
                     bid: last.close,
                     ask: last.close + dec!(0.00012),
                     timestamp: last.timestamp,

@@ -208,10 +208,11 @@ impl BacktestService {
                 if active_sim_orders.is_empty() {
                     let last_slice_candle = &slice[slice.len() - 1];
                     let tick = Tick {
-                        symbol: symbol.clone(),
+                        symbol: last_slice_candle.symbol.clone(),
                         bid: last_slice_candle.close,
                         ask: last_slice_candle.close + spread_offset,
                         timestamp: last_slice_candle.timestamp,
+                        source: last_slice_candle.source,
                     };
 
                     let context = MarketContext {

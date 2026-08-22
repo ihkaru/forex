@@ -16,11 +16,22 @@ pub enum Timeframe {
     W1,
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, Default)]
+pub enum MarketDataSource {
+    #[default]
+    DukascopyEcn,
+    Mt5BrokerLive,
+    CtraderOpenApi,
+    SyntheticTest,
+}
+
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct Candle {
     pub symbol: Symbol,
     pub timeframe: Timeframe,
     pub timestamp: DateTime<Utc>,
+    #[serde(default)]
+    pub source: MarketDataSource,
     pub open: Decimal,
     pub high: Decimal,
     pub low: Decimal,
@@ -32,6 +43,8 @@ pub struct Candle {
 pub struct Tick {
     pub symbol: Symbol,
     pub timestamp: DateTime<Utc>,
+    #[serde(default)]
+    pub source: MarketDataSource,
     pub bid: Decimal,
     pub ask: Decimal,
 }

@@ -13,6 +13,7 @@ use std::sync::Arc;
 #[derive(Serialize)]
 pub struct CandleDto {
     pub time: i64,
+    pub source: domain::models::MarketDataSource,
     pub open: Decimal,
     pub high: Decimal,
     pub low: Decimal,
@@ -35,6 +36,7 @@ pub async fn market_candles_handler(
                 .iter()
                 .map(|c| CandleDto {
                     time: c.timestamp.timestamp(),
+                    source: c.source,
                     open: c.open,
                     high: c.high,
                     low: c.low,
@@ -82,6 +84,7 @@ pub async fn signals_scan_handler(
                 if let Some(last) = candles.last() {
                     let tick = Tick {
                         symbol: sym.clone(),
+                        source: last.source,
                         bid: last.close,
                         ask: last.close + dec!(0.00012),
                         timestamp: last.timestamp,

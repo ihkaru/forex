@@ -4,8 +4,8 @@ use application::services::{
 use async_trait::async_trait;
 use chrono::{DateTime, Utc};
 use domain::models::{
-    AppConfig, Candle, PolaNStrategy, RiskProfile, Signal, SignalAction, SignalStatus, Symbol,
-    TfComplianceGuard, TfPairSpec, Tick, Timeframe,
+    AppConfig, Candle, MarketDataSource, PolaNStrategy, RiskProfile, Signal, SignalAction,
+    SignalStatus, Symbol, TfComplianceGuard, TfPairSpec, Tick, Timeframe,
 };
 use domain::ports::{MarketDataPort, SignalPublisherPort, StrategyPort};
 use domain::strategies::{EnsembleStrategy, SmcLiquiditySweepStrategy};
@@ -43,6 +43,7 @@ impl MarketDataPort for HistoricalMarketFeed {
         Ok(Tick {
             symbol: symbol.clone(),
             timestamp: Utc::now(),
+            source: MarketDataSource::SyntheticTest,
             bid: last_close,
             ask: last_close + (spec.pip_size * self.spread_pips),
         })
@@ -128,6 +129,7 @@ fn load_real_market_candles(symbol: &Symbol) -> anyhow::Result<Vec<Candle>> {
             symbol: symbol.clone(),
             timeframe: Timeframe::H1,
             timestamp: ts,
+            source: MarketDataSource::DukascopyEcn,
             open,
             high,
             low,

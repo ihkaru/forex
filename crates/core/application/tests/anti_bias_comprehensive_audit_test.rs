@@ -27,6 +27,7 @@ impl MarketDataPort for AuditMarketFeed {
         Ok(Tick {
             symbol: symbol.clone(),
             timestamp: Utc::now(),
+            source: domain::models::MarketDataSource::SyntheticTest,
             bid: last_close,
             ask: last_close + (spec.pip_size * self.spread_pips),
         })
@@ -68,6 +69,7 @@ async fn test_audit_lookahead_bias_isolation() {
             symbol: symbol.clone(),
             timeframe: Timeframe::H1,
             timestamp: base_time + Duration::hours(i as i64),
+            source: domain::models::MarketDataSource::SyntheticTest,
             open: price,
             high: price + dec!(0.0010),
             low: price - dec!(0.0010),
@@ -84,6 +86,7 @@ async fn test_audit_lookahead_bias_isolation() {
             symbol: symbol.clone(),
             timeframe: Timeframe::H1,
             timestamp: base_time + Duration::hours(i as i64),
+            source: domain::models::MarketDataSource::SyntheticTest,
             open: price,
             high: price + dec!(0.0100),
             low: price - dec!(0.0010),
@@ -100,6 +103,7 @@ async fn test_audit_lookahead_bias_isolation() {
             symbol: symbol.clone(),
             timeframe: Timeframe::H1,
             timestamp: base_time + Duration::hours(i as i64),
+            source: domain::models::MarketDataSource::SyntheticTest,
             open: price,
             high: price + dec!(0.0010),
             low: price - dec!(0.0100),
@@ -170,6 +174,7 @@ async fn test_audit_pending_order_lifecycle_fill_and_expiration() {
             symbol: symbol.clone(),
             timeframe: Timeframe::H1,
             timestamp: base_time + Duration::hours(i as i64),
+            source: domain::models::MarketDataSource::SyntheticTest,
             open: price,
             high: price + dec!(0.00030),
             low: dec!(1.08350), // Low tidak pernah menyentuh level Limit 1.08200!
@@ -256,6 +261,7 @@ async fn test_audit_intrabar_ambiguity_conservative_worst_case() {
             symbol: symbol.clone(),
             timeframe: Timeframe::H1,
             timestamp: base_time + Duration::hours(i as i64),
+            source: domain::models::MarketDataSource::SyntheticTest,
             open: price,
             high: price + dec!(0.00050),
             low: price - dec!(0.00050),
@@ -269,6 +275,7 @@ async fn test_audit_intrabar_ambiguity_conservative_worst_case() {
         symbol: symbol.clone(),
         timeframe: Timeframe::H1,
         timestamp: base_time + Duration::hours(50),
+        source: domain::models::MarketDataSource::SyntheticTest,
         open: dec!(1.08500),
         high: dec!(1.08550),
         low: dec!(1.08450),
@@ -281,6 +288,7 @@ async fn test_audit_intrabar_ambiguity_conservative_worst_case() {
         symbol: symbol.clone(),
         timeframe: Timeframe::H1,
         timestamp: base_time + Duration::hours(51),
+        source: domain::models::MarketDataSource::SyntheticTest,
         open: dec!(1.08400),
         high: dec!(1.08450),
         low: dec!(1.08100), // Entry Filled!
@@ -293,6 +301,7 @@ async fn test_audit_intrabar_ambiguity_conservative_worst_case() {
         symbol: symbol.clone(),
         timeframe: Timeframe::H1,
         timestamp: base_time + Duration::hours(52),
+        source: domain::models::MarketDataSource::SyntheticTest,
         open: dec!(1.08200),
         high: dec!(1.08800), // TP (1.08600) tersentuh!
         low: dec!(1.07800),  // SL (1.08000) tersentuh!
@@ -307,6 +316,7 @@ async fn test_audit_intrabar_ambiguity_conservative_worst_case() {
             symbol: symbol.clone(),
             timeframe: Timeframe::H1,
             timestamp: base_time + Duration::hours(i as i64),
+            source: domain::models::MarketDataSource::SyntheticTest,
             open: price,
             high: price + dec!(0.00050),
             low: price - dec!(0.00050),

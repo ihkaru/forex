@@ -109,6 +109,7 @@ impl BrokerConnector {
                 let tick = Tick {
                     symbol: symbol_obj.clone(),
                     timestamp: utc_time,
+                    source: domain::models::MarketDataSource::Mt5BrokerLive,
                     bid,
                     ask,
                 };
@@ -134,6 +135,7 @@ impl BrokerConnector {
                     symbol: symbol_obj.clone(),
                     timeframe: Timeframe::M15,
                     timestamp: utc_time,
+                    source: domain::models::MarketDataSource::Mt5BrokerLive,
                     open,
                     high,
                     low,
@@ -162,6 +164,7 @@ impl MarketDataPort for BrokerConnector {
         Ok(Tick {
             symbol: symbol.clone(),
             timestamp: Utc::now(),
+            source: domain::models::MarketDataSource::Mt5BrokerLive,
             bid: dec!(1.08500),
             ask: dec!(1.08515),
         })
@@ -193,6 +196,7 @@ impl MarketDataPort for BrokerConnector {
                 symbol: symbol.clone(),
                 timeframe,
                 timestamp: now - chrono::Duration::minutes(i as i64 * 15),
+                source: domain::models::MarketDataSource::Mt5BrokerLive,
                 open: dec!(1.08450),
                 high: dec!(1.08600),
                 low: dec!(1.08400),
@@ -249,6 +253,7 @@ impl MarketDataPort for CtraderOpenApiConnector {
         Ok(Tick {
             symbol: symbol.clone(),
             timestamp: Utc::now(),
+            source: domain::models::MarketDataSource::CtraderOpenApi,
             bid: dec!(1.08500),
             ask: dec!(1.08512), // Tighter institutional cTrader spread
         })
@@ -267,6 +272,7 @@ impl MarketDataPort for CtraderOpenApiConnector {
                 symbol: symbol.clone(),
                 timeframe,
                 timestamp: now - chrono::Duration::minutes(i as i64 * 15),
+                source: domain::models::MarketDataSource::CtraderOpenApi,
                 open: dec!(1.08450),
                 high: dec!(1.08600),
                 low: dec!(1.08400),

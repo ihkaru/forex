@@ -13,6 +13,7 @@ mod tests {
             symbol: Symbol::new("EUR", "USD"),
             timeframe: Timeframe::H1,
             timestamp: Utc::now() + chrono::Duration::hours(time_offset_hours),
+            source: crate::models::MarketDataSource::SyntheticTest,
             open: dec!(1.0) * Decimal::from_f64_retain(o).unwrap(),
             high: dec!(1.0) * Decimal::from_f64_retain(h).unwrap(),
             low: dec!(1.0) * Decimal::from_f64_retain(l).unwrap(),
@@ -136,6 +137,7 @@ mod tests {
             symbol: sym.clone(),
             bid: dec!(1.1050),
             ask: dec!(1.1052),
+            source: crate::models::MarketDataSource::SyntheticTest,
             timestamp: Utc::now(),
         };
 

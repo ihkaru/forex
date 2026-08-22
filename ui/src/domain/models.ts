@@ -5,6 +5,8 @@
 export type SignalAction = 'BUY_LIMIT' | 'SELL_LIMIT' | 'BUY_STOP' | 'SELL_STOP';
 export type SignalStatus = 'PENDING' | 'ACTIVE' | 'TARGET_HIT' | 'SL_HIT' | 'EXPIRED';
 
+export type MarketDataSource = 'DukascopyEcn' | 'Mt5BrokerLive' | 'CtraderOpenApi' | 'SyntheticTest';
+
 export interface Candle {
   time: number; // Unix timestamp in seconds
   open: number;
@@ -12,6 +14,7 @@ export interface Candle {
   low: number;
   close: number;
   volume?: number;
+  source?: MarketDataSource;
 }
 
 export interface SwingPoint {

@@ -239,9 +239,9 @@ impl StoragePort for SqlxStorage {
 
     async fn save_candles(&self, candles: &[Candle]) -> Result<(), DomainError> {
         let query = r#"
-            INSERT INTO candles (symbol, timeframe, timestamp, open, high, low, close, volume)
-            VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
-            ON CONFLICT (symbol, timeframe, timestamp) DO UPDATE SET
+            INSERT INTO candles (symbol, timeframe, timestamp, source, open, high, low, close, volume)
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+            ON CONFLICT (symbol, timeframe, timestamp, source) DO UPDATE SET
                 close = EXCLUDED.close,
                 volume = EXCLUDED.volume
         "#;
@@ -249,11 +249,13 @@ impl StoragePort for SqlxStorage {
         for c in candles {
             let symbol_str = c.symbol.to_compact_string();
             let timeframe_str = format!("{:?}", c.timeframe);
+            let source_str = format!("{:?}", c.source);
 
             sqlx::query(query)
                 .bind(symbol_str)
                 .bind(timeframe_str)
                 .bind(c.timestamp)
+                .bind(source_str)
                 .bind(c.open)
                 .bind(c.high)
                 .bind(c.low)
@@ -277,7 +279,7 @@ impl StoragePort for SqlxStorage {
         let limit_i64 = limit as i64;
 
         let query = r#"
-            SELECT symbol, timeframe, timestamp, open, high, low, close, volume
+            SELECT symbol, timeframe, timestamp, source, open, high, low, close, volume
             FROM candles
             WHERE symbol = $1 AND timeframe = $2
             ORDER BY timestamp DESC
@@ -294,10 +296,21 @@ impl StoragePort for SqlxStorage {
 
         let mut candles = Vec::new();
         for r in rows {
+            let src_str: String = r
+                .try_get("source")
+                .unwrap_or_else(|_| "DukascopyEcn".to_string());
+            let source = match src_str.as_str() {
+                "Mt5BrokerLive" => domain::models::MarketDataSource::Mt5BrokerLive,
+                "CtraderOpenApi" => domain::models::MarketDataSource::CtraderOpenApi,
+                "SyntheticTest" => domain::models::MarketDataSource::SyntheticTest,
+                _ => domain::models::MarketDataSource::DukascopyEcn,
+            };
+
             candles.push(Candle {
                 symbol: symbol.clone(),
                 timeframe,
                 timestamp: r.get("timestamp"),
+                source,
                 open: r.get("open"),
                 high: r.get("high"),
                 low: r.get("low"),

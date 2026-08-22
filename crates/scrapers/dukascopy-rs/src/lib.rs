@@ -146,6 +146,7 @@ impl DukascopyDownloader {
             ticks.push(Tick {
                 symbol: symbol.clone(),
                 timestamp: tick_time,
+                source: domain::models::MarketDataSource::DukascopyEcn,
                 bid,
                 ask,
             });
@@ -160,8 +161,9 @@ impl DukascopyDownloader {
         timeframe: Timeframe,
         symbol: &Symbol,
     ) -> Vec<Candle> {
+        let mut candles = Vec::new();
         if ticks.is_empty() {
-            return Vec::new();
+            return candles;
         }
 
         let tf_minutes = match timeframe {
@@ -175,7 +177,8 @@ impl DukascopyDownloader {
             Timeframe::W1 => 10080,
         };
 
-        let mut candles = Vec::new();
+        let tf_secs = tf_minutes * 60;
+
         let mut current_bucket: Option<(
             DateTime<Utc>,
             Decimal,
@@ -186,11 +189,10 @@ impl DukascopyDownloader {
         )> = None;
 
         for tick in ticks {
+            let ts_secs = tick.timestamp.timestamp();
+            let bucket_secs = (ts_secs / tf_secs) * tf_secs;
             let bucket_timestamp = Utc
-                .timestamp_opt(
-                    (tick.timestamp.timestamp() / (tf_minutes * 60)) * (tf_minutes * 60),
-                    0,
-                )
+                .timestamp_opt(bucket_secs, 0)
                 .single()
                 .unwrap_or(tick.timestamp);
 
@@ -207,6 +209,7 @@ impl DukascopyDownloader {
                         symbol: symbol.clone(),
                         timeframe,
                         timestamp: ts,
+                        source: domain::models::MarketDataSource::DukascopyEcn,
                         open,
                         high,
                         low,
@@ -226,6 +229,7 @@ impl DukascopyDownloader {
                 symbol: symbol.clone(),
                 timeframe,
                 timestamp: ts,
+                source: domain::models::MarketDataSource::DukascopyEcn,
                 open,
                 high,
                 low,
@@ -288,6 +292,7 @@ impl domain::ports::MarketDataPort for DukascopyDownloader {
         Ok(Tick {
             symbol: symbol.clone(),
             timestamp: Utc::now(),
+            source: domain::models::MarketDataSource::DukascopyEcn,
             bid: dec!(1.08500),
             ask: dec!(1.08508), // Raw interbank 0.8 pip spread
         })
@@ -306,6 +311,7 @@ impl domain::ports::MarketDataPort for DukascopyDownloader {
                 symbol: symbol.clone(),
                 timeframe,
                 timestamp: now - chrono::Duration::minutes(i as i64 * 15),
+                source: domain::models::MarketDataSource::DukascopyEcn,
                 open: dec!(1.08450),
                 high: dec!(1.08600),
                 low: dec!(1.08400),
@@ -351,24 +357,28 @@ mod tests {
             Tick {
                 symbol: symbol.clone(),
                 timestamp: base_time + Duration::seconds(5),
+                source: domain::models::MarketDataSource::DukascopyEcn,
                 bid: dec!(1.08500),
                 ask: dec!(1.08515),
             },
             Tick {
                 symbol: symbol.clone(),
                 timestamp: base_time + Duration::seconds(15),
+                source: domain::models::MarketDataSource::DukascopyEcn,
                 bid: dec!(1.08550), // High
                 ask: dec!(1.08565),
             },
             Tick {
                 symbol: symbol.clone(),
                 timestamp: base_time + Duration::seconds(30),
+                source: domain::models::MarketDataSource::DukascopyEcn,
                 bid: dec!(1.08480), // Low
                 ask: dec!(1.08495),
             },
             Tick {
                 symbol: symbol.clone(),
                 timestamp: base_time + Duration::seconds(55),
+                source: domain::models::MarketDataSource::DukascopyEcn,
                 bid: dec!(1.08520), // Close
                 ask: dec!(1.08535),
             },

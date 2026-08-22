@@ -21,6 +21,7 @@ mod tests {
             Ok(Tick {
                 symbol: symbol.clone(),
                 timestamp: Utc::now(),
+                source: domain::models::MarketDataSource::SyntheticTest,
                 bid: dec!(1.0850),
                 ask: dec!(1.0852),
             })
@@ -58,6 +59,7 @@ mod tests {
                 symbol: symbol.clone(),
                 timeframe: Timeframe::H1,
                 timestamp: now + chrono::Duration::hours(i as i64),
+                source: domain::models::MarketDataSource::SyntheticTest,
                 open: dec!(0.6000) + Decimal::new(i as i64 * 5, 4),
                 high: dec!(0.6050) + Decimal::new(i as i64 * 5, 4),
                 low: dec!(0.5980) + Decimal::new(i as i64 * 5, 4),

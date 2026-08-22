@@ -25,6 +25,7 @@ impl MarketDataPort for ConsensusMockFeed {
         Ok(Tick {
             symbol: symbol.clone(),
             timestamp: Utc::now(),
+            source: domain::models::MarketDataSource::SyntheticTest,
             bid: last_close,
             ask: last_close + (spec.pip_size * self.spread_pips),
         })
@@ -90,6 +91,7 @@ fn create_market_wave(symbol: &Symbol, count: usize) -> Vec<Candle> {
             symbol: symbol.clone(),
             timeframe: Timeframe::H1,
             timestamp: now + Duration::hours(i as i64),
+            source: domain::models::MarketDataSource::SyntheticTest,
             open,
             high,
             low,
@@ -118,6 +120,7 @@ fn test_eda_health_scorecard_detects_corrupt_candles_and_gaps() {
             symbol: symbol.clone(),
             timeframe: Timeframe::H1,
             timestamp: now + Duration::hours(i),
+            source: domain::models::MarketDataSource::SyntheticTest,
             open: dec!(0.6000),
             high: dec!(0.6040),
             low: dec!(0.5980),

@@ -1,4 +1,4 @@
-use chrono::{TimeZone, Timelike, Utc};
+use chrono::Timelike;
 use domain::models::{Symbol, Timeframe};
 use dukascopy_rs::DukascopyDownloader;
 use rust_decimal::Decimal;
@@ -59,7 +59,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             .iter()
             .find(|r| r.timestamp.starts_with(&hour_str[0..13]))
         {
-            let comp_open = Decimal::from_str(&comp.open)?;
+            let _comp_open = Decimal::from_str(&comp.open)?;
             let comp_high = Decimal::from_str(&comp.high)?;
             let comp_low = Decimal::from_str(&comp.low)?;
             let comp_close = Decimal::from_str(&comp.close)?;
