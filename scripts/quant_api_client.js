@@ -130,23 +130,60 @@ Contoh:
       }
     } else if (cmd === 'trades') {
       const sym = (args[1] || 'EURGBP').toUpperCase();
-      const data = await requestApi(`backtest/trades/${sym}`);
+      
+      // Parse rich filter options from CLI flags
+      const getArg = (flag) => {
+        const idx = args.indexOf(flag);
+        return idx !== -1 ? args[idx + 1] : null;
+      };
+
+      const params = new URLSearchParams();
+      const page = getArg('--page') || '1';
+      const limit = getArg('--limit') || '25';
+      const action = getArg('--action');
+      const result = getArg('--result');
+      const exitReason = getArg('--exit');
+      const year = getArg('--year');
+      const month = getArg('--month');
+      const sortBy = getArg('--sort');
+      const sortDir = getArg('--order') || getArg('--dir');
+
+      params.set('page', page);
+      params.set('limit', limit);
+      if (action) params.set('action', action);
+      if (result) params.set('result', result);
+      if (exitReason) params.set('exit_reason', exitReason);
+      if (year) params.set('year', year);
+      if (month) params.set('month', month);
+      if (sortBy) params.set('sort_by', sortBy);
+      if (sortDir) params.set('sort_direction', sortDir);
+
+      const endpoint = `audit/trades/${sym}?${params.toString()}`;
+      const data = await requestApi(endpoint);
+
       if (exportPath) exportJson(data, exportPath);
       else if (isJsonOnly) console.log(JSON.stringify(data, null, 2));
       else {
+        const sum = data.summary || {};
         console.log('═════════════════════════════════════════════════════════════════════════');
-        console.log(`📜 LIST OF SETTLED TRADES: ${sym} (Total: ${data.length} Trades)`);
+        console.log(`📜 PAGINATED & FILTERED TRADES: ${sym} [Page ${data.current_page} of ${data.total_pages}]`);
         console.log('═════════════════════════════════════════════════════════════════════════');
-        console.log(`${'#'.padEnd(4)} ${'ACTION'.padEnd(12)} ${'ENTRY'.padEnd(10)} ${'EXIT'.padEnd(10)} ${'PNL PIPS'.padEnd(10)} ${'VALUED PIPS'.padEnd(12)} RESULT`);
+        console.log(`Matching Trades : ${data.total_records} trades (${sum.winning_trades || 0} Win / ${sum.losing_trades || 0} Loss)`);
+        console.log(`Filtered Win Rate: ${(sum.win_rate_pct || 0).toFixed(1)}% | Profit Factor: ${(sum.profit_factor || 0).toFixed(2)}`);
+        console.log(`Filtered Net PnL: ${(sum.total_raw_pips || 0) > 0 ? '+' : ''}${(sum.total_raw_pips || 0).toFixed(1)} pips | ${(sum.total_valued_pips || 0) > 0 ? '+' : ''}${(sum.total_valued_pips || 0).toFixed(1)} VP`);
         console.log('─────────────────────────────────────────────────────────────────────────');
-        const showTrades = data.slice(0, 30);
-        showTrades.forEach((t, i) => {
-          const res = t.pnl_pips > 0 ? '🟢 WIN' : '🔴 LOSS';
-          console.log(`${String(i + 1).padEnd(4)} ${t.action.padEnd(12)} ${t.entry_price.toFixed(5).padEnd(10)} ${t.exit_price.toFixed(5).padEnd(10)} ${(t.pnl_pips > 0 ? '+' : '') + t.pnl_pips.toFixed(1).padEnd(8)} ${(t.valued_pips > 0 ? '+' : '') + t.valued_pips.toFixed(1).padEnd(10)} ${res}`);
+        console.log(`${'#'.padEnd(4)} ${'ACTION'.padEnd(12)} ${'ENTRY'.padEnd(9)} ${'EXIT'.padEnd(9)} ${'PNL PIPS'.padEnd(10)} ${'VALUED PIPS'.padEnd(12)} ${'DURATION'.padEnd(9)} EXIT REASON`);
+        console.log('─────────────────────────────────────────────────────────────────────────');
+        
+        data.trades.forEach((t, i) => {
+          const rowNum = (data.current_page - 1) * data.page_size + i + 1;
+          const res = t.pnl_pips > 0 ? '🟢 TP' : '🔴 SL';
+          console.log(`${String(rowNum).padEnd(4)} ${t.action.padEnd(12)} ${t.entry_price.toFixed(5).padEnd(9)} ${t.exit_price.toFixed(5).padEnd(9)} ${(t.pnl_pips > 0 ? '+' : '') + t.pnl_pips.toFixed(1).padEnd(8)} ${(t.valued_pips > 0 ? '+' : '') + t.valued_pips.toFixed(1).padEnd(10)} ${(t.duration_hours + 'h').padEnd(9)} ${res} (${t.exit_reason})`);
         });
-        if (data.length > 30) {
-          console.log(`... dan ${data.length - 30} trade lainnya (gunakan --export file.json untuk dump semua).`);
-        }
+
+        console.log('─────────────────────────────────────────────────────────────────────────');
+        console.log(`Pagination: Page ${data.current_page}/${data.total_pages} (Items ${data.trades.length} of ${data.total_records}) | Prev: ${data.has_prev_page ? '✅' : '❌'} | Next: ${data.has_next_page ? '✅' : '❌'}`);
+        console.log('Gunakan --page <N> --limit <N> --action <BUY/SELL> --result <WIN/LOSS> --sort <pnl/close>');
         console.log('═════════════════════════════════════════════════════════════════════════');
       }
     } else if (cmd === 'monte-carlo') {

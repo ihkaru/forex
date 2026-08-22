@@ -381,4 +381,183 @@ impl QuantAuditPort for QuantAuditService {
             trades: trade_items,
         })
     }
+
+    async fn get_paginated_trades(
+        &self,
+        query: &TradeFilterQuery,
+    ) -> Result<PaginatedTradesResponse, DomainError> {
+        let pair_audit = self.get_pair_audit(&query.symbol).await?;
+        let mut filtered: Vec<TradeAuditItem> = pair_audit.trades;
+
+        // 1. Filter by Action / Direction
+        if let Some(ref action_filter) = query.action {
+            match action_filter {
+                TradeActionFilter::Buy => {
+                    filtered.retain(|t| t.action.to_uppercase().contains("BUY"));
+                }
+                TradeActionFilter::Sell => {
+                    filtered.retain(|t| t.action.to_uppercase().contains("SELL"));
+                }
+                TradeActionFilter::All => {}
+            }
+        }
+
+        // 2. Filter by Result (Win / Loss)
+        if let Some(ref res_filter) = query.result {
+            match res_filter {
+                TradeResultFilter::Win => {
+                    filtered.retain(|t| t.pnl_pips > dec!(0.0));
+                }
+                TradeResultFilter::Loss => {
+                    filtered.retain(|t| t.pnl_pips <= dec!(0.0));
+                }
+                TradeResultFilter::All => {}
+            }
+        }
+
+        // 3. Filter by Exit Reason
+        if let Some(ref exit_filter) = query.exit_reason {
+            match exit_filter {
+                TradeExitFilter::TakeProfit => {
+                    filtered.retain(|t| t.exit_reason.to_uppercase().contains("TAKE_PROFIT"));
+                }
+                TradeExitFilter::StopLoss => {
+                    filtered.retain(|t| t.exit_reason.to_uppercase().contains("STOP_LOSS"));
+                }
+                TradeExitFilter::Expired => {
+                    filtered.retain(|t| t.exit_reason.to_uppercase().contains("EXPIRED"));
+                }
+                TradeExitFilter::All => {}
+            }
+        }
+
+        // 4. Filter by Year & Month
+        if let Some(y) = query.year {
+            filtered.retain(|t| t.close_time.year() == y);
+        }
+        if let Some(m) = query.month {
+            filtered.retain(|t| t.close_time.month() == m);
+        }
+
+        // 5. Filter by Min / Max PnL
+        if let Some(min_pnl) = query.min_pnl_pips {
+            filtered.retain(|t| t.pnl_pips >= min_pnl);
+        }
+        if let Some(max_pnl) = query.max_pnl_pips {
+            filtered.retain(|t| t.pnl_pips <= max_pnl);
+        }
+        if let Some(min_vp) = query.min_valued_pips {
+            filtered.retain(|t| t.valued_pips >= min_vp);
+        }
+
+        // 6. Filter by Holding Duration
+        if let Some(min_d) = query.min_duration_hours {
+            filtered.retain(|t| t.duration_hours >= min_d);
+        }
+        if let Some(max_d) = query.max_duration_hours {
+            filtered.retain(|t| t.duration_hours <= max_d);
+        }
+
+        // 7. Calculate Filtered Aggregate Summary
+        let matched_count = filtered.len();
+        let mut win_count = 0;
+        let mut loss_count = 0;
+        let mut gross_profit = dec!(0.0);
+        let mut gross_loss = dec!(0.0);
+        let mut total_pnl = dec!(0.0);
+        let mut total_vp = dec!(0.0);
+
+        for t in &filtered {
+            total_pnl += t.pnl_pips;
+            total_vp += t.valued_pips;
+            if t.pnl_pips > dec!(0.0) {
+                win_count += 1;
+                gross_profit += t.pnl_pips;
+            } else {
+                loss_count += 1;
+                gross_loss += t.pnl_pips.abs();
+            }
+        }
+
+        let win_rate = if matched_count > 0 {
+            Decimal::from(win_count) / Decimal::from(matched_count) * dec!(100.0)
+        } else {
+            dec!(0.0)
+        };
+
+        let pf = if gross_loss > dec!(0.0) {
+            gross_profit / gross_loss
+        } else if gross_profit > dec!(0.0) {
+            dec!(99.0)
+        } else {
+            dec!(0.0)
+        };
+
+        let avg_trade = if matched_count > 0 {
+            total_pnl / Decimal::from(matched_count)
+        } else {
+            dec!(0.0)
+        };
+
+        let summary = FilteredTradesSummary {
+            matched_trades: matched_count,
+            winning_trades: win_count,
+            losing_trades: loss_count,
+            win_rate_pct: win_rate,
+            total_raw_pips: total_pnl,
+            total_valued_pips: total_vp,
+            gross_profit_pips: gross_profit,
+            gross_loss_pips: gross_loss,
+            profit_factor: pf,
+            avg_trade_pips: avg_trade,
+        };
+
+        // 8. Sorting
+        let sort_field = query.sort_by.clone().unwrap_or(TradeSortField::CloseTime);
+        let is_desc = query.sort_direction != Some(SortDirection::Asc);
+
+        filtered.sort_by(|a, b| {
+            let ordering = match sort_field {
+                TradeSortField::CloseTime => a.close_time.cmp(&b.close_time),
+                TradeSortField::OpenTime => a.open_time.cmp(&b.open_time),
+                TradeSortField::PnlPips => a.pnl_pips.cmp(&b.pnl_pips),
+                TradeSortField::ValuedPips => a.valued_pips.cmp(&b.valued_pips),
+                TradeSortField::DurationHours => a.duration_hours.cmp(&b.duration_hours),
+            };
+            if is_desc {
+                ordering.reverse()
+            } else {
+                ordering
+            }
+        });
+
+        // 9. Pagination
+        let page_size = query.page_size.clamp(1, 500);
+        let current_page = query.page.max(1);
+        let total_pages = if matched_count > 0 {
+            (matched_count + page_size - 1) / page_size
+        } else {
+            1
+        };
+
+        let start_idx = (current_page - 1) * page_size;
+        let paged_trades = if start_idx < matched_count {
+            let end_idx = (start_idx + page_size).min(matched_count);
+            filtered[start_idx..end_idx].to_vec()
+        } else {
+            Vec::new()
+        };
+
+        Ok(PaginatedTradesResponse {
+            symbol: query.symbol.clone(),
+            total_records: matched_count,
+            total_pages,
+            current_page,
+            page_size,
+            has_next_page: current_page < total_pages,
+            has_prev_page: current_page > 1,
+            summary,
+            trades: paged_trades,
+        })
+    }
 }

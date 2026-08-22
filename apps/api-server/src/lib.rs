@@ -28,6 +28,10 @@ pub fn create_router(state: Arc<AppState>) -> Router {
         .route("/api/signals/scan", get(signals_scan_handler))
         .route("/api/audit/full", get(audit_full_handler))
         .route("/api/audit/pair/:symbol", get(audit_pair_handler))
+        .route(
+            "/api/audit/trades/:symbol",
+            get(audit_trades_paginated_handler),
+        )
         .layer(CorsLayer::permissive())
         .with_state(state)
 }

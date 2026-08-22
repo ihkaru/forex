@@ -7,7 +7,7 @@ pub mod monte_carlo;
 pub mod scorecard;
 pub mod strategies;
 
-pub use audit::{audit_full_handler, audit_pair_handler};
+pub use audit::{audit_full_handler, audit_pair_handler, audit_trades_paginated_handler};
 pub use backtest::{backtest_detailed_handler, backtest_handler, backtest_trades_handler};
 pub use config::config_handler;
 pub use health::health_handler;
