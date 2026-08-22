@@ -389,21 +389,64 @@ impl QuantAuditPort for QuantAuditService {
         let pair_audit = self.get_pair_audit(&query.symbol).await?;
         let mut filtered: Vec<TradeAuditItem> = pair_audit.trades;
 
-        // 0. Search Query Text Filter (ID, Action, Price, Reason, Date, PnL)
+        // 0. Search Query Text & Smart Operator Filter (e.g. ">100", "<0", "pnl>50", "vp>100", "duration>24")
         if let Some(ref q) = query.search_query {
             let clean_q = q.trim().to_lowercase();
             if !clean_q.is_empty() {
-                filtered.retain(|t| {
-                    t.id.to_lowercase().contains(&clean_q)
-                        || t.action.to_lowercase().contains(&clean_q)
-                        || t.exit_reason.to_lowercase().contains(&clean_q)
-                        || t.entry_price.to_string().contains(&clean_q)
-                        || t.exit_price.to_string().contains(&clean_q)
-                        || t.pnl_pips.to_string().contains(&clean_q)
-                        || t.valued_pips.to_string().contains(&clean_q)
-                        || t.open_time.to_rfc3339().to_lowercase().contains(&clean_q)
-                        || t.close_time.to_rfc3339().to_lowercase().contains(&clean_q)
-                });
+                // Check if user typed comparison operator in search box (e.g. ">1000", "<=0", "pnl>50", "vp>100")
+                if let Some(rest) = clean_q.strip_prefix(">=") {
+                    if let Ok(num) = rest.trim().parse::<Decimal>() {
+                        filtered.retain(|t| t.pnl_pips >= num || t.valued_pips >= num);
+                    }
+                } else if let Some(rest) = clean_q.strip_prefix("<=") {
+                    if let Ok(num) = rest.trim().parse::<Decimal>() {
+                        filtered.retain(|t| t.pnl_pips <= num || t.valued_pips <= num);
+                    }
+                } else if let Some(rest) = clean_q.strip_prefix('>') {
+                    if let Ok(num) = rest.trim().parse::<Decimal>() {
+                        filtered.retain(|t| t.pnl_pips > num || t.valued_pips > num);
+                    }
+                } else if let Some(rest) = clean_q.strip_prefix('<') {
+                    if let Ok(num) = rest.trim().parse::<Decimal>() {
+                        filtered.retain(|t| t.pnl_pips < num || t.valued_pips < num);
+                    }
+                } else if let Some(rest) = clean_q.strip_prefix("pnl>") {
+                    if let Ok(num) = rest.trim().parse::<Decimal>() {
+                        filtered.retain(|t| t.pnl_pips > num);
+                    }
+                } else if let Some(rest) = clean_q.strip_prefix("pnl<") {
+                    if let Ok(num) = rest.trim().parse::<Decimal>() {
+                        filtered.retain(|t| t.pnl_pips < num);
+                    }
+                } else if let Some(rest) = clean_q.strip_prefix("vp>") {
+                    if let Ok(num) = rest.trim().parse::<Decimal>() {
+                        filtered.retain(|t| t.valued_pips > num);
+                    }
+                } else if let Some(rest) = clean_q.strip_prefix("vp<") {
+                    if let Ok(num) = rest.trim().parse::<Decimal>() {
+                        filtered.retain(|t| t.valued_pips < num);
+                    }
+                } else if let Some(rest) = clean_q.strip_prefix("hours>") {
+                    if let Ok(num) = rest.trim().parse::<i64>() {
+                        filtered.retain(|t| t.duration_hours > num);
+                    }
+                } else if let Some(rest) = clean_q.strip_prefix("hours<") {
+                    if let Ok(num) = rest.trim().parse::<i64>() {
+                        filtered.retain(|t| t.duration_hours < num);
+                    }
+                } else {
+                    filtered.retain(|t| {
+                        t.id.to_lowercase().contains(&clean_q)
+                            || t.action.to_lowercase().contains(&clean_q)
+                            || t.exit_reason.to_lowercase().contains(&clean_q)
+                            || t.entry_price.to_string().contains(&clean_q)
+                            || t.exit_price.to_string().contains(&clean_q)
+                            || t.pnl_pips.to_string().contains(&clean_q)
+                            || t.valued_pips.to_string().contains(&clean_q)
+                            || t.open_time.to_rfc3339().to_lowercase().contains(&clean_q)
+                            || t.close_time.to_rfc3339().to_lowercase().contains(&clean_q)
+                    });
+                }
             }
         }
 
@@ -457,20 +500,60 @@ impl QuantAuditPort for QuantAuditService {
             filtered.retain(|t| t.close_time.month() == m);
         }
 
-        // 5. Filter by Min / Max PnL
+        // 5. Filter by PnL Comparison (> / < / >= / <=)
+        if let Some(pnl_gt) = query.pnl_gt {
+            filtered.retain(|t| t.pnl_pips > pnl_gt);
+        }
+        if let Some(pnl_gte) = query.pnl_gte {
+            filtered.retain(|t| t.pnl_pips >= pnl_gte);
+        }
         if let Some(min_pnl) = query.min_pnl_pips {
             filtered.retain(|t| t.pnl_pips >= min_pnl);
+        }
+        if let Some(pnl_lt) = query.pnl_lt {
+            filtered.retain(|t| t.pnl_pips < pnl_lt);
+        }
+        if let Some(pnl_lte) = query.pnl_lte {
+            filtered.retain(|t| t.pnl_pips <= pnl_lte);
         }
         if let Some(max_pnl) = query.max_pnl_pips {
             filtered.retain(|t| t.pnl_pips <= max_pnl);
         }
+
+        // 6. Filter by Valued Pips Comparison (> / < / >= / <=)
+        if let Some(vp_gt) = query.vp_gt {
+            filtered.retain(|t| t.valued_pips > vp_gt);
+        }
+        if let Some(vp_gte) = query.vp_gte {
+            filtered.retain(|t| t.valued_pips >= vp_gte);
+        }
         if let Some(min_vp) = query.min_valued_pips {
             filtered.retain(|t| t.valued_pips >= min_vp);
         }
+        if let Some(vp_lt) = query.vp_lt {
+            filtered.retain(|t| t.valued_pips < vp_lt);
+        }
+        if let Some(vp_lte) = query.vp_lte {
+            filtered.retain(|t| t.valued_pips <= vp_lte);
+        }
 
-        // 6. Filter by Holding Duration
+        // 7. Filter by Price Comparison (> / <)
+        if let Some(price_gt) = query.price_gt {
+            filtered.retain(|t| t.entry_price > price_gt || t.exit_price > price_gt);
+        }
+        if let Some(price_lt) = query.price_lt {
+            filtered.retain(|t| t.entry_price < price_lt || t.exit_price < price_lt);
+        }
+
+        // 8. Filter by Holding Duration (> / < / min / max)
+        if let Some(dur_gt) = query.duration_gt {
+            filtered.retain(|t| t.duration_hours > dur_gt);
+        }
         if let Some(min_d) = query.min_duration_hours {
             filtered.retain(|t| t.duration_hours >= min_d);
+        }
+        if let Some(dur_lt) = query.duration_lt {
+            filtered.retain(|t| t.duration_hours < dur_lt);
         }
         if let Some(max_d) = query.max_duration_hours {
             filtered.retain(|t| t.duration_hours <= max_d);

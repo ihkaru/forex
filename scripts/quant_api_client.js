@@ -146,6 +146,18 @@ Contoh:
       const exitReason = getArg('--exit');
       const year = getArg('--year');
       const month = getArg('--month');
+      const pnlGt = getArg('--pnl-gt') || getArg('--gt');
+      const pnlGte = getArg('--pnl-gte') || getArg('--gte');
+      const pnlLt = getArg('--pnl-lt') || getArg('--lt');
+      const pnlLte = getArg('--pnl-lte') || getArg('--lte');
+      const vpGt = getArg('--vp-gt');
+      const vpGte = getArg('--vp-gte');
+      const vpLt = getArg('--vp-lt');
+      const vpLte = getArg('--vp-lte');
+      const priceGt = getArg('--price-gt');
+      const priceLt = getArg('--price-lt');
+      const hoursGt = getArg('--hours-gt') || getArg('--dur-gt');
+      const hoursLt = getArg('--hours-lt') || getArg('--dur-lt');
       const sortBy = getArg('--sort');
       const sortDir = getArg('--order') || getArg('--dir');
 
@@ -157,6 +169,18 @@ Contoh:
       if (exitReason) params.set('exit_reason', exitReason);
       if (year) params.set('year', year);
       if (month) params.set('month', month);
+      if (pnlGt) params.set('pnl_gt', pnlGt);
+      if (pnlGte) params.set('pnl_gte', pnlGte);
+      if (pnlLt) params.set('pnl_lt', pnlLt);
+      if (pnlLte) params.set('pnl_lte', pnlLte);
+      if (vpGt) params.set('vp_gt', vpGt);
+      if (vpGte) params.set('vp_gte', vpGte);
+      if (vpLt) params.set('vp_lt', vpLt);
+      if (vpLte) params.set('vp_lte', vpLte);
+      if (priceGt) params.set('price_gt', priceGt);
+      if (priceLt) params.set('price_lt', priceLt);
+      if (hoursGt) params.set('duration_gt', hoursGt);
+      if (hoursLt) params.set('duration_lt', hoursLt);
       if (sortBy) params.set('sort_by', sortBy);
       if (sortDir) params.set('sort_direction', sortDir);
 

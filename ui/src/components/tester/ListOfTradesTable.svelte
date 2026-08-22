@@ -6,7 +6,8 @@
     X, 
     ArrowUp, 
     ArrowDown, 
-    ArrowUpDown 
+    ArrowUpDown,
+    Filter
   } from 'lucide-svelte';
 
   let { 
@@ -19,6 +20,7 @@
 
   let filterResult = $state<'ALL' | 'WIN' | 'LOSS'>('ALL');
   let filterDirection = $state<'ALL' | 'BUY' | 'SELL'>('ALL');
+  let filterThreshold = $state<'ALL' | 'GT_100' | 'GT_500' | 'LT_MINUS_200'>('ALL');
   let searchQuery = $state<string>('');
   let pageSize = $state<number>(25);
   let currentPage = $state<number>(1);
@@ -41,17 +43,94 @@
   const filteredAndSortedTrades = $derived.by(() => {
     const q = searchQuery.trim().toLowerCase();
     
+    // Parse comparison operators from search query if present
+    let opType: 'NONE' | 'GT' | 'GTE' | 'LT' | 'LTE' | 'PNL_GT' | 'PNL_LT' | 'VP_GT' | 'VP_LT' | 'PRICE_GT' | 'PRICE_LT' | 'HOURS_GT' | 'HOURS_LT' = 'NONE';
+    let opNum = 0;
+
+    if (q.startsWith('>=')) {
+      const n = parseFloat(q.substring(2));
+      if (!isNaN(n)) { opType = 'GTE'; opNum = n; }
+    } else if (q.startsWith('<=')) {
+      const n = parseFloat(q.substring(2));
+      if (!isNaN(n)) { opType = 'LTE'; opNum = n; }
+    } else if (q.startsWith('>')) {
+      const n = parseFloat(q.substring(1));
+      if (!isNaN(n)) { opType = 'GT'; opNum = n; }
+    } else if (q.startsWith('<')) {
+      const n = parseFloat(q.substring(1));
+      if (!isNaN(n)) { opType = 'LT'; opNum = n; }
+    } else if (q.startsWith('pnl>')) {
+      const n = parseFloat(q.substring(4));
+      if (!isNaN(n)) { opType = 'PNL_GT'; opNum = n; }
+    } else if (q.startsWith('pnl<')) {
+      const n = parseFloat(q.substring(4));
+      if (!isNaN(n)) { opType = 'PNL_LT'; opNum = n; }
+    } else if (q.startsWith('vp>')) {
+      const n = parseFloat(q.substring(3));
+      if (!isNaN(n)) { opType = 'VP_GT'; opNum = n; }
+    } else if (q.startsWith('vp<')) {
+      const n = parseFloat(q.substring(3));
+      if (!isNaN(n)) { opType = 'VP_LT'; opNum = n; }
+    } else if (q.startsWith('price>')) {
+      const n = parseFloat(q.substring(6));
+      if (!isNaN(n)) { opType = 'PRICE_GT'; opNum = n; }
+    } else if (q.startsWith('price<')) {
+      const n = parseFloat(q.substring(6));
+      if (!isNaN(n)) { opType = 'PRICE_LT'; opNum = n; }
+    } else if (q.startsWith('hours>') || q.startsWith('dur>')) {
+      const n = parseFloat(q.split('>')[1]);
+      if (!isNaN(n)) { opType = 'HOURS_GT'; opNum = n; }
+    } else if (q.startsWith('hours<') || q.startsWith('dur<')) {
+      const n = parseFloat(q.split('<')[1]);
+      if (!isNaN(n)) { opType = 'HOURS_LT'; opNum = n; }
+    }
+
     // 1. Filter
     const list = trades.filter((t) => {
-      const isWin = (t.pnl_pips || 0) > 0 || t.is_win;
+      const pnl = Number(t.pnl_pips || 0);
+      const vp = Number(t.valued_pips || 0);
+      const isWin = pnl > 0 || t.is_win;
+
+      // Result filter
       if (filterResult === 'WIN' && !isWin) return false;
       if (filterResult === 'LOSS' && isWin) return false;
 
+      // Direction filter
       const act = String(t.action || '').toUpperCase();
       if (filterDirection === 'BUY' && !act.includes('BUY')) return false;
       if (filterDirection === 'SELL' && !act.includes('SELL')) return false;
 
-      if (q) {
+      // Threshold filter
+      if (filterThreshold === 'GT_100' && pnl <= 100) return false;
+      if (filterThreshold === 'GT_500' && pnl <= 500) return false;
+      if (filterThreshold === 'LT_MINUS_200' && pnl >= -200) return false;
+
+      // Search / Operator comparison
+      if (opType === 'GT') {
+        if (pnl <= opNum && vp <= opNum) return false;
+      } else if (opType === 'GTE') {
+        if (pnl < opNum && vp < opNum) return false;
+      } else if (opType === 'LT') {
+        if (pnl >= opNum && vp >= opNum) return false;
+      } else if (opType === 'LTE') {
+        if (pnl > opNum && vp > opNum) return false;
+      } else if (opType === 'PNL_GT') {
+        if (pnl <= opNum) return false;
+      } else if (opType === 'PNL_LT') {
+        if (pnl >= opNum) return false;
+      } else if (opType === 'VP_GT') {
+        if (vp <= opNum) return false;
+      } else if (opType === 'VP_LT') {
+        if (vp >= opNum) return false;
+      } else if (opType === 'PRICE_GT') {
+        if (Number(t.open_price) <= opNum && Number(t.close_price) <= opNum) return false;
+      } else if (opType === 'PRICE_LT') {
+        if (Number(t.open_price) >= opNum && Number(t.close_price) >= opNum) return false;
+      } else if (opType === 'HOURS_GT') {
+        if (Number(t.duration_hours || 0) <= opNum) return false;
+      } else if (opType === 'HOURS_LT') {
+        if (Number(t.duration_hours || 0) >= opNum) return false;
+      } else if (q) {
         const idMatch = String(t.id || '').toLowerCase().includes(q);
         const actMatch = act.toLowerCase().includes(q);
         const reasonMatch = String(t.exit_reason || '').toLowerCase().includes(q);
@@ -152,15 +231,16 @@
   <!-- Rich Filter, Search & Controls Bar -->
   <div class="flex flex-wrap items-center justify-between gap-3 px-4 py-2 border-b border-[#2a2e39] bg-[#1e222d]">
     <div class="flex flex-wrap items-center gap-3">
-      <!-- Search Input -->
+      <!-- Search Input with Comparison Operators support -->
       <div class="relative flex items-center">
         <Search class="w-3.5 h-3.5 text-[#787b86] absolute left-2.5 pointer-events-none" />
         <input
           type="text"
           bind:value={searchQuery}
           oninput={() => (currentPage = 1)}
-          placeholder="Search price, date, ID..."
-          class="bg-[#131722] text-[#d1d4dc] placeholder-[#787b86] text-[11px] pl-8 pr-7 py-1 rounded-md border border-[#2a2e39] focus:outline-none focus:border-[#2962ff] w-48 font-mono"
+          placeholder="Search price, date, >100, <0..."
+          title="Support operator perbandingan: >1000, <0, pnl>50, vp>100, hours>24, price>0.86"
+          class="bg-[#131722] text-[#d1d4dc] placeholder-[#787b86] text-[11px] pl-8 pr-7 py-1 rounded-md border border-[#2a2e39] focus:outline-none focus:border-[#2962ff] w-52 font-mono"
         />
         {#if searchQuery}
           <button
@@ -214,6 +294,35 @@
           class="px-2 py-0.5 rounded text-[11px] transition-colors {filterDirection === 'SELL' ? 'bg-[#e040fb]/20 text-[#e040fb] font-bold border border-[#e040fb]/40' : 'text-[#787b86] hover:text-[#e040fb]'}"
         >
           Short / Sell
+        </button>
+      </div>
+
+      <!-- Quick Threshold Comparison Pills (> / <) -->
+      <div class="hidden 2xl:flex items-center gap-1 bg-[#131722] p-1 rounded-md border border-[#2a2e39]">
+        <span class="text-[10px] text-[#787b86] px-1 font-mono">Threshold:</span>
+        <button
+          onclick={() => { filterThreshold = 'ALL'; currentPage = 1; }}
+          class="px-1.5 py-0.5 rounded text-[10px] transition-colors {filterThreshold === 'ALL' ? 'bg-[#2a2e39] text-white font-bold' : 'text-[#787b86] hover:text-[#d1d4dc]'}"
+        >
+          All
+        </button>
+        <button
+          onclick={() => { filterThreshold = 'GT_100'; currentPage = 1; }}
+          class="px-1.5 py-0.5 rounded text-[10px] transition-colors {filterThreshold === 'GT_100' ? 'bg-[#089981]/20 text-[#089981] font-bold border border-[#089981]/40' : 'text-[#787b86] hover:text-[#089981]'}"
+        >
+          &gt; +100 pips
+        </button>
+        <button
+          onclick={() => { filterThreshold = 'GT_500'; currentPage = 1; }}
+          class="px-1.5 py-0.5 rounded text-[10px] transition-colors {filterThreshold === 'GT_500' ? 'bg-[#089981]/20 text-[#089981] font-bold border border-[#089981]/40' : 'text-[#787b86] hover:text-[#089981]'}"
+        >
+          &gt; +500 pips
+        </button>
+        <button
+          onclick={() => { filterThreshold = 'LT_MINUS_200'; currentPage = 1; }}
+          class="px-1.5 py-0.5 rounded text-[10px] transition-colors {filterThreshold === 'LT_MINUS_200' ? 'bg-[#f23645]/20 text-[#f23645] font-bold border border-[#f23645]/40' : 'text-[#787b86] hover:text-[#f23645]'}"
+        >
+          &lt; -200 pips
         </button>
       </div>
 
