@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { onMount } from 'svelte';
+  import { onMount, onDestroy } from 'svelte';
   import TopBentoBar from './components/TopBentoBar.svelte';
   import LifecycleSidebar from './components/LifecycleSidebar.svelte';
   import TradingViewCanvas from './components/TradingViewCanvas.svelte';
@@ -15,10 +15,11 @@
   import { Cpu, Dices, Search, Layers } from '@lucide/svelte';
 
   const composition = new AppCompositionRoot();
+  const initialPrefs = composition.preferencesPort.loadPreferences();
 
   // Reactive State (Svelte 5 Runes)
   let activeNav = $state('terminal');
-  let activeSymbol = $state('XAUUSD');
+  let activeSymbol = $state(initialPrefs.activeSymbol || 'XAUUSD');
   let activePairs = $state<Array<{ symbol: string; base: string; quote: string; tier: number; multiplier: number }>>([
     { symbol: 'XAUUSD', base: 'XAU', quote: 'USD', tier: 4, multiplier: 0.5 },
     { symbol: 'USDCHF', base: 'USD', quote: 'CHF', tier: 1, multiplier: 2.0 },
@@ -37,23 +38,34 @@
 
   // Multi-Strategy State
   let strategies = $state<StrategyDescriptor[]>([]);
-  let selectedStrategyId = $state('pola-n-core');
+  let selectedStrategyId = $state(initialPrefs.activeStrategyId || 'pola-n-v2');
+
+  // Auto-persist active strategy & symbol on reactive change
+  $effect(() => {
+    composition.preferencesPort.savePreferences({
+      activeStrategyId: selectedStrategyId,
+      activeSymbol: activeSymbol,
+    });
+  });
   let selectedStrategy = $derived(
     strategies.find((s) => s.id === selectedStrategyId) || {
-      id: 'pola-n-core',
-      name: 'TF Pola N Structure Engine',
-      code: 'STRAT_POLA_N_V1',
-      description: 'Struktur fraktal swing L1-H1-L2 + 50% Golden Zone retest',
-      category: 'MARKET_STRUCTURE',
-      author: 'TF Lab',
-      winRatePct: 68.4,
-      profitFactor: 2.34,
-      recoveryFactor: 9.80,
-      sharpeRatio: 2.14,
-      sortinoRatio: 3.42,
-      calmarRatio: 4.12,
-      wferPct: 94.8,
+      id: 'pola-n-v2',
+      name: 'TF Pola N Adaptive (v2 Gold Specialist)',
+      code: 'STRAT_POLA_N_V2_GOLD',
+      description: 'Model kuantitatif fraktal Pola N khusus Emas (XAUUSD) dengan Fibonacci Golden Pocket 61.8%, Session Liquidity Filter (10-21 UTC), dan Target R:R 1:1.08 (Master/Legend Tier 80% Revenue Share).',
+      category: 'GOLD_SPECIALIST',
+      author: 'TF Quantitative Lab',
+      winRatePct: 34.8,
+      profitFactor: 2.19,
+      recoveryFactor: 15.82,
+      sharpeRatio: 3.10,
+      sortinoRatio: 4.60,
+      calmarRatio: 6.20,
+      wferPct: 98.2,
       isTfCompliant: true,
+      supportedSymbols: ['XAUUSD'],
+      isSpecialist: true,
+      specialistLabel: '⭐ GOLD SPECIALIST (LEGEND PF 2.19)',
     }
   );
 
@@ -107,6 +119,51 @@
     }
   }
 
+  let streamAbortController: AbortController | null = null;
+
+  function stopLiveStream() {
+    if (streamAbortController) {
+      streamAbortController.abort();
+      streamAbortController = null;
+    }
+  }
+
+  async function startLiveStream(symbol: string) {
+    stopLiveStream();
+    if (!composition.marketDataPort.streamCandles) return;
+
+    const controller = new AbortController();
+    streamAbortController = controller;
+
+    try {
+      const stream = composition.marketDataPort.streamCandles(symbol, 'M1');
+      for await (const liveCandle of stream) {
+        if (controller.signal.aborted) break;
+        if (activeSymbol !== symbol) break;
+
+        currentPrice = liveCandle.close;
+
+        if (candles.length > 0) {
+          const lastCandle = candles[candles.length - 1];
+          if (liveCandle.time === lastCandle.time) {
+            const updated: Candle = {
+              ...lastCandle,
+              high: Math.max(lastCandle.high, liveCandle.high),
+              low: Math.min(lastCandle.low, liveCandle.low),
+              close: liveCandle.close,
+              volume: (lastCandle.volume ?? 0) + (liveCandle.volume ?? 0),
+            };
+            candles = [...candles.slice(0, -1), updated];
+          } else if (liveCandle.time > lastCandle.time) {
+            candles = [...candles, liveCandle];
+          }
+        }
+      }
+    } catch (e) {
+      console.warn('Live stream closed or errored for', symbol, e);
+    }
+  }
+
   async function loadMarketData(symbol: string, strategyId?: string) {
     activeSymbol = symbol;
     const stratId = strategyId || selectedStrategyId;
@@ -129,6 +186,9 @@
       }
       // Background fetch Monte Carlo
       loadMonteCarlo(symbol);
+
+      // Start live websocket stream
+      startLiveStream(symbol);
     } catch (e) {
       console.error('Failed to load market data for', symbol, e);
     }
@@ -250,6 +310,11 @@
     await loadMarketData(activeSymbol);
     await loadBacktestAndScorecard();
   });
+
+  onDestroy(() => {
+    stopLiveStream();
+    composition.marketDataPort.close?.();
+  });
 </script>
 
 <div class="min-h-screen bg-[#131722] text-[#d1d4dc] p-3 sm:p-5 flex flex-col gap-4 font-sans">
@@ -305,9 +370,19 @@
             {trades}
             signal={activeSignal}
             {syncStatusMessage}
+            preferencesPort={composition.preferencesPort}
             onSelectSymbol={(sym) => loadMarketData(sym)}
             onSyncDelta={handleSyncDelta}
             onOpenProvenance={handleOpenProvenance}
+            onReplayChange={(displayed, isReplay) => {
+              if (isReplay && displayed.length > 0) {
+                currentPrice = displayed[displayed.length - 1].close;
+                generateSignal(activeSymbol, displayed);
+              } else if (candles.length > 0) {
+                currentPrice = candles[candles.length - 1].close;
+                generateSignal(activeSymbol, candles);
+              }
+            }}
           />
         </div>
 

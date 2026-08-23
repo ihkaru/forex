@@ -20,8 +20,10 @@ export class IctOrderBlockLayer implements IChartLayer {
   }
 
   render(context: ChartLayerContext): void {
-    this.clear();
-    if (!this.visible || !context.candles || context.candles.length < 20) return;
+    if (!this.visible || !context.candles || context.candles.length < 20 || !context.candleSeries) {
+      this.clear();
+      return;
+    }
 
     const markers: SeriesMarker<any>[] = [];
     const candles = context.candles;
@@ -43,7 +45,11 @@ export class IctOrderBlockLayer implements IChartLayer {
     markers.sort((a, b) => Number(a.time) - Number(b.time));
 
     try {
-      this.markersPrimitive = createSeriesMarkers(context.candleSeries, markers);
+      if (!this.markersPrimitive) {
+        this.markersPrimitive = createSeriesMarkers(context.candleSeries, markers);
+      } else {
+        this.markersPrimitive.setMarkers(markers);
+      }
     } catch (e) {
       console.warn('[IctOrderBlockLayer] warn:', e);
     }

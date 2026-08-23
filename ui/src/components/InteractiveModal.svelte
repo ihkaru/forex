@@ -43,7 +43,7 @@
     monteCarloData = null,
     scorecardData = null,
     strategies = [],
-    selectedStrategyId = 'pola-n-core',
+    selectedStrategyId = 'pola-n-v2',
     onSelectStrategy,
     onClose
   }: Props = $props();

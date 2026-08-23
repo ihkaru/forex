@@ -48,6 +48,7 @@ export interface IChartLayer {
   isApplicableForStrategy(strategyId: string, category?: string): boolean;
 
   render(context: ChartLayerContext): void;
+  update?(context: ChartLayerContext, lastCandle: Candle): void;
   clear(): void;
   toggle(context: ChartLayerContext): boolean;
 }

@@ -21,7 +21,7 @@
 
   let {
     strategies = [],
-    selectedStrategyId = 'pola-n-core',
+    selectedStrategyId = 'pola-n-v2',
     onSelectStrategy,
     onOpenModelHub,
     onOpenMonteCarlo

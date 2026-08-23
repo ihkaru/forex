@@ -3,12 +3,13 @@
  * Wires together Ports, Adapters, and UI Controllers via Pure Constructor Dependency Injection.
  */
 
-import { RestMarketDataAdapter } from './adapters/driven/RestMarketDataAdapter';
+import { LiveDukascopyAdapter } from './adapters/driven/LiveDukascopyAdapter';
 import { RestBacktestAdapter } from './adapters/driven/RestBacktestAdapter';
 import { RestEdaAdapter } from './adapters/driven/RestEdaAdapter';
 import { RestStrategyAdapter, RestMonteCarloAdapter } from './adapters/driven/RestStrategyAdapter';
 import { RestTesterAdapter } from './adapters/driven/RestTesterAdapter';
 import { RestDeltaSyncAdapter } from './adapters/driven/RestDeltaSyncAdapter';
+import { LocalStoragePreferencesAdapter } from './adapters/driven/LocalStoragePreferencesAdapter';
 import { TradingViewChartAdapter } from './adapters/driving/TradingViewChartAdapter';
 import type {
   IMarketDataPort,
@@ -17,6 +18,7 @@ import type {
   IStrategyPort,
   IMonteCarloPort,
   IDeltaSyncPort,
+  IUserPreferencesPort,
 } from './ports';
 import type { ITesterPort } from './ports/ITesterPort';
 
@@ -28,17 +30,19 @@ export class AppCompositionRoot {
   public readonly monteCarloPort: IMonteCarloPort;
   public readonly testerPort: ITesterPort;
   public readonly deltaSyncPort: IDeltaSyncPort;
+  public readonly preferencesPort: IUserPreferencesPort;
   public readonly chartAdapter: TradingViewChartAdapter;
 
   constructor(apiBaseUrl: string = 'http://127.0.0.1:5000/api') {
     // 1. Instantiate Driven Adapters (I/O)
-    this.marketDataPort = new RestMarketDataAdapter(apiBaseUrl);
+    this.marketDataPort = new LiveDukascopyAdapter(apiBaseUrl);
     this.backtestPort = new RestBacktestAdapter(apiBaseUrl);
     this.edaPort = new RestEdaAdapter(apiBaseUrl);
     this.strategyPort = new RestStrategyAdapter(apiBaseUrl);
     this.monteCarloPort = new RestMonteCarloAdapter(apiBaseUrl);
     this.testerPort = new RestTesterAdapter(apiBaseUrl);
     this.deltaSyncPort = new RestDeltaSyncAdapter(apiBaseUrl);
+    this.preferencesPort = new LocalStoragePreferencesAdapter();
 
     // 2. Instantiate Driving Adapters via Composition
     this.chartAdapter = new TradingViewChartAdapter('tv-chart', this.marketDataPort);

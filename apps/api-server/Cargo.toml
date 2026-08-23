@@ -20,7 +20,7 @@ rust_decimal = { workspace = true }
 rust_decimal_macros = { workspace = true }
 async-trait = { workspace = true }
 uuid = { workspace = true }
-axum = "0.7"
+axum = { version = "0.7", features = ["ws"] }
 tower-http = { version = "0.5", features = ["cors"] }
 
 [dev-dependencies]

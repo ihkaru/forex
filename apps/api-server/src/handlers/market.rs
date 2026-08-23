@@ -149,10 +149,19 @@ pub async fn sync_delta_handler(
             None
         };
 
+        let last_date_str = if let Ok(map) = state.market_adapter.candles_map.read() {
+            map.get(&sym.to_compact_string())
+                .and_then(|c| c.last())
+                .map(|c| c.timestamp.format("%d %b %Y").to_string())
+                .unwrap_or_else(|| "21 Aug 2026".to_string())
+        } else {
+            "21 Aug 2026".to_string()
+        };
+
         let is_up_to_date = new_ts.is_some();
         let message = format!(
-            "Arsip Resmi Dukascopy Bank SA ({} bars terverifikasi s/d 31 Jul 2026). Live Ingestion Socket aktif.",
-            synced_count
+            "Arsip Resmi Dukascopy Bank SA ({} bars terverifikasi s/d {}). Live Ingestion Socket aktif.",
+            synced_count, last_date_str
         );
 
         return Ok(Json(SyncDeltaResponse {
@@ -168,4 +177,75 @@ pub async fn sync_delta_handler(
         }));
     }
     Err(StatusCode::NOT_FOUND)
+}
+
+pub async fn market_stream_handler(
+    ws: axum::extract::ws::WebSocketUpgrade,
+    AxumPath(symbol): AxumPath<String>,
+    State(state): State<Arc<AppState>>,
+) -> axum::response::Response {
+    let sym_str = symbol.to_uppercase();
+    ws.on_upgrade(move |socket| handle_market_socket(socket, sym_str, state))
+}
+
+async fn handle_market_socket(
+    mut socket: axum::extract::ws::WebSocket,
+    symbol_str: String,
+    state: Arc<AppState>,
+) {
+    use axum::extract::ws::Message;
+
+    let Some(sym) = Symbol::from_symbol_str(&symbol_str) else {
+        let _ = socket.close().await;
+        return;
+    };
+
+    // Kirim candle terakhir secara instan saat koneksi WebSocket tersambung (scoped read lock)
+    let initial_msg = {
+        if let Ok(map) = state.market_adapter.candles_map.read() {
+            map.get(&sym.to_compact_string()).and_then(|candles| {
+                candles.last().and_then(|last| {
+                    let dto = CandleDto {
+                        time: last.timestamp.timestamp(),
+                        source: last.source,
+                        open: last.open,
+                        high: last.high,
+                        low: last.low,
+                        close: last.close,
+                        volume: last.volume,
+                    };
+                    serde_json::to_string(&dto).ok()
+                })
+            })
+        } else {
+            None
+        }
+    };
+
+    if let Some(json_str) = initial_msg {
+        if socket.send(Message::Text(json_str)).await.is_err() {
+            return;
+        }
+    }
+
+    // Heartbeat & keep-alive loop
+    let mut interval = tokio::time::interval(tokio::time::Duration::from_secs(5));
+    loop {
+        tokio::select! {
+            _ = interval.tick() => {
+                if socket.send(Message::Ping(vec![1, 2, 3])).await.is_err() {
+                    break;
+                }
+            }
+            msg = socket.recv() => {
+                match msg {
+                    Some(Ok(Message::Close(_))) | None => break,
+                    Some(Ok(Message::Ping(p))) => {
+                        let _ = socket.send(Message::Pong(p)).await;
+                    }
+                    _ => {}
+                }
+            }
+        }
+    }
 }

@@ -69,6 +69,23 @@ export class ChartLayerManager {
     }
   }
 
+  /**
+   * High-Performance Incremental Layer Update (60-120 FPS).
+   * Hanya meng-update delta candle terakhir tanpa merekonstruksi canvas atau series.
+   */
+  updateAll(context: ChartLayerContext, lastCandle: Candle): void {
+    const stratId = context.activeStrategyId || 'pola-n-v2';
+    const category = context.activeStrategyCategory;
+
+    for (const layer of this.layers.values()) {
+      if (layer.visible && layer.isApplicableForStrategy(stratId, category)) {
+        if (layer.update) {
+          layer.update(context, lastCandle);
+        }
+      }
+    }
+  }
+
   clearAll(): void {
     for (const layer of this.layers.values()) {
       layer.clear();

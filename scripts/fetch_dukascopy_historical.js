@@ -12,12 +12,14 @@ const path = require('path');
 const { getHistoricRates } = require('dukascopy-node');
 
 const PAIRS = [
-  { instrument: 'nzdusd', symbolStr: 'NZDUSD', base: 'NZD', quote: 'USD' },
-  { instrument: 'audusd', symbolStr: 'AUDUSD', base: 'AUD', quote: 'USD' },
-  { instrument: 'eurgbp', symbolStr: 'EURGBP', base: 'EUR', quote: 'GBP' },
-  { instrument: 'usdchf', symbolStr: 'USDCHF', base: 'USD', quote: 'CHF' },
-  { instrument: 'eurusd', symbolStr: 'EURUSD', base: 'EUR', quote: 'USD' },
-  { instrument: 'gbpusd', symbolStr: 'GBPUSD', base: 'GBP', quote: 'USD' },
+  { instrument: 'nzdusd', symbolStr: 'NZDUSD', base: 'NZD', quote: 'USD', decimals: 5 },
+  { instrument: 'audusd', symbolStr: 'AUDUSD', base: 'AUD', quote: 'USD', decimals: 5 },
+  { instrument: 'eurgbp', symbolStr: 'EURGBP', base: 'EUR', quote: 'GBP', decimals: 5 },
+  { instrument: 'usdchf', symbolStr: 'USDCHF', base: 'USD', quote: 'CHF', decimals: 5 },
+  { instrument: 'eurusd', symbolStr: 'EURUSD', base: 'EUR', quote: 'USD', decimals: 5 },
+  { instrument: 'gbpusd', symbolStr: 'GBPUSD', base: 'GBP', quote: 'USD', decimals: 5 },
+  { instrument: 'usdjpy', symbolStr: 'USDJPY', base: 'USD', quote: 'JPY', decimals: 3 },
+  { instrument: 'xauusd', symbolStr: 'XAUUSD', base: 'XAU', quote: 'USD', decimals: 2 },
 ];
 
 const OUTPUT_DIR = path.resolve(__dirname, '../data/historical');
@@ -72,16 +74,17 @@ async function downloadPair(pair) {
             const epochSecs = Math.floor(ts / 1000);
             const isoStr = new Date(ts).toISOString().replace('.000Z', 'Z');
 
+            const dec = pair.decimals || 5;
             cleanCandles.push({
               symbol: { base, quote },
               timeframe: 'H1',
               time: epochSecs,
               timestamp: isoStr,
               source: 'DukascopyEcn',
-              open: o.toFixed(5),
-              high: h.toFixed(5),
-              low: l.toFixed(5),
-              close: c.toFixed(5),
+              open: o.toFixed(dec),
+              high: h.toFixed(dec),
+              low: l.toFixed(dec),
+              close: c.toFixed(dec),
               volume: (v > 0 ? v : 1.0).toFixed(1),
             });
           }

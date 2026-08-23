@@ -24,6 +24,7 @@ pub fn create_router(state: Arc<AppState>) -> Router {
         )
         .route("/api/eda/:symbol", get(eda_handler))
         .route("/api/market/candles/:symbol", get(market_candles_handler))
+        .route("/api/market/stream/:symbol", get(market_stream_handler))
         .route("/api/market/sync/:symbol", get(sync_delta_handler))
         .route(
             "/api/market/ingest",
