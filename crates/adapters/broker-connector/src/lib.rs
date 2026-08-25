@@ -252,6 +252,85 @@ impl BrokerConnector {
             }
         });
     }
+
+    /// Memindai dan memuat file histori lilin lokal yang diekspor EA MT4 ke MQL4/Files
+    pub async fn load_mt4_disk_files(&self) {
+        let paths = [
+            "/home/ihza/.wine/drive_c/users/ihza/AppData/Roaming/MetaQuotes/Terminal/2191F4A3D14D7B4B1EBB84F924777883/MQL4/Files",
+            "/home/ihza/.wine/drive_c/Program Files (x86)/MetaTrader 4 EXNESS/MQL4/Files",
+        ];
+
+        for p in paths {
+            let p_buf = std::path::Path::new(p);
+            if !p_buf.exists() {
+                continue;
+            }
+            if let Ok(entries) = std::fs::read_dir(p_buf) {
+                for entry in entries.flatten() {
+                    let path = entry.path();
+                    if path.extension().and_then(|e| e.to_str()) == Some("json") {
+                        if let Ok(content) = std::fs::read_to_string(&path) {
+                            if let Ok(bars) =
+                                serde_json::from_str::<Vec<serde_json::Value>>(&content)
+                            {
+                                for bar in bars {
+                                    let time =
+                                        bar.get("time").and_then(|v| v.as_i64()).unwrap_or(0);
+                                    let parse_num =
+                                        |val: Option<&serde_json::Value>| -> Option<Decimal> {
+                                            val.and_then(|v| {
+                                                if let Some(s) = v.as_str() {
+                                                    s.parse().ok()
+                                                } else if let Some(f) = v.as_f64() {
+                                                    Decimal::from_f64_retain(f)
+                                                } else {
+                                                    None
+                                                }
+                                            })
+                                        };
+
+                                    let open = match parse_num(bar.get("open")) {
+                                        Some(v) => v,
+                                        None => continue,
+                                    };
+                                    let high = match parse_num(bar.get("high")) {
+                                        Some(v) => v,
+                                        None => continue,
+                                    };
+                                    let low = match parse_num(bar.get("low")) {
+                                        Some(v) => v,
+                                        None => continue,
+                                    };
+                                    let close = match parse_num(bar.get("close")) {
+                                        Some(v) => v,
+                                        None => continue,
+                                    };
+                                    let vol = parse_num(bar.get("volume")).unwrap_or(Decimal::ONE);
+                                    let src_str = bar
+                                        .get("source")
+                                        .and_then(|v| v.as_str())
+                                        .unwrap_or("MrgDemoMt4");
+
+                                    let msg = Mt5SocketMessage::Bar {
+                                        symbol: "XAUUSD".to_string(),
+                                        source: Some(src_str.to_string()),
+                                        timeframe: "H1".to_string(),
+                                        open,
+                                        high,
+                                        low,
+                                        close,
+                                        volume: vol,
+                                        time_gmt: time,
+                                    };
+                                    let _ = self.ingest_socket_message(msg).await;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
 }
 
 #[async_trait]
@@ -333,6 +412,15 @@ impl MarketDataPort for BrokerConnector {
         &self,
         query: &domain::models::CandleQuery,
     ) -> Result<Vec<Candle>, DomainError> {
+        let is_empty = {
+            let lock = self.candle_buffer.read().await;
+            lock.is_empty()
+        };
+
+        if is_empty {
+            self.load_mt4_disk_files().await;
+        }
+
         let lock = self.candle_buffer.read().await;
         let target_candles = if let Some(candles) =
             lock.get(&(query.symbol.clone(), query.timeframe, query.source))

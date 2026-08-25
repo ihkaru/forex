@@ -33,6 +33,7 @@ bool is_connected = false;
 int OnInit()
 {
    Print("🚀 Menghubungkan MRG MT4 ke Rust Quant Server (Port: ", InpPort, ")...");
+   DumpHistoricalBarsToFile();
    EventSetTimer(2); // Heartbeat timer setiap 2 detik
    ConnectToRustDaemon();
    
@@ -41,6 +42,7 @@ int OnInit()
    }
    return(INIT_SUCCEEDED);
 }
+
 
 //+------------------------------------------------------------------+
 //| Deinitialization                                                 |
@@ -142,7 +144,45 @@ void SendHistoricalH1Bars()
       SendSocketData(json);
    }
    Print("✅ Sukses sinkronisasi ", bars_to_send, " bar H1 ke Rust Engine.");
+   DumpHistoricalBarsToFile();
 }
+
+void DumpHistoricalBarsToFile()
+{
+   int total_h1_bars = iBars(_Symbol, PERIOD_H1);
+   int bars_to_send = MathMin(InpHistoryLimit, total_h1_bars);
+   bool is_real = (AccountInfoInteger(ACCOUNT_TRADE_MODE) == ACCOUNT_TRADE_MODE_REAL);
+   string src = is_real ? "MrgRealMt4" : "MrgDemoMt4";
+
+   string filename = "mrg_" + _Symbol + "_h1.json";
+   int file_handle = FileOpen(filename, FILE_WRITE|FILE_TXT);
+   if(file_handle != INVALID_HANDLE)
+   {
+      FileWriteString(file_handle, "[\n");
+      for(int i = bars_to_send - 1; i >= 0; i--)
+      {
+         datetime bar_time = iTime(_Symbol, PERIOD_H1, i);
+         double bar_open   = iOpen(_Symbol, PERIOD_H1, i);
+         double bar_high   = iHigh(_Symbol, PERIOD_H1, i);
+         double bar_low    = iLow(_Symbol, PERIOD_H1, i);
+         double bar_close  = iClose(_Symbol, PERIOD_H1, i);
+         long   bar_vol    = iVolume(_Symbol, PERIOD_H1, i);
+
+         string bar_json = StringFormat(
+            "  {\"time\":%lld,\"source\":\"%s\",\"open\":%.5f,\"high\":%.5f,\"low\":%.5f,\"close\":%.5f,\"volume\":%.2f}%s\n",
+            (long)bar_time,
+            src,
+            bar_open, bar_high, bar_low, bar_close, (double)bar_vol,
+            (i == 0 ? "" : ",")
+         );
+         FileWriteString(file_handle, bar_json);
+      }
+      FileWriteString(file_handle, "]\n");
+      FileClose(file_handle);
+      Print("💾 Berhasil menyimpan ", bars_to_send, " bar asli ke MQL4/Files/", filename);
+   }
+}
+
 
 
 
