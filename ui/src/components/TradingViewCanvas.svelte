@@ -131,8 +131,10 @@
   const layerManager = new ChartLayerManager();
   const replayEngine = new ReplayEngineService();
 
+  let lastRenderedSource = $state<string>(selectedSource);
   let replayState = $state(replayEngine.getState());
   let displayedCandles: Candle[] = [];
+
 
   replayEngine.subscribe((st, sliced, latestCandle, isStepForward) => {
     const wasSelecting = replayState.isSelectingCutPoint;
@@ -513,7 +515,13 @@
     if (!candleSeries) return;
 
     const activeCandles = replayState.isActive && displayedCandles.length > 0 ? displayedCandles : candles;
-    if (activeCandles.length === 0) return;
+    if (activeCandles.length === 0) {
+      if (candleSeries) {
+        candleSeries.setData([]);
+      }
+      layerManager.clearAll();
+      return;
+    }
 
     // Capture the current visible logical range before dataset modification
     const prevLogicalRange = chart.timeScale().getVisibleLogicalRange();
@@ -584,10 +592,11 @@
 
     layerManager.renderAll(getContext());
 
-    // Only apply initial auto-zoom on symbol change or initial load (NEVER during user pan/scroll or bar replay cut)
+    // Only apply initial auto-zoom on symbol/source change or initial load (NEVER during user pan/scroll or bar replay cut)
     const isSymbolChanged = lastRenderedSymbol === '' || lastRenderedSymbol !== activeSymbol;
-    if (isSymbolChanged && !replayState.isActive) {
-      if (activeRange === 'ALL') {
+    const isSourceChanged = lastRenderedSource !== selectedSource;
+    if ((isSymbolChanged || isSourceChanged) && !replayState.isActive) {
+      if (activeRange === 'ALL' || selectedSource !== 'dukascopy') {
         chart?.timeScale().fitContent();
       } else {
         handleZoom(activeRange);
@@ -600,6 +609,7 @@
     }
 
     lastRenderedSymbol = activeSymbol;
+    lastRenderedSource = selectedSource;
     lastRenderedChartType = activeChartType;
     lastCandlesLength = activeCandles.length;
     lastReplayActive = replayState.isActive;
@@ -622,11 +632,14 @@
   });
 
   $effect(() => {
-    // Re-render when activeSymbol changes or activeChartType changes or non-replay dataset updates
-    if (!replayState.isActive && candles.length > 0 && chart) {
+    // Re-render when activeSymbol, selectedSource, activeChartType, or dataset updates
+    if (!replayState.isActive && chart) {
+      const _src = selectedSource;
+      const _c = candles;
       updateChartData();
     }
   });
+
 
 
   function handleKeydown(e: KeyboardEvent) {

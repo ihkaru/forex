@@ -214,18 +214,25 @@
         composition.backtestPort.getTrades(symbol, stratId),
         composition.testerPort.getDetailedBacktestReport(symbol, stratId).catch(() => null),
       ]);
-      if (candleData && candleData.length > 0) {
+      if (candleData) {
         candles = candleData;
-        currentPrice = candleData[candleData.length - 1].close;
-        evaluateExecutionState(symbol, candleData, false);
-      }
-
-      if (tradeData) {
-        trades = tradeData;
-        if (candles.length > 0) {
-          evaluateExecutionState(symbol, candles, false);
+        if (candleData.length > 0) {
+          currentPrice = candleData[candleData.length - 1].close;
+          evaluateExecutionState(symbol, candleData, false);
         }
       }
+
+      if (src === 'dukascopy') {
+        if (tradeData) {
+          trades = tradeData;
+          if (candles.length > 0) {
+            evaluateExecutionState(symbol, candles, false);
+          }
+        }
+      } else {
+        trades = [];
+      }
+
       if (detailedData) {
         detailedBacktest = detailedData;
       }

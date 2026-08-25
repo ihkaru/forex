@@ -27,9 +27,13 @@ bool is_connected = false;
 //+------------------------------------------------------------------+
 //| Inisialisasi EA                                                  |
 //+------------------------------------------------------------------+
+//+------------------------------------------------------------------+
+//| Inisialisasi EA                                                  |
+//+------------------------------------------------------------------+
 int OnInit()
 {
    Print("🚀 Menghubungkan MRG MT4 ke Rust Quant Server (Port: ", InpPort, ")...");
+   EventSetTimer(2); // Heartbeat timer setiap 2 detik
    ConnectToRustDaemon();
    
    if(is_connected) {
@@ -43,11 +47,28 @@ int OnInit()
 //+------------------------------------------------------------------+
 void OnDeinit(const int reason)
 {
+   EventKillTimer();
    if(socket_handle >= 0) {
       closesocket(socket_handle);
       WSACleanup();
    }
    Print("🛑 Bridge MT4 Terputus.");
+}
+
+//+------------------------------------------------------------------+
+//| Timer Heartbeat & Auto-Reconnect                                 |
+//+------------------------------------------------------------------+
+void OnTimer()
+{
+   if(!is_connected) {
+      ConnectToRustDaemon();
+      if(is_connected) {
+         SendHistoricalH1Bars();
+      }
+   } else {
+      // Kirim live tick heartbeat
+      SendCurrentTick();
+   }
 }
 
 //+------------------------------------------------------------------+
@@ -57,8 +78,19 @@ void OnTick()
 {
    if(!is_connected) {
       ConnectToRustDaemon();
-      if(!is_connected) return;
+      if(is_connected) {
+         SendHistoricalH1Bars();
+      } else {
+         return;
+      }
    }
+
+   SendCurrentTick();
+}
+
+void SendCurrentTick()
+{
+   if(!is_connected || socket_handle < 0) return;
 
    bool is_real = (AccountInfoInteger(ACCOUNT_TRADE_MODE) == ACCOUNT_TRADE_MODE_REAL);
    string src = is_real ? "MrgRealMt4" : "MrgDemoMt4";
@@ -77,6 +109,7 @@ void OnTick()
 
    SendSocketData(json);
 }
+
 
 //+------------------------------------------------------------------+
 //| Sinkronisasi Seluruh Candle H1 Histori                           |
