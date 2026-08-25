@@ -27,8 +27,11 @@ export class RestStrategyAdapter implements IStrategyPort {
       supportedSymbols: s.supported_symbols || [],
       isSpecialist: s.is_specialist || false,
       specialistLabel: s.specialist_label || null,
+      activeParametersSummary: s.active_parameters_summary || '',
+      parameters: s.parameters || [],
     }));
   }
+
 }
 
 export class RestMonteCarloAdapter implements IMonteCarloPort {

@@ -1,9 +1,12 @@
 import type { IChartLayer, ChartLayerContext } from '../../ports/layers';
+import type { Candle } from '../../domain/models';
 import { BacktestTradesLayer } from './BacktestTradesLayer';
 import { PolaNSwingPointsLayer } from './PolaNSwingPointsLayer';
 import { DualEmaLayer } from './DualEmaLayer';
 import { ActiveSignalOverlayLayer } from './ActiveSignalOverlayLayer';
 import { IctOrderBlockLayer } from './IctOrderBlockLayer';
+import { VolumeLiquidityLayer } from './VolumeLiquidityLayer';
+import { MarketSessionsLayer } from './MarketSessionsLayer';
 
 export class ChartLayerManager {
   private layers: Map<string, IChartLayer> = new Map();
@@ -14,6 +17,8 @@ export class ChartLayerManager {
     } else {
       // Default Strategy-Adaptive Composition
       this.registerLayer(new BacktestTradesLayer());
+      this.registerLayer(new VolumeLiquidityLayer());
+      this.registerLayer(new MarketSessionsLayer());
       this.registerLayer(new PolaNSwingPointsLayer());
       this.registerLayer(new DualEmaLayer());
       this.registerLayer(new IctOrderBlockLayer());

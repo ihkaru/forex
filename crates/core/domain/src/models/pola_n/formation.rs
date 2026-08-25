@@ -28,6 +28,9 @@ pub struct PolaNFormation {
 pub struct PolaNFormationEngine {
     pub pip_buffer: Decimal,
     pub min_rr_ratio: Decimal,
+    pub entry_offset: Decimal,
+    pub min_retracement: Decimal,
+    pub max_retracement: Decimal,
 }
 
 impl Default for PolaNFormationEngine {
@@ -35,6 +38,9 @@ impl Default for PolaNFormationEngine {
         Self {
             pip_buffer: dec!(0.00020), // 2.0 pips buffer untuk 5-digit pair
             min_rr_ratio: dec!(1.49),  // User requested R:R 1:1.49
+            entry_offset: dec!(0.25),  // 25% pullback buffer from swing level
+            min_retracement: dec!(0.38),
+            max_retracement: dec!(0.85),
         }
     }
 }
@@ -44,6 +50,25 @@ impl PolaNFormationEngine {
         Self {
             pip_buffer,
             min_rr_ratio,
+            entry_offset: dec!(0.25),
+            min_retracement: dec!(0.38),
+            max_retracement: dec!(0.85),
+        }
+    }
+
+    pub fn with_advanced_params(
+        pip_buffer: Decimal,
+        min_rr_ratio: Decimal,
+        entry_offset: Decimal,
+        min_retracement: Decimal,
+        max_retracement: Decimal,
+    ) -> Self {
+        Self {
+            pip_buffer,
+            min_rr_ratio,
+            entry_offset,
+            min_retracement,
+            max_retracement,
         }
     }
 
@@ -64,6 +89,15 @@ impl PolaNFormationEngine {
         let p2 = &swings[n - 2];
         let p3 = &swings[n - 1];
 
+        let min_ret = self.min_retracement;
+        let max_ret = self.max_retracement;
+        let offset = self.entry_offset;
+        let buffer = if self.pip_buffer > Decimal::ZERO {
+            self.pip_buffer
+        } else {
+            pip_size * dec!(2.0)
+        };
+
         // 1. EVALUASI POLA N BULLISH: (Low1 -> High1 -> HigherLow2)
         if !p1.is_high && p2.is_high && !p3.is_high {
             let l1 = p1.price;
@@ -75,16 +109,13 @@ impl PolaNFormationEngine {
                 let impulse = h1 - l1;
                 let retracement_ratio = (h1 - l2) / impulse;
 
-                // Pullback di area Fibonacci retracement yang valid (38% – 85%)
-                // 38% = shallow pullback (strong trend), 85% = deep discount (golden pocket)
-                if retracement_ratio >= dec!(0.38) && retracement_ratio <= dec!(0.85) {
+                // Pullback di area Fibonacci retracement yang valid
+                if retracement_ratio >= min_ret && retracement_ratio <= max_ret {
                     let pullback_range = h1 - l2;
-                    // Golden Pullback Entry: Entry Limit di 25% di atas swing low L2
-                    // Keunggulan matematis: SL sangat ketat di bawah L2 (10-18 pips),
-                    // sehingga TP1 (RR 1:1.5) sudah tercapai SEBELUM harga menyentuh H1!
-                    let entry = l2 + (pullback_range * dec!(0.25));
-                    // SL Struktural: Tepat di bawah Higher Low (L2) dengan 2 pips buffer
-                    let sl = l2 - (pip_size * dec!(2.0));
+                    // Golden Pullback Entry
+                    let entry = l2 + (pullback_range * offset);
+                    // SL Struktural: Tepat di bawah Higher Low (L2) dengan buffer
+                    let sl = l2 - buffer;
                     let risk_distance = entry - sl;
 
                     if risk_distance > Decimal::ZERO {
@@ -124,13 +155,13 @@ impl PolaNFormationEngine {
                 let impulse = h1 - l1;
                 let retracement_ratio = (h2 - l1) / impulse;
 
-                // Pullback di area Fibonacci retracement yang valid (38% – 85%)
-                if retracement_ratio >= dec!(0.38) && retracement_ratio <= dec!(0.85) {
+                // Pullback di area Fibonacci retracement yang valid
+                if retracement_ratio >= min_ret && retracement_ratio <= max_ret {
                     let pullback_range = h2 - l1;
-                    // Golden Pullback Entry: Entry Limit di 25% di bawah swing high H2
-                    let entry = h2 - (pullback_range * dec!(0.25));
-                    // SL Struktural: Tepat di atas Lower High (H2) dengan 2 pips buffer
-                    let sl = h2 + (pip_size * dec!(2.0));
+                    // Golden Pullback Entry
+                    let entry = h2 - (pullback_range * offset);
+                    // SL Struktural: Tepat di atas Lower High (H2) dengan buffer
+                    let sl = h2 + buffer;
                     let risk_distance = sl - entry;
 
                     if risk_distance > Decimal::ZERO {

@@ -28,6 +28,7 @@
     candles?: Candle[];
     monteCarloData?: MonteCarloReport | null;
     scorecardData?: TfScorecardReport | null;
+    backtestData?: any;
     strategies?: StrategyDescriptor[];
     selectedStrategyId?: string;
     onSelectStrategy?: (strategyId: string) => void;
@@ -42,6 +43,7 @@
     candles = [],
     monteCarloData = null,
     scorecardData = null,
+    backtestData = null,
     strategies = [],
     selectedStrategyId = 'pola-n-v2',
     onSelectStrategy,

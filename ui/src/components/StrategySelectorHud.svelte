@@ -34,7 +34,7 @@
   );
 
   let isGoldSpecialist = $derived(
-    selectedStrategy?.isSpecialist || selectedStrategy?.id === 'pola-n-v2'
+    selectedStrategy?.isSpecialist || selectedStrategy?.id === 'pola-n-v2' || selectedStrategy?.id === 'pola-n-v3'
   );
 
   function handleSelect(id: string) {
@@ -111,7 +111,8 @@
             <div class="p-1.5 max-h-64 overflow-y-auto space-y-1">
               {#each strategies as strat}
                 {@const isSelected = selectedStrategyId === strat.id}
-                {@const isGold = strat.isSpecialist || strat.id === 'pola-n-v2'}
+                {@const isGold = strat.isSpecialist || strat.id === 'pola-n-v2' || strat.id === 'pola-n-v3'}
+
                 <button
                   onclick={() => handleSelect(strat.id)}
                   class="w-full flex items-center justify-between p-2 rounded-lg text-xs font-mono text-left transition-all {isSelected ? 'bg-[#2962ff] text-white shadow-sm' : 'text-[#d1d4dc] hover:bg-[#131722] hover:text-white'}"
@@ -183,14 +184,10 @@
       <Zap class="w-3 h-3 text-[#2962ff]" /> Active Parameters:
     </span>
 
-    {#if selectedStrategyId === 'pola-n-core'}
-      <span class="text-[#d1d4dc]">Swing (5, 3) • Retest Golden Pocket 61.8% • Session 10:00–21:00 UTC (NY/London) • Target R:R 1:1.30 • Breakeven @ 30% MFE</span>
-    {:else if selectedStrategyId === 'pola-n-v2'}
-      <span class="text-[#f5c344] font-semibold">⭐ Gold Specialist: Swing (5, 3) • Golden Pocket 61.8% Limit • Session 10:00–21:00 UTC Overlap • Target R:R 1:1.20 • Breakeven @ 30% MFE</span>
-    {:else if selectedStrategyId === 'dual-ema-trend'}
-      <span class="text-[#d1d4dc]">EMA Fast (12) &gt; Slow (36) Cross • Slope Momentum Filter • Target R:R 1:1.50 • Trend Expansion</span>
-    {:else}
-      <span class="text-[#d1d4dc]">ICT Order Block Sweep • FVG Liquidity Mitigation • Target R:R 1:2.00 • Institutional SMC</span>
-    {/if}
+    <span class="text-[#d1d4dc] font-mono font-medium">
+      {selectedStrategy?.activeParametersSummary || selectedStrategy?.description || 'Standard Institutional Parameters'}
+    </span>
+
+
   </div>
 </div>

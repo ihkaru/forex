@@ -17,7 +17,8 @@ export class ReplayEngineService implements IReplayEnginePort {
     totalBars: 0,
     speedMs: 1000,
   };
-  private timerId: any = null;
+  private rafId: number | null = null;
+  private lastTickTime = 0;
   private listeners = new Set<ReplayStateListener>();
 
   loadDataset(candles: Candle[]): void {
@@ -83,7 +84,8 @@ export class ReplayEngineService implements IReplayEnginePort {
     if (this.state.currentIndex < this.fullCandles.length - 1) {
       this.state.currentIndex++;
       this.updateTimestamps();
-      this.notify();
+      const latestCandle = this.fullCandles[this.state.currentIndex];
+      this.notify(true, latestCandle);
     } else {
       this.pause();
     }
@@ -94,7 +96,7 @@ export class ReplayEngineService implements IReplayEnginePort {
     if (this.state.currentIndex > 10) {
       this.state.currentIndex--;
       this.updateTimestamps();
-      this.notify();
+      this.notify(false);
     }
   }
 
@@ -102,7 +104,7 @@ export class ReplayEngineService implements IReplayEnginePort {
     if (!this.state.isActive || this.fullCandles.length === 0) return;
     this.state.currentIndex = Math.max(0, Math.min(this.fullCandles.length - 1, index));
     this.updateTimestamps();
-    this.notify();
+    this.notify(false);
   }
 
   play(): void {
@@ -113,35 +115,53 @@ export class ReplayEngineService implements IReplayEnginePort {
     }
 
     this.state.isPlaying = true;
-    this.notify();
+    this.notify(false);
 
-    this.clearInterval();
-    this.timerId = setInterval(() => {
-      if (this.state.currentIndex < this.fullCandles.length - 1) {
-        this.state.currentIndex++;
-        this.updateTimestamps();
-        this.notify();
-      } else {
-        this.pause();
+    this.stopPlaybackLoop();
+    this.lastTickTime = performance.now();
+
+    const loop = (now: number) => {
+      if (!this.state.isPlaying) return;
+
+      const elapsed = now - this.lastTickTime;
+      const interval = this.state.speedMs;
+
+      if (elapsed >= interval) {
+        this.lastTickTime = now;
+
+        if (this.state.currentIndex < this.fullCandles.length - 1) {
+          this.state.currentIndex++;
+          this.updateTimestamps();
+          const latestCandle = this.fullCandles[this.state.currentIndex];
+          this.notify(true, latestCandle);
+        } else {
+          this.pause();
+          return;
+        }
       }
-    }, this.state.speedMs);
+
+      if (this.state.isPlaying) {
+        this.rafId = requestAnimationFrame(loop);
+      }
+    };
+
+    this.rafId = requestAnimationFrame(loop);
   }
 
   pause(): void {
-    this.clearInterval();
+    this.stopPlaybackLoop();
     if (this.state.isPlaying) {
       this.state.isPlaying = false;
-      this.notify();
+      this.notify(false);
     }
   }
 
   setSpeed(speedMs: number): void {
-    this.state.speedMs = Math.max(100, speedMs);
+    this.state.speedMs = Math.max(20, speedMs);
     if (this.state.isPlaying) {
-      this.pause();
-      this.play();
+      this.lastTickTime = performance.now();
     } else {
-      this.notify();
+      this.notify(false);
     }
   }
 
@@ -152,13 +172,13 @@ export class ReplayEngineService implements IReplayEnginePort {
     this.state.currentIndex = Math.max(0, this.fullCandles.length - 1);
     this.state.startIndex = this.state.currentIndex;
     this.updateTimestamps();
-    this.notify();
+    this.notify(false);
   }
 
   subscribe(listener: ReplayStateListener): () => void {
     this.listeners.add(listener);
     // Berikan snapshot inisial
-    listener(this.getState(), this.getSlicedCandles());
+    listener(this.getState(), this.getSlicedCandles(), undefined, false);
     return () => {
       this.listeners.delete(listener);
     };
@@ -172,22 +192,24 @@ export class ReplayEngineService implements IReplayEnginePort {
     }
   }
 
-  private clearInterval(): void {
-    if (this.timerId) {
-      clearInterval(this.timerId);
-      this.timerId = null;
+  private stopPlaybackLoop(): void {
+    if (this.rafId !== null) {
+      cancelAnimationFrame(this.rafId);
+      this.rafId = null;
     }
   }
 
-  private notify(): void {
+  private notify(isStepForward: boolean = false, latestCandle?: Candle): void {
     const stateSnapshot = this.getState();
-    const sliced = this.getSlicedCandles();
+    const sliced = isStepForward ? [] : this.getSlicedCandles();
     for (const listener of this.listeners) {
       try {
-        listener(stateSnapshot, sliced);
+        listener(stateSnapshot, sliced, latestCandle, isStepForward);
       } catch (e) {
         console.error('[ReplayEngineService] Error notifying listener:', e);
       }
     }
   }
 }
+
+

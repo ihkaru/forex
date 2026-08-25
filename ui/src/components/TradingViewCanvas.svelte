@@ -3,10 +3,19 @@
   import {
     createChart,
     CandlestickSeries,
+    LineSeries,
+    AreaSeries,
+    BarSeries,
+    BaselineSeries,
     type IChartApi,
     type ISeriesApi,
-    type CandlestickData
+    type CandlestickData,
+    type LineData,
+    type AreaData,
+    type BarData,
+    type BaselineData
   } from 'lightweight-charts';
+  import ChartTypeSelector from './ChartTypeSelector.svelte';
   import {
     Eye,
     EyeOff,
@@ -19,15 +28,20 @@
     Info,
     ChevronDown,
     Check,
-    Scissors
+    Scissors,
+    Clock,
+    Sliders
   } from '@lucide/svelte';
-  import type { Candle, Signal } from '../domain/models';
-  import type { SimulatedTrade } from '../ports/layers';
+  import type { Candle, Signal, ChartType } from '../domain/models';
+  import type { SimulatedTrade, ChartLayerContext } from '../ports/layers';
   import type { IUserPreferencesPort } from '../ports/IUserPreferencesPort';
+  import type { StrategyDescriptor } from '../ports';
   import { ChartLayerManager } from '../adapters/layers/ChartLayerManager';
+
   import { ReplayEngineService } from '../services/ReplayEngineService';
   import ReplayToolbar from './replay/ReplayToolbar.svelte';
   import GoToDateModal from './replay/GoToDateModal.svelte';
+  import LayersManagerModal from './modals/LayersManagerModal.svelte';
 
   interface Props {
     activeSymbol: string;
@@ -36,6 +50,7 @@
     isSpecialist?: boolean;
     activeStrategyId?: string;
     activeStrategyCategory?: string;
+    strategies?: StrategyDescriptor[];
     currentPrice: number;
     candles: Candle[];
     trades: SimulatedTrade[];
@@ -45,16 +60,18 @@
     onSelectSymbol: (symbol: string) => void;
     onSyncDelta?: () => void;
     onOpenProvenance?: () => void;
-    onReplayChange?: (displayedCandles: Candle[], isReplayActive: boolean) => void;
+    onReplayChange?: (displayedCandles: Candle[], isReplayActive: boolean, latestCandle?: Candle) => void;
   }
+
 
   let {
     activeSymbol = 'XAUUSD',
     activePairs = [],
     supportedSymbols = [],
     isSpecialist = false,
-    activeStrategyId = 'pola-n-v2',
+    activeStrategyId = 'pola-n-v3',
     activeStrategyCategory = 'GOLD_SPECIALIST',
+    strategies = [],
     currentPrice = 0.85412,
     candles = [],
     trades = [],
@@ -67,6 +84,7 @@
     onReplayChange
   }: Props = $props();
 
+
   let displayPairs = $derived(
     supportedSymbols && supportedSymbols.length > 0
       ? activePairs.filter((p) => supportedSymbols.includes(p.symbol))
@@ -75,10 +93,28 @@
 
   let isSymbolDropdownOpen = $state(false);
   let isGoToDateModalOpen = $state(false);
+  let isLayersModalOpen = $state(false);
   let chartContainer: HTMLDivElement | null = $state(null);
   let chart: IChartApi | null = null;
-  let candleSeries: ISeriesApi<'Candlestick'> | null = null;
+  let candleSeries: ISeriesApi<any> | null = null;
+  let activeChartType = $state<ChartType>('CANDLES');
+  let currentSeriesType: ChartType = 'CANDLES';
   let activeRange = $state('1W');
+
+  // Client TimeZone Detection (TradingView Native Standard)
+  const userTimeZone = typeof Intl !== 'undefined' ? Intl.DateTimeFormat().resolvedOptions().timeZone : 'UTC';
+  const userTimeZoneOffset = (() => {
+    try {
+      const d = new Date();
+      const offsetMinutes = -d.getTimezoneOffset();
+      const sign = offsetMinutes >= 0 ? '+' : '-';
+      const hours = Math.floor(Math.abs(offsetMinutes) / 60);
+      return `UTC${sign}${hours}`;
+    } catch {
+      return 'UTC';
+    }
+  })();
+  const userTimeZoneCity = userTimeZone.split('/').pop()?.replace(/_/g, ' ') || userTimeZone;
 
   // Interactive Live Cut Line Tracking
   let cutCrosshairX = $state<number | null>(null);
@@ -90,24 +126,44 @@
   const replayEngine = new ReplayEngineService();
 
   let replayState = $state(replayEngine.getState());
-  let displayedCandles = $state<Candle[]>([]);
+  let displayedCandles: Candle[] = [];
 
-  replayEngine.subscribe((st, sliced) => {
+  replayEngine.subscribe((st, sliced, latestCandle, isStepForward) => {
+    const wasSelecting = replayState.isSelectingCutPoint;
+    const wasActive = replayState.isActive;
     replayState = st;
-    displayedCandles = sliced;
+
     if (!st.isSelectingCutPoint) {
       cutCrosshairX = null;
     }
-    if (onReplayChange) {
-      onReplayChange(sliced, st.isActive);
+
+    // If only toggling cut selection mode (not starting replay or stepping), do NOT reload chart data or reset viewport!
+    if (!st.isActive && !wasActive && st.isSelectingCutPoint !== wasSelecting) {
+      return;
+    }
+
+    if (isStepForward && latestCandle) {
+      displayedCandles.push(latestCandle);
+      appendSingleCandle(latestCandle);
+      if (onReplayChange) {
+        onReplayChange(displayedCandles, st.isActive, latestCandle);
+      }
+    } else {
+      displayedCandles = sliced;
+      updateChartData();
+      if (onReplayChange) {
+        onReplayChange(sliced, st.isActive);
+      }
     }
   });
+
 
   $effect(() => {
     if (candles && candles.length > 0) {
       replayEngine.loadDataset(candles);
     }
   });
+
 
   function syncPreferences() {
     const prefs = preferencesPort?.loadPreferences();
@@ -134,7 +190,7 @@
     layerManager.getApplicableLayers(activeStrategyId, activeStrategyCategory)
   );
 
-  function getContext() {
+  function getContext(): ChartLayerContext {
     const activeCandles = replayState.isActive && displayedCandles.length > 0 ? displayedCandles : candles;
     return {
       chart: chart!,
@@ -147,6 +203,11 @@
       activeStrategyCategory,
     };
   }
+
+  let currentLayerContext = $derived.by<ChartLayerContext | null>(() => {
+    if (!chart || !candleSeries) return null;
+    return getContext();
+  });
 
   function initChart() {
     if (!chartContainer) return;
@@ -174,6 +235,19 @@
           style: 3,
         },
       },
+      localization: {
+        timeFormatter: (timestamp: number) => {
+          const d = new Date(timestamp * 1000);
+          return new Intl.DateTimeFormat(undefined, {
+            day: '2-digit',
+            month: 'short',
+            year: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit',
+            hour12: false,
+          }).format(d);
+        },
+      },
       timeScale: {
         borderColor: '#2a2e39',
         timeVisible: true,
@@ -181,16 +255,15 @@
       },
       rightPriceScale: {
         borderColor: '#2a2e39',
+        autoScale: true,
+        scaleMargins: {
+          top: 0.12,
+          bottom: 0.12,
+        },
       },
     });
 
-    candleSeries = chart.addSeries(CandlestickSeries, {
-      upColor: '#089981',
-      downColor: '#f23645',
-      borderVisible: false,
-      wickUpColor: '#089981',
-      wickDownColor: '#f23645',
-    });
+    ensureMainSeries(activeChartType);
 
     // TradingView Replay Live Blue Cut Line Mouse Tracking
     chart.subscribeCrosshairMove((param) => {
@@ -199,7 +272,16 @@
         if (param.time) {
           const t = typeof param.time === 'number' ? param.time : (param.time as any).timestamp;
           if (t) {
-            cutCrosshairDateStr = new Date(t * 1000).toUTCString().replace('GMT', 'UTC');
+            cutCrosshairDateStr = new Intl.DateTimeFormat(undefined, {
+              weekday: 'short',
+              day: '2-digit',
+              month: 'short',
+              year: 'numeric',
+              hour: '2-digit',
+              minute: '2-digit',
+              hour12: false,
+              timeZoneName: 'short',
+            }).format(new Date(t * 1000));
           }
         }
         if (param.seriesData && candleSeries) {
@@ -292,55 +374,232 @@
   }
 
   let lastRenderedSymbol = '';
+  let lastRenderedChartType: ChartType = 'CANDLES';
   let lastCandlesLength = 0;
   let lastReplayActive = false;
 
+  function ensureMainSeries(type: ChartType) {
+    if (!chart) return;
+    const isCandleVariant = (t: ChartType) => t === 'CANDLES' || t === 'VOLUME_CANDLES' || t === 'HEIKIN_ASHI';
+
+    if (candleSeries && isCandleVariant(type) && isCandleVariant(currentSeriesType)) {
+      currentSeriesType = type;
+      return;
+    }
+
+    if (candleSeries) {
+      try {
+        chart.removeSeries(candleSeries);
+      } catch (e) {
+        console.warn('Could not cleanly remove existing candle series:', e);
+      }
+      candleSeries = null;
+    }
+
+    if (type === 'LINE') {
+      candleSeries = chart.addSeries(LineSeries, {
+        color: '#2962ff',
+        lineWidth: 2,
+        priceLineVisible: false,
+      });
+    } else if (type === 'AREA') {
+      candleSeries = chart.addSeries(AreaSeries, {
+        topColor: 'rgba(41, 98, 255, 0.4)',
+        bottomColor: 'rgba(41, 98, 255, 0.02)',
+        lineColor: '#2962ff',
+        lineWidth: 2,
+        priceLineVisible: false,
+      });
+    } else if (type === 'BARS') {
+      candleSeries = chart.addSeries(BarSeries, {
+        upColor: '#089981',
+        downColor: '#f23645',
+        priceLineVisible: false,
+      });
+    } else if (type === 'BASELINE') {
+      candleSeries = chart.addSeries(BaselineSeries, {
+        baseValue: { type: 'price', price: currentPrice },
+        topFillColor1: 'rgba(8, 153, 129, 0.24)',
+        topFillColor2: 'rgba(8, 153, 129, 0.04)',
+        bottomFillColor1: 'rgba(242, 54, 69, 0.04)',
+        bottomFillColor2: 'rgba(242, 54, 69, 0.24)',
+        topLineColor: '#089981',
+        bottomLineColor: '#f23645',
+        priceLineVisible: false,
+      });
+    } else {
+      // CANDLES, VOLUME_CANDLES, HEIKIN_ASHI
+      candleSeries = chart.addSeries(CandlestickSeries, {
+        upColor: '#089981',
+        downColor: '#f23645',
+        borderVisible: false,
+        wickUpColor: '#089981',
+        wickDownColor: '#f23645',
+      });
+    }
+
+    currentSeriesType = type;
+  }
+
+  function appendSingleCandle(c: Candle) {
+    if (!chart || !candleSeries) return;
+
+    if (activeChartType === 'LINE' || activeChartType === 'AREA' || activeChartType === 'BASELINE') {
+      candleSeries.update({
+        time: c.time as any,
+        value: c.close,
+      } as any);
+    } else if (activeChartType === 'VOLUME_CANDLES') {
+      const activeCandles = displayedCandles;
+      const lastIdx = activeCandles.length - 1;
+      const start = Math.max(0, lastIdx - 19);
+      let sum = 0;
+      for (let j = start; j <= lastIdx; j++) {
+        sum += activeCandles[j]?.volume || 1.0;
+      }
+      const avgVol = sum / (lastIdx - start + 1);
+      const vol = c.volume || 1.0;
+      const isHighVol = vol > avgVol * 1.5;
+      const isUp = c.close >= c.open;
+      const color = isHighVol ? (isUp ? '#00f2fe' : '#ff0055') : (isUp ? '#089981' : '#f23645');
+      candleSeries.update({
+        time: c.time as any,
+        open: c.open,
+        high: c.high,
+        low: c.low,
+        close: c.close,
+        color,
+        wickColor: color,
+      } as any);
+    } else if (activeChartType === 'HEIKIN_ASHI') {
+      const activeCandles = displayedCandles;
+      const lastIdx = activeCandles.length - 1;
+      const prev = lastIdx > 0 ? activeCandles[lastIdx - 1] : c;
+      const prevClose = (prev.open + prev.high + prev.low + prev.close) / 4;
+      const prevOpen = (prev.open + prev.close) / 2;
+      const close = (c.open + c.high + c.low + c.close) / 4;
+      const open = (prevOpen + prevClose) / 2;
+      const high = Math.max(c.high, open, close);
+      const low = Math.min(c.low, open, close);
+      candleSeries.update({
+        time: c.time as any,
+        open,
+        high,
+        low,
+        close,
+      } as any);
+    } else {
+      candleSeries.update({
+        time: c.time as any,
+        open: c.open,
+        high: c.high,
+        low: c.low,
+        close: c.close,
+      } as any);
+    }
+
+    layerManager.updateAll(getContext(), c);
+  }
+
   function updateChartData() {
+    if (!chart) return;
+    ensureMainSeries(activeChartType);
     if (!candleSeries) return;
+
     const activeCandles = replayState.isActive && displayedCandles.length > 0 ? displayedCandles : candles;
     if (activeCandles.length === 0) return;
 
-    const replayStatusChanged = replayState.isActive !== lastReplayActive;
-    const isForwardStep = !replayStatusChanged && activeSymbol === lastRenderedSymbol && (activeCandles.length === lastCandlesLength + 1 || activeCandles.length === lastCandlesLength);
+    // Capture the current visible logical range before dataset modification
+    const prevLogicalRange = chart.timeScale().getVisibleLogicalRange();
 
-    if (isForwardStep) {
-      // 60-120 FPS Pure Incremental Step (<0.05ms)
-      const last = activeCandles[activeCandles.length - 1];
-      candleSeries.update({
-        time: last.time as any,
-        open: last.open,
-        high: last.high,
-        low: last.low,
-        close: last.close,
-      });
-      layerManager.updateAll(getContext(), last);
-      lastCandlesLength = activeCandles.length;
+    if (activeChartType === 'LINE' || activeChartType === 'AREA' || activeChartType === 'BASELINE') {
+      const lineData: LineData[] = activeCandles.map((c) => ({
+        time: c.time as any,
+        value: c.close,
+      }));
+      candleSeries.setData(lineData as any);
+    } else if (activeChartType === 'VOLUME_CANDLES') {
+      const len = activeCandles.length;
+      const volData: any[] = [];
+      for (let i = 0; i < len; i++) {
+        const c = activeCandles[i];
+        const start = Math.max(0, i - 19);
+        let sum = 0;
+        for (let j = start; j <= i; j++) {
+          sum += activeCandles[j].volume || 1.0;
+        }
+        const avgVol = sum / (i - start + 1);
+        const vol = c.volume || 1.0;
+        const isHighVol = vol > avgVol * 1.5;
+        const isUp = c.close >= c.open;
+
+        const color = isHighVol
+          ? (isUp ? '#00f2fe' : '#ff0055')
+          : (isUp ? '#089981' : '#f23645');
+
+        volData.push({
+          time: c.time as any,
+          open: c.open,
+          high: c.high,
+          low: c.low,
+          close: c.close,
+          color,
+          wickColor: color,
+        });
+      }
+      candleSeries.setData(volData as any);
+    } else if (activeChartType === 'HEIKIN_ASHI') {
+      const haData: CandlestickData[] = [];
+      for (let i = 0; i < activeCandles.length; i++) {
+        const c = activeCandles[i];
+        const close = (c.open + c.high + c.low + c.close) / 4;
+        const open = i === 0 ? (c.open + c.close) / 2 : (haData[i - 1].open + haData[i - 1].close) / 2;
+        const high = Math.max(c.high, open, close);
+        const low = Math.min(c.low, open, close);
+        haData.push({
+          time: c.time as any,
+          open,
+          high,
+          low,
+          close,
+        });
+      }
+      candleSeries.setData(haData as any);
     } else {
-      // Full Reload ONLY on Initial Cut, Scrubbing, Symbol Change, or Replay Toggle
-      const formattedData: CandlestickData[] = activeCandles.map((c) => ({
+      const standardData: CandlestickData[] = activeCandles.map((c) => ({
         time: c.time as any,
         open: c.open,
         high: c.high,
         low: c.low,
         close: c.close,
       }));
-
-      candleSeries.setData(formattedData);
-      layerManager.renderAll(getContext());
-
-      if (!replayState.isActive) {
-        if (activeRange === 'ALL') {
-          chart?.timeScale().fitContent();
-        } else {
-          handleZoom(activeRange);
-        }
-      }
-
-      lastRenderedSymbol = activeSymbol;
-      lastCandlesLength = activeCandles.length;
-      lastReplayActive = replayState.isActive;
+      candleSeries.setData(standardData as any);
     }
+
+    layerManager.renderAll(getContext());
+
+    // Only apply initial auto-zoom on symbol change or initial load (NEVER during user pan/scroll or bar replay cut)
+    const isSymbolChanged = lastRenderedSymbol === '' || lastRenderedSymbol !== activeSymbol;
+    if (isSymbolChanged && !replayState.isActive) {
+      if (activeRange === 'ALL') {
+        chart?.timeScale().fitContent();
+      } else {
+        handleZoom(activeRange);
+      }
+    } else if (replayState.isActive && prevLogicalRange) {
+      // TradingView Seamless Replay: Lock and preserve exact visible viewport so the cut bar stays at exact screen position!
+      try {
+        chart.timeScale().setVisibleLogicalRange(prevLogicalRange);
+      } catch (e) {}
+    }
+
+    lastRenderedSymbol = activeSymbol;
+    lastRenderedChartType = activeChartType;
+    lastCandlesLength = activeCandles.length;
+    lastReplayActive = replayState.isActive;
   }
+
+
 
   onMount(() => {
     syncPreferences();
@@ -357,11 +616,12 @@
   });
 
   $effect(() => {
-    const activeCandles = replayState.isActive && displayedCandles.length > 0 ? displayedCandles : candles;
-    if (activeCandles.length > 0 && chart) {
+    // Re-render when activeSymbol changes or activeChartType changes or non-replay dataset updates
+    if (!replayState.isActive && candles.length > 0 && chart) {
       updateChartData();
     }
   });
+
 
   function handleKeydown(e: KeyboardEvent) {
     // Alt + G: Jump to Date
@@ -501,8 +761,17 @@
 
       <!-- Timeframe Chip -->
       <span class="text-[10px] font-semibold px-2 py-1 rounded-lg bg-[#131722] text-[#787b86] border border-[#2a2e39] font-mono">
-        1H Candlestick
+        1H
       </span>
+
+      <!-- TradingView Chart Type Selector Dropdown -->
+      <ChartTypeSelector
+        activeType={activeChartType}
+        onSelectType={(type) => {
+          activeChartType = type;
+          updateChartData();
+        }}
+      />
 
       <!-- TradingView Bar Replay Trigger Button -->
       <button
@@ -552,9 +821,14 @@
 
     <!-- Center: Integrated Strategy-Adaptive Layer Toggles (TradingView Native Style) -->
     <div class="flex items-center gap-1 bg-[#131722] p-1 rounded-lg border border-[#2a2e39]">
-      <span class="text-[10px] text-[#787b86] font-mono px-1 font-bold flex items-center gap-1 border-r border-[#2a2e39] mr-0.5" title="Strategy-Adaptive Indicators ({applicableLayers.length} Active)">
+      <button
+        onclick={() => isLayersModalOpen = true}
+        class="flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-mono font-bold text-[#787b86] hover:text-white hover:bg-[#2a2e39] border-r border-[#2a2e39] mr-0.5 transition-all"
+        title="Buka Object Tree & Pengaturan Layer Lengkap"
+      >
         <Layers class="w-3.5 h-3.5 text-[#2962ff]" />
-      </span>
+        <Sliders class="w-3 h-3 text-[#787b86]" />
+      </button>
 
       {#each applicableLayers as layer}
         <button
@@ -572,8 +846,23 @@
       {/each}
     </div>
 
-    <!-- Right: Zoom Range Selectors & Live Sync Status -->
+    <!-- Right: Timezone/Volume Badge, Zoom Range Selectors & Live Sync Status -->
     <div class="flex items-center gap-2">
+      <!-- Timezone & Liquidity Badge (Cleanly docked in toolbar, unobstructed chart) -->
+      <div class="hidden sm:flex items-center gap-1.5 px-2 py-1 rounded-lg bg-[#131722] border border-[#2a2e39] text-[10px] font-mono select-none">
+        <div class="flex items-center gap-1 text-[#2962ff] font-bold" title="Zona waktu lokal browser ({userTimeZone})">
+          <Clock class="w-3 h-3 text-[#2962ff]" />
+          <span>{userTimeZoneOffset} ({userTimeZoneCity})</span>
+        </div>
+        <span class="text-[#2a2e39] font-bold">|</span>
+        <div class="flex items-center gap-1 text-[#787b86]" title="Indikator Volume Dukascopy ECN: Bar Neon = Lonjakan Likuiditas Besar (>1.5x SMA20)">
+          <span class="w-1.5 h-1.5 rounded-sm bg-[#00f2fe]"></span>
+          <span class="text-[9px] text-[#00f2fe] font-bold">High Vol</span>
+          <span class="w-1.5 h-1.5 rounded-sm bg-[#089981]/60 ml-1"></span>
+          <span class="text-[9px] text-[#787b86]">Norm</span>
+        </div>
+      </div>
+
       {#if syncStatusMessage}
         <div class="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-[#00E676]/10 text-[#00E676] text-xs font-mono border border-[#00E676]/30 animate-pulse shadow-sm">
           <span>{syncStatusMessage}</span>
@@ -637,6 +926,7 @@
     {/if}
   </div>
 
+
   <!-- Go to Date Modal Popup (Alt + G) -->
   <GoToDateModal
     isOpen={isGoToDateModalOpen}
@@ -644,4 +934,16 @@
     {replayEngine}
     onClose={() => isGoToDateModalOpen = false}
   />
+
+  <!-- Object Tree & Layers Manager Modal -->
+  <LayersManagerModal
+    isOpen={isLayersModalOpen}
+    layers={applicableLayers}
+    {strategies}
+    {activeStrategyId}
+    layerContext={currentLayerContext}
+    onToggleLayer={handleToggleLayer}
+    onClose={() => isLayersModalOpen = false}
+  />
 </div>
+

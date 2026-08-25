@@ -149,3 +149,91 @@ pub fn calculate_ema_slope(candles: &[Candle], period: usize, lookback: usize) -
     let ema_prev = calculate_ema(&candles[..candles.len() - lookback], period)?;
     Some(ema_now - ema_prev)
 }
+
+/// Utilitas Perhitungan Choppiness Index (CHOP) - Indikator Konsolidasi/Chop (0 - 100)
+/// Nilai > 60 = Chop/Ranging, Nilai < 40 = Trend Kuat
+pub fn calculate_chop(candles: &[Candle], period: usize) -> Option<Decimal> {
+    use rust_decimal::prelude::ToPrimitive;
+
+    if candles.len() < period + 1 || period == 0 {
+        return None;
+    }
+    let slice = &candles[candles.len() - period..];
+
+    let mut sum_atr1 = Decimal::ZERO;
+    let mut max_high = slice[0].high;
+    let mut min_low = slice[0].low;
+
+    for c in slice {
+        if c.high > max_high {
+            max_high = c.high;
+        }
+        if c.low < min_low {
+            min_low = c.low;
+        }
+        sum_atr1 += c.high - c.low;
+    }
+
+    let high_low_diff = max_high - min_low;
+    if high_low_diff <= Decimal::ZERO || sum_atr1 <= Decimal::ZERO {
+        return None;
+    }
+
+    let sum_atr_f64 = sum_atr1.to_f64()?;
+    let hl_diff_f64 = high_low_diff.to_f64()?;
+    let period_f64 = period as f64;
+
+    let ratio = sum_atr_f64 / hl_diff_f64;
+    if ratio <= 0.0 {
+        return None;
+    }
+
+    let chop_val = 100.0 * (ratio.log10() / period_f64.log10());
+    Decimal::from_f64_retain(chop_val)
+}
+
+/// Utilitas Perhitungan Average Directional Index (ADX) - Kekuatan Trend (0 - 100)
+pub fn calculate_adx(candles: &[Candle], period: usize) -> Option<Decimal> {
+    if candles.len() < (period * 2) || period == 0 {
+        return None;
+    }
+    let n = candles.len();
+    let mut tr_sum = Decimal::ZERO;
+    let mut dm_plus_sum = Decimal::ZERO;
+    let mut dm_minus_sum = Decimal::ZERO;
+
+    for i in (n - period)..n {
+        let curr = &candles[i];
+        let prev = &candles[i - 1];
+
+        let tr = (curr.high - curr.low)
+            .max((curr.high - prev.close).abs())
+            .max((curr.low - prev.close).abs());
+        tr_sum += tr;
+
+        let up_move = curr.high - prev.high;
+        let down_move = prev.low - curr.low;
+
+        if up_move > down_move && up_move > Decimal::ZERO {
+            dm_plus_sum += up_move;
+        }
+        if down_move > up_move && down_move > Decimal::ZERO {
+            dm_minus_sum += down_move;
+        }
+    }
+
+    if tr_sum <= Decimal::ZERO {
+        return None;
+    }
+
+    let di_plus = (dm_plus_sum / tr_sum) * dec!(100.0);
+    let di_minus = (dm_minus_sum / tr_sum) * dec!(100.0);
+    let di_diff = (di_plus - di_minus).abs();
+    let di_sum = di_plus + di_minus;
+
+    if di_sum <= Decimal::ZERO {
+        return None;
+    }
+
+    Some((di_diff / di_sum) * dec!(100.0))
+}

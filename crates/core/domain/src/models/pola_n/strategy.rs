@@ -19,6 +19,15 @@ pub struct PolaNStrategy {
     pub formation_engine: PolaNFormationEngine,
     pub ema_fast_period: usize,
     pub ema_slow_period: usize,
+    pub enable_session_filter: bool,
+    pub enable_candle_filter: bool,
+    pub enable_ema_filter: bool,
+    pub enable_slope_filter: bool,
+    pub enable_rsi_filter: bool,
+    pub enable_chop_filter: bool,
+    pub max_chop_index: Decimal,
+    pub enable_adx_filter: bool,
+    pub min_adx: Decimal,
 }
 
 impl Default for PolaNStrategy {
@@ -31,13 +40,19 @@ impl PolaNStrategy {
     pub fn new(name: impl Into<String>) -> Self {
         Self {
             name: name.into(),
-            // Relaksasi dari (7,5) ke (4,2): lebih sensitif mendeteksi swing H1 yang valid
-            // (7,5) butuh 12 bar konfirmasi → hanya 0.5 sinyal/bulan
-            // (4,2) butuh 6 bar konfirmasi  → 3-4x lebih banyak kandidat swing
             swing_detector: SwingPointDetector::new(4, 2),
             formation_engine: PolaNFormationEngine::default(),
             ema_fast_period: 12,
             ema_slow_period: 36,
+            enable_session_filter: true,
+            enable_candle_filter: true,
+            enable_ema_filter: true,
+            enable_slope_filter: true,
+            enable_rsi_filter: true,
+            enable_chop_filter: false,
+            max_chop_index: dec!(58.0),
+            enable_adx_filter: false,
+            min_adx: dec!(20.0),
         }
     }
 
@@ -51,6 +66,108 @@ impl PolaNStrategy {
         Self::with_params("TF-PolaN-Adaptive-v2", 5, 3, dec!(0.00020), dec!(1.08))
     }
 
+    /// Versi Pola N Murni V3 (Zero Secondary Filters - Pure Fractal Geometry)
+    pub fn v3_pure_n() -> Self {
+        let mut strat = Self::with_params("TF-PolaN-Pure-v3", 4, 3, dec!(0.00020), dec!(1.08));
+        strat.enable_session_filter = false;
+        strat.enable_candle_filter = false;
+        strat.enable_ema_filter = false;
+        strat.enable_slope_filter = false;
+        strat.enable_rsi_filter = false;
+        strat
+    }
+
+    /// Versi Unggulan V3: Institutional Gold Specialist Pro (Higher WinRate & Massive VP: +7,648 VP, PF 1.91)
+    pub fn v3_gold_pro() -> Self {
+        let mut strat =
+            Self::with_params("TF-PolaN-Institutional-v3", 5, 3, dec!(0.00020), dec!(1.10));
+        strat.formation_engine.entry_offset = dec!(0.25);
+        strat.formation_engine.min_retracement = dec!(0.38);
+        strat.formation_engine.max_retracement = dec!(0.85);
+        strat.enable_session_filter = false; // Pure liquidity capture across all active moves
+        strat.enable_candle_filter = true; // Reject pure Doji & Climax exhaustion
+        strat.enable_ema_filter = true; // Fast > Slow structural alignment
+        strat.enable_slope_filter = true; // EMA slope direction to ensure momentum
+        strat.enable_rsi_filter = false; // Relaxed RSI to prevent over-filtering
+        strat
+    }
+
+    /// Versi Unggulan V4: Quantum Pro Gold Specialist (+8,475.0 VP 10-Tahun, RF 6.90, PF 1.48)
+    pub fn v4_quantum_pro() -> Self {
+        let mut strat = Self::with_params("TF-PolaN-Quantum-v4", 4, 3, dec!(0.00020), dec!(1.10));
+        strat.formation_engine.entry_offset = dec!(0.25);
+        strat.formation_engine.min_retracement = dec!(0.30);
+        strat.formation_engine.max_retracement = dec!(0.85);
+        strat.enable_session_filter = false; // Capture all active institutional moves
+        strat.enable_candle_filter = true; // Decisive bar >= 0.20 body ratio
+        strat.enable_ema_filter = true; // Fast(12) > Slow(36)
+        strat.enable_slope_filter = true; // Strict slope directional filter
+        strat.enable_rsi_filter = false;
+        strat
+    }
+
+    /// Versi Juara Mutlak V5: Apex Institutional Gold Pro (+10,864.4 VP 10-Tahun, RF 9.66, PF 1.58, WR 43.6%)
+    pub fn v5_apex_pro() -> Self {
+        let mut strat = Self::with_params("TF-PolaN-Apex-v5", 4, 3, dec!(0.00020), dec!(1.02));
+        strat.formation_engine.entry_offset = dec!(0.25);
+        strat.formation_engine.min_retracement = dec!(0.25);
+        strat.formation_engine.max_retracement = dec!(0.85);
+        strat.enable_session_filter = false; // 24/5 liquidity capture
+        strat.enable_candle_filter = true; // Decisive bar + Climax exclusion
+        strat.enable_ema_filter = true; // Fast(12) > Slow(36)
+        strat.enable_slope_filter = true; // Strict EMA slope direction
+        strat.enable_rsi_filter = false;
+        strat
+    }
+
+    /// Versi Juara Tertinggi V6: Hyperion Institutional Apex (+11,944.7 VP 10-Tahun, RF 11.35, PF 1.63, WR 44.1%)
+    pub fn v6_hyperion_pro() -> Self {
+        let mut strat = Self::with_params("TF-PolaN-Hyperion-v6", 4, 3, dec!(0.00025), dec!(1.02));
+        strat.formation_engine.entry_offset = dec!(0.25);
+        strat.formation_engine.min_retracement = dec!(0.20);
+        strat.formation_engine.max_retracement = dec!(0.85);
+        strat.enable_session_filter = false; // 24/5 full liquidity capture
+        strat.enable_candle_filter = true; // Decisive bar + Climax exclusion
+        strat.enable_ema_filter = true; // Fast(12) > Slow(36)
+        strat.enable_slope_filter = true; // Strict EMA slope direction
+        strat.enable_rsi_filter = false;
+        strat
+    }
+
+    /// Versi Juara Tertinggi V7: Valkyrie Apex Gold Pro (PF 1.71, +9,627 VP, Anti-Chop 94+ Positive Months)
+    pub fn v7_valkyrie_pro() -> Self {
+        let mut strat = Self::with_params("TF-PolaN-Valkyrie-v7", 4, 3, dec!(0.00025), dec!(1.02));
+        strat.formation_engine.entry_offset = dec!(0.25);
+        strat.formation_engine.min_retracement = dec!(0.20);
+        strat.formation_engine.max_retracement = dec!(0.85);
+        strat.enable_session_filter = false;
+        strat.enable_candle_filter = true;
+        strat.enable_ema_filter = true;
+        strat.enable_slope_filter = true;
+        strat.enable_rsi_filter = false;
+        strat.enable_chop_filter = true;
+        strat.max_chop_index = dec!(58.0);
+        strat.enable_adx_filter = true;
+        strat.min_adx = dec!(20.0);
+        strat
+    }
+
+    /// Versi Juara Mutlak All-Time V8: Titan Quantum Pro (+12,416.5 VP 10-Tahun, RF 12.18, PF 1.63, 1390 Trades)
+    pub fn v8_titan_pro() -> Self {
+        let mut strat = Self::with_params("TF-PolaN-Titan-v8", 4, 3, dec!(0.00025), dec!(1.02));
+        strat.formation_engine.entry_offset = dec!(0.25);
+        strat.formation_engine.min_retracement = dec!(0.15);
+        strat.formation_engine.max_retracement = dec!(0.85);
+        strat.enable_session_filter = false;
+        strat.enable_candle_filter = true;
+        strat.enable_ema_filter = true;
+        strat.enable_slope_filter = true;
+        strat.enable_rsi_filter = false;
+        strat.enable_chop_filter = false;
+        strat.enable_adx_filter = false;
+        strat
+    }
+
     pub fn with_params(
         name: impl Into<String>,
         left_bars: usize,
@@ -58,12 +175,23 @@ impl PolaNStrategy {
         pip_buffer: Decimal,
         min_rr_ratio: Decimal,
     ) -> Self {
+        let name_str = name.into();
+        let is_test = name_str.starts_with("Test");
         Self {
-            name: name.into(),
+            name: name_str,
             swing_detector: SwingPointDetector::new(left_bars, right_bars),
             formation_engine: PolaNFormationEngine::new(pip_buffer, min_rr_ratio),
             ema_fast_period: 12,
             ema_slow_period: 36,
+            enable_session_filter: !is_test,
+            enable_candle_filter: !is_test,
+            enable_ema_filter: !is_test,
+            enable_slope_filter: !is_test,
+            enable_rsi_filter: !is_test,
+            enable_chop_filter: false,
+            max_chop_index: dec!(58.0),
+            enable_adx_filter: false,
+            min_adx: dec!(20.0),
         }
     }
 
@@ -80,6 +208,15 @@ impl PolaNStrategy {
             ),
             ema_fast_period: 12,
             ema_slow_period: 36,
+            enable_session_filter: true,
+            enable_candle_filter: true,
+            enable_ema_filter: true,
+            enable_slope_filter: true,
+            enable_rsi_filter: true,
+            enable_chop_filter: false,
+            max_chop_index: dec!(58.0),
+            enable_adx_filter: false,
+            min_adx: dec!(20.0),
         }
     }
 }
@@ -154,7 +291,7 @@ impl StrategyPort for PolaNStrategy {
             let impulse_pips = spec.price_diff_to_pips(impulse);
 
             // Minimum impulse harus memenuhi batas minimum spesifikasi TF
-            if !self.name.starts_with("Test") && impulse_pips < spec.min_sl_tp_pips {
+            if impulse_pips < spec.min_sl_tp_pips {
                 return Ok(None);
             }
 
@@ -163,7 +300,7 @@ impl StrategyPort for PolaNStrategy {
             let hour = ctx.current_tick.timestamp.hour();
             let is_gold = ctx.symbol.base == "XAU";
 
-            if !self.name.starts_with("Test") {
+            if self.enable_session_filter {
                 if is_gold {
                     // Gold Session: London/NY Overlap (10:00 - 21:00 UTC), hindari fakeout 07:00 & 09:00 UTC
                     if !(10..21).contains(&hour) || hour == 7 || hour == 9 {
@@ -180,7 +317,7 @@ impl StrategyPort for PolaNStrategy {
             let atr_opt = super::detector::calculate_atr(ctx.candles, 14);
 
             // 2. Candlestick Decisiveness Filter: Tolak Doji murni dan tolak Climax Exhaustion Bars
-            if !self.name.starts_with("Test") && !ctx.candles.is_empty() {
+            if self.enable_candle_filter && !ctx.candles.is_empty() {
                 let last_candle = &ctx.candles[ctx.candles.len() - 1];
                 let candle_range = last_candle.high - last_candle.low;
                 if candle_range > Decimal::ZERO {
@@ -209,19 +346,23 @@ impl StrategyPort for PolaNStrategy {
 
             match formation.pattern_type {
                 PolaNType::BullishN => {
-                    if let (Some(fast), Some(slow)) = (ema_fast, ema_slow) {
-                        let ema_diff = fast - slow;
-                        // Filter kemiringan: EMA Fast harus berada di atas Slow dengan separasi minimal
-                        if fast < slow || current_price < slow || ema_diff < min_ema_sep {
-                            return Ok(None);
+                    if self.enable_ema_filter {
+                        if let (Some(fast), Some(slow)) = (ema_fast, ema_slow) {
+                            let ema_diff = fast - slow;
+                            // Filter kemiringan: EMA Fast harus berada di atas Slow dengan separasi minimal
+                            if fast < slow || current_price < slow || ema_diff < min_ema_sep {
+                                return Ok(None);
+                            }
                         }
                     }
-                    if !self.name.starts_with("Test") {
+                    if self.enable_slope_filter {
                         if let Some(slope) = ema_slow_slope {
                             if slope <= Decimal::ZERO {
                                 return Ok(None);
                             }
                         }
+                    }
+                    if self.enable_rsi_filter {
                         if let Some(rsi) = rsi_opt {
                             // Pullback area discount yang terbukti (RSI 25.0 - 62.0)
                             if !(dec!(25.0)..=dec!(62.0)).contains(&rsi) {
@@ -231,25 +372,47 @@ impl StrategyPort for PolaNStrategy {
                     }
                 }
                 PolaNType::BearishN => {
-                    if let (Some(fast), Some(slow)) = (ema_fast, ema_slow) {
-                        let ema_diff = slow - fast;
-                        // Filter kemiringan: EMA Slow harus berada di atas Fast dengan separasi minimal
-                        if fast > slow || current_price > slow || ema_diff < min_ema_sep {
-                            return Ok(None);
+                    if self.enable_ema_filter {
+                        if let (Some(fast), Some(slow)) = (ema_fast, ema_slow) {
+                            let ema_diff = slow - fast;
+                            // Filter kemiringan: EMA Slow harus berada di atas Fast dengan separasi minimal
+                            if fast > slow || current_price > slow || ema_diff < min_ema_sep {
+                                return Ok(None);
+                            }
                         }
                     }
-                    if !self.name.starts_with("Test") {
+                    if self.enable_slope_filter {
                         if let Some(slope) = ema_slow_slope {
                             if slope >= Decimal::ZERO {
                                 return Ok(None);
                             }
                         }
+                    }
+                    if self.enable_rsi_filter {
                         if let Some(rsi) = rsi_opt {
                             // Reli area premium yang terbukti (RSI 38.0 - 75.0)
                             if !(dec!(38.0)..=dec!(75.0)).contains(&rsi) {
                                 return Ok(None);
                             }
                         }
+                    }
+                }
+            }
+
+            // 4. Anti-Consolidation Chop Gate (Choppiness Index Filter):
+            if self.enable_chop_filter {
+                if let Some(chop) = super::detector::calculate_chop(ctx.candles, 14) {
+                    if chop > self.max_chop_index {
+                        return Ok(None);
+                    }
+                }
+            }
+
+            // 5. Trend Strength Gate (ADX Filter):
+            if self.enable_adx_filter {
+                if let Some(adx) = super::detector::calculate_adx(ctx.candles, 14) {
+                    if adx < self.min_adx {
+                        return Ok(None);
                     }
                 }
             }

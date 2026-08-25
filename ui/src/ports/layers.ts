@@ -15,7 +15,9 @@ export interface SimulatedTrade {
   valued_pips: number;
   is_win: boolean;
   exit_reason: string;
+  posted_time?: number;
 }
+
 
 export interface ChartLayerContext {
   chart: IChartApi;

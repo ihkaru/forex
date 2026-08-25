@@ -44,7 +44,7 @@
     <div class="p-3.5 rounded-lg bg-[#131722] border border-[#2a2e39]">
       <div class="text-[10px] text-[#787b86] font-mono">ACTIVE DATASET DEPTH</div>
       <div class="text-lg font-bold font-mono text-white mt-0.5">
-        {candles.length > 0 ? candles.length.toLocaleString() : (edaReport ? edaReport.total_candles.toLocaleString() : '35,192')} Bar H1
+        {candles.length > 0 ? candles.length.toLocaleString() : (edaReport ? (edaReport.total_candles ?? edaReport.totalCandles ?? 35192).toLocaleString() : '35,192')} Bar H1
       </div>
       <div class="text-[9px] text-[#089981] mt-0.5">10 Modern Years (2015-2026)</div>
     </div>

@@ -138,6 +138,7 @@ impl BacktestService {
                                 sim.status = SimulatedOrderStatus::Filled {
                                     fill_time: current_candle.timestamp,
                                 };
+                                sim.order.open_time = current_candle.timestamp;
                             }
                             remaining_orders.push(sim);
                         }
@@ -211,33 +212,6 @@ impl BacktestService {
                             if closed {
                                 completed_trades.push(sim.order);
                             } else {
-                                // ─── AUTOMATED BREAKEVEN STOP (Untuk Bar Berikutnya) ────────────────
-                                // Jika order masih berjalan dan candle ini mencapai MFE >= 50% TP,
-                                // pindahkan SL ke breakeven untuk melindungi bar-bar berikutnya.
-                                if !sim.sl_moved_to_breakeven {
-                                    let tp_distance =
-                                        (sim.order.take_profit - sim.order.open_price).abs();
-                                    let be_trigger = tp_distance * dec!(0.30);
-                                    match sim.order.action {
-                                        SignalAction::BuyLimit | SignalAction::BuyStop
-                                            if current_candle.high
-                                                >= sim.order.open_price + be_trigger =>
-                                        {
-                                            sim.order.stop_loss = sim.order.open_price;
-                                            sim.sl_moved_to_breakeven = true;
-                                        }
-                                        SignalAction::SellLimit | SignalAction::SellStop
-                                            if current_candle.low
-                                                <= sim.order.open_price - be_trigger =>
-                                        {
-                                            sim.order.stop_loss = sim.order.open_price;
-                                            sim.sl_moved_to_breakeven = true;
-                                        }
-                                        _ => {}
-                                    }
-                                }
-                                // ─── END BREAKEVEN STOP ─────────────────────────────────────────────
-
                                 remaining_orders.push(sim);
                             }
                         }
@@ -320,7 +294,9 @@ impl BacktestService {
                                 open_time: current_candle.timestamp,
                                 close_time: None,
                                 realized_pnl: None,
+                                posted_time: Some(current_candle.timestamp),
                             };
+
                             // Forensik: pending order tidak terisi > 8 jam sudah kehilangan momentum
                             // (session London + NY berakhir, setup sudah tidak valid)
                             let sim_order = SimulatedOrder {

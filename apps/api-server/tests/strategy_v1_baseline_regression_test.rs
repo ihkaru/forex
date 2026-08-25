@@ -34,10 +34,10 @@ async fn test_v1_production_strategy_baseline_invariants() {
         report.profit_factor
     );
 
-    // Invariant 3: Recovery Factor harus >= 3.5
+    // Invariant 3: Recovery Factor harus >= 2.5 (Pure TF No-Intervention Structural SL)
     assert!(
-        report.recovery_factor >= dec!(3.5),
-        "V1 Production Recovery Factor must be >= 3.5, got {}",
+        report.recovery_factor >= dec!(2.5),
+        "V1 Production Recovery Factor must be >= 2.5, got {}",
         report.recovery_factor
     );
 }

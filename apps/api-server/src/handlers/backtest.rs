@@ -4,11 +4,9 @@ use axum::extract::{Path as AxumPath, Query, State};
 use axum::http::StatusCode;
 use axum::Json;
 use chrono::{TimeZone, Utc};
-use domain::models::{PolaNStrategy, RiskProfile, Symbol, TfPairSpec, Timeframe};
+use domain::models::{RiskProfile, Symbol, TfPairSpec, Timeframe};
 use domain::ports::StrategyPort;
-use domain::strategies::SmcLiquiditySweepStrategy;
 use rust_decimal::Decimal;
-use rust_decimal_macros::dec;
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 
@@ -42,21 +40,13 @@ pub struct SimulatedTradeDto {
     pub valued_pips: Decimal,
     pub is_win: bool,
     pub exit_reason: String,
+    #[serde(default)]
+    pub posted_time: Option<i64>,
 }
 
 fn resolve_strategy(query_strat: Option<&str>) -> Arc<dyn StrategyPort> {
-    match query_strat {
-        Some("pola-n-v2") | Some("pola-n-adaptive") => Arc::new(PolaNStrategy::v2_adaptive()),
-        Some("dual-ema-trend") => Arc::new(PolaNStrategy::with_params(
-            "TF-DualEMA-Trend",
-            3,
-            2,
-            dec!(0.00015),
-            dec!(1.5),
-        )),
-        Some("liquidity-order-block") => Arc::new(SmcLiquiditySweepStrategy::default()),
-        _ => Arc::new(PolaNStrategy::v1_production()),
-    }
+    let registry = domain::strategies::StrategyRegistry::default();
+    registry.resolve_or_default(query_strat)
 }
 
 pub async fn backtest_handler(
@@ -171,6 +161,7 @@ pub async fn backtest_trades_handler(
                         valued_pips,
                         is_win,
                         exit_reason,
+                        posted_time: t.posted_time.map(|pt| pt.timestamp()),
                     })
                 })
                 .collect();
@@ -233,6 +224,7 @@ pub async fn backtest_detailed_handler(
                         valued_pips,
                         is_win,
                         exit_reason,
+                        posted_time: t.posted_time.map(|pt| pt.timestamp()),
                     })
                 })
                 .collect();

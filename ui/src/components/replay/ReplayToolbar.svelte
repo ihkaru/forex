@@ -30,13 +30,17 @@
   let toolbarPos = $state<{ x: number; y: number } | null>(null);
 
   const speedOptions = [
+    { label: '0.025s / Bar (40x Hyper)', value: 25 },
+    { label: '0.05s / Bar (20x Turbo)', value: 50 },
     { label: '0.1s / Bar (10x Ultra Cepat)', value: 100 },
+    { label: '0.2s / Bar (5x Cepat)', value: 200 },
     { label: '0.25s / Bar (4x Cepat)', value: 250 },
     { label: '0.5s / Bar (2x Cepat)', value: 500 },
     { label: '1.0s / Bar (1x Normal)', value: 1000 },
     { label: '2.0s / Bar (0.5x Santai)', value: 2000 },
     { label: '3.0s / Bar (0.3x Teliti)', value: 3000 },
   ];
+
 
   function handleSpeedSelect(speedMs: number) {
     replayEngine.setSpeed(speedMs);
@@ -72,6 +76,27 @@
     isDragging = false;
     window.removeEventListener('mousemove', handleMouseMove);
     window.removeEventListener('mouseup', handleMouseUp);
+  }
+  function formatReplayTime(timestampSec?: number, isoDate?: string): string {
+    let d: Date | null = null;
+    if (timestampSec) {
+      d = new Date(timestampSec * 1000);
+    } else if (isoDate) {
+      const parsed = new Date(isoDate);
+      if (!isNaN(parsed.getTime())) d = parsed;
+    }
+
+    if (!d) return 'Waktu Bar';
+
+    return new Intl.DateTimeFormat(undefined, {
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false,
+      timeZoneName: 'short',
+    }).format(d);
   }
 </script>
 
@@ -234,9 +259,9 @@
   <!-- Bottom Row: Timeline Progress Scrubber & Timestamp Info -->
   {#if replayState.isActive}
     <div class="flex items-center gap-2 pt-1 border-t border-[#2a2e39]/60 text-[10px] text-[#787b86]">
-      <div class="flex items-center gap-1 text-[#2962ff] flex-shrink-0 font-bold">
-        <Clock class="w-3 h-3" />
-        <span>{replayState.currentIsoDate || 'Waktu Bar'}</span>
+      <div class="flex items-center gap-1 text-[#2962ff] bg-[#2962ff]/10 px-2 py-0.5 rounded border border-[#2962ff]/20 flex-shrink-0 font-bold">
+        <Clock class="w-3 h-3 text-[#2962ff]" />
+        <span>{formatReplayTime(replayState.currentTimestamp, replayState.currentIsoDate)}</span>
       </div>
 
       <!-- Scrubber Slider -->
@@ -249,7 +274,7 @@
         class="flex-1 h-1.5 bg-[#2a2e39] rounded-lg appearance-none cursor-pointer accent-[#2962ff]"
       />
 
-      <span class="font-mono flex-shrink-0">
+      <span class="font-mono flex-shrink-0 bg-[#1e222d] px-2 py-0.5 rounded border border-[#2a2e39] text-[#787b86]">
         +{replayState.currentIndex - replayState.startIndex} Bar Diputar
       </span>
     </div>

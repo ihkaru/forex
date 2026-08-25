@@ -9,7 +9,7 @@ export class PolaNSwingPointsLayer implements IChartLayer {
   public readonly description = 'Menandai titik swing geometri fraktal pembentuk struktur Pola N';
   public readonly isUniversal = false;
   public readonly supportedCategories = ['MARKET_STRUCTURE', 'GOLD_SPECIALIST'];
-  public readonly supportedStrategyIds = ['pola-n-core', 'pola-n-v2'];
+  public readonly supportedStrategyIds = ['pola-n-core', 'pola-n-v2', 'pola-n-v3'];
   public visible = true;
 
   private markersPrimitive: any = null;

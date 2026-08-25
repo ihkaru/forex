@@ -40,12 +40,12 @@
 
     previewCandle = closest;
     const d = new Date(closest.time * 1000);
-    // Format to YYYY-MM-DDTHH:mm for datetime-local input
-    const year = d.getUTCFullYear();
-    const month = String(d.getUTCMonth() + 1).padStart(2, '0');
-    const day = String(d.getUTCDate()).padStart(2, '0');
-    const hours = String(d.getUTCHours()).padStart(2, '0');
-    const mins = String(d.getUTCMinutes()).padStart(2, '0');
+    // Format to YYYY-MM-DDTHH:mm in client local time for datetime-local input
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    const hours = String(d.getHours()).padStart(2, '0');
+    const mins = String(d.getMinutes()).padStart(2, '0');
     selectedDateStr = `${year}-${month}-${day}T${hours}:${mins}`;
   }
 
@@ -60,7 +60,8 @@
     const val = (e.target as HTMLInputElement).value;
     selectedDateStr = val;
     if (val) {
-      const parsedSec = Math.floor(new Date(val + ':00Z').getTime() / 1000);
+      // Parse in local browser timezone
+      const parsedSec = Math.floor(new Date(val).getTime() / 1000);
       if (!isNaN(parsedSec)) {
         findClosestCandle(parsedSec);
       }
@@ -164,7 +165,7 @@
         <!-- Custom Date & Time Picker -->
         <div>
           <label for="replay-target-datetime" class="block text-[10px] font-bold text-[#787b86] uppercase tracking-wider mb-2">
-            Pilih Tanggal & Jam Spesifik (UTC)
+            Pilih Tanggal & Jam Spesifik ({typeof Intl !== 'undefined' ? Intl.DateTimeFormat().resolvedOptions().timeZone : 'Waktu Lokal'})
           </label>
           <div class="relative">
             <input
@@ -189,7 +190,16 @@
             </div>
             <div class="flex items-center justify-between pt-1">
               <span class="text-white font-extrabold">
-                {new Date(previewCandle.time * 1000).toUTCString().replace('GMT', 'UTC')}
+                {new Intl.DateTimeFormat(undefined, {
+                  weekday: 'short',
+                  day: '2-digit',
+                  month: 'short',
+                  year: 'numeric',
+                  hour: '2-digit',
+                  minute: '2-digit',
+                  hour12: false,
+                  timeZoneName: 'short',
+                }).format(new Date(previewCandle.time * 1000))}
               </span>
               <span class="font-black text-[#089981]">
                 {previewCandle.close.toFixed(5)}

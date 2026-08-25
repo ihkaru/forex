@@ -21,7 +21,13 @@ export interface ReplayState {
   currentIsoDate?: string;
 }
 
-export type ReplayStateListener = (state: ReplayState, slicedCandles: Candle[]) => void;
+export type ReplayStateListener = (
+  state: ReplayState,
+  slicedCandles: Candle[],
+  latestCandle?: Candle,
+  isStepForward?: boolean
+) => void;
+
 
 /**
  * Interface First Pattern: IReplayEnginePort

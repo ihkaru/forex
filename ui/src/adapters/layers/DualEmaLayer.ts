@@ -9,7 +9,7 @@ export class DualEmaLayer implements IChartLayer {
   public readonly description = 'Menampilkan kurva tren Fast EMA 20 (Cyan) dan Slow EMA 50 (Orange)';
   public readonly isUniversal = false;
   public readonly supportedCategories = ['MARKET_STRUCTURE', 'GOLD_SPECIALIST', 'TREND_FOLLOWING'];
-  public readonly supportedStrategyIds = ['pola-n-core', 'pola-n-v2', 'dual-ema-trend'];
+  public readonly supportedStrategyIds = ['pola-n-core', 'pola-n-v2', 'pola-n-v3', 'dual-ema-trend'];
   public visible = true;
 
   private emaFastSeries: ISeriesApi<'Line'> | null = null;

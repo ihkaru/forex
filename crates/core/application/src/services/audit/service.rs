@@ -253,6 +253,8 @@ impl QuantAuditPort for QuantAuditService {
                     "STOP_LOSS_HIT".to_string()
                 },
                 running_equity_pips: running_equity,
+                posted_time: t.posted_time,
+                posted_epoch: t.posted_time.map(|pt| pt.timestamp()),
             });
         }
 

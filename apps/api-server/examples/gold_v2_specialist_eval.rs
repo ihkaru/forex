@@ -1,3 +1,10 @@
+#![allow(
+    dead_code,
+    unused_variables,
+    unused_assignments,
+    unused_imports,
+    clippy::all
+)]
 use api_server::state::RealHistoricalMarketAdapter;
 use application::services::BacktestService;
 use chrono::{TimeZone, Utc};

@@ -216,9 +216,14 @@
 
   function formatDate(ts: number | string): string {
     if (!ts) return '-';
-    if (typeof ts === 'string') return ts.replace('T', ' ').substring(0, 16);
-    const d = new Date(ts * 1000);
-    return d.toISOString().replace('T', ' ').substring(0, 16);
+    const d = typeof ts === 'number' ? new Date(ts * 1000) : new Date(ts);
+    if (isNaN(d.getTime())) return String(ts);
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    const hours = String(d.getHours()).padStart(2, '0');
+    const mins = String(d.getMinutes()).padStart(2, '0');
+    return `${year}-${month}-${day} ${hours}:${mins}`;
   }
 
   function handleRowClick(trade: any) {

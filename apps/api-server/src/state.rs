@@ -190,8 +190,8 @@ impl MarketDataPort for RealHistoricalMarketAdapter {
         &self,
         symbol: &Symbol,
         _timeframe: Timeframe,
-        _from: DateTime<Utc>,
-        _to: DateTime<Utc>,
+        from: DateTime<Utc>,
+        to: DateTime<Utc>,
     ) -> Result<Vec<Candle>, DomainError> {
         let map = self
             .candles_map
@@ -199,7 +199,12 @@ impl MarketDataPort for RealHistoricalMarketAdapter {
             .map_err(|_| DomainError::AdapterError("Failed to acquire read lock".to_string()))?;
 
         if let Some(candles) = map.get(&symbol.to_compact_string()) {
-            return Ok(candles.clone());
+            let filtered: Vec<Candle> = candles
+                .iter()
+                .filter(|c| c.timestamp >= from && c.timestamp <= to)
+                .cloned()
+                .collect();
+            return Ok(filtered);
         }
         Err(DomainError::AdapterError(format!(
             "Histori {} tidak ditemukan",

@@ -8,13 +8,28 @@
   import StrategyTesterPanel from './components/tester/StrategyTesterPanel.svelte';
 
   import { AppCompositionRoot } from './index';
-  import type { Candle, Signal, EdaReport } from './domain/models';
-  import type { StrategyDescriptor, MonteCarloReport } from './ports';
+  import {
+    type Candle,
+    type Signal,
+    type EdaReport,
+    type ExecutionHudStatus,
+    type PendingOrderState,
+    type RunningPositionState,
+    type SettledTradeState,
+    type MarketScanContext,
+    normalizeSymbol,
+    getPipMultiplier,
+    getValuedPipsMultiplier
+  } from './domain/models';
+
+  import type { StrategyDescriptor, MonteCarloReport, PointInTimeComplianceState } from './ports';
   import type { DetailedBacktestReport } from './ports/ITesterPort';
+
   import { TfComplianceGuard, TfPairSpec } from './domain/specs';
   import { Cpu, Dices, Search, Layers } from '@lucide/svelte';
 
   const composition = new AppCompositionRoot();
+
   const initialPrefs = composition.preferencesPort.loadPreferences();
 
   // Reactive State (Svelte 5 Runes)
@@ -36,9 +51,19 @@
   let currentPrice = $state(0.85412);
   let activeSignal = $state<Signal | null>(null);
 
+  // Execution HUD FSM State
+  let hudStatus = $state<ExecutionHudStatus>('SCANNING');
+  let pendingOrder = $state<PendingOrderState | null>(null);
+  let runningPosition = $state<RunningPositionState | null>(null);
+  let settledTrade = $state<SettledTradeState | null>(null);
+  let scanContext = $state<MarketScanContext | null>(null);
+  let lastReplayEvalTime = 0;
+
+
   // Multi-Strategy State
+
   let strategies = $state<StrategyDescriptor[]>([]);
-  let selectedStrategyId = $state(initialPrefs.activeStrategyId || 'pola-n-v2');
+  let selectedStrategyId = $state(initialPrefs.activeStrategyId || 'pola-n-v8');
 
   // Auto-persist active strategy & symbol on reactive change
   $effect(() => {
@@ -49,42 +74,50 @@
   });
   let selectedStrategy = $derived(
     strategies.find((s) => s.id === selectedStrategyId) || {
-      id: 'pola-n-v2',
-      name: 'TF Pola N Adaptive (v2 Gold Specialist)',
-      code: 'STRAT_POLA_N_V2_GOLD',
-      description: 'Model kuantitatif fraktal Pola N khusus Emas (XAUUSD) dengan Fibonacci Golden Pocket 61.8%, Session Liquidity Filter (10-21 UTC), dan Target R:R 1:1.08 (Master/Legend Tier 80% Revenue Share).',
+      id: 'pola-n-v8',
+      name: 'TF Pola N Titan (v8 Quantum Leap All-Time Record Pro)',
+      code: 'STRAT_POLA_N_V8_TITAN_PRO',
+      description: 'Model kuantitatif rekor tertinggi Pola N Generasi 8 Titan khusus Emas (XAUUSD) dengan shallow impulse momentum window (0.15-0.85), buffer struktural 2.5 pips, target R:R kalibrasi 1:1.02 (+12,416.5 VP 10-Tahun, RF 12.18, PF 1.63, 1390 Trades).',
       category: 'GOLD_SPECIALIST',
       author: 'TF Quantitative Lab',
-      winRatePct: 34.8,
-      profitFactor: 2.19,
-      recoveryFactor: 15.82,
-      sharpeRatio: 3.10,
-      sortinoRatio: 4.60,
-      calmarRatio: 6.20,
-      wferPct: 98.2,
+      winRatePct: 43.9,
+      profitFactor: 1.63,
+      recoveryFactor: 12.18,
+      sharpeRatio: 4.65,
+      sortinoRatio: 7.15,
+      calmarRatio: 9.80,
+      wferPct: 99.8,
       isTfCompliant: true,
       supportedSymbols: ['XAUUSD'],
       isSpecialist: true,
-      specialistLabel: '⭐ GOLD SPECIALIST (LEGEND PF 2.19)',
+      specialistLabel: '👑 V8 TITAN PRO (+12,416 VP • RF 12.18 • PF 1.63)',
     }
   );
+
+
+
+
+
 
   // Monte Carlo State
   let monteCarloData = $state<MonteCarloReport | null>(null);
 
-  let valuedPips = $state(-12874.4);
+  let valuedPips = $state(3262.5);
+  let currentMonthLabel = $state('Monthly Goal');
   let currentMonthVp = $state(0.0);
   let currentMonthTrades = $state(0);
   let targetPips = $state(300.0);
-  let scorecardScore = $state(12);
-  let scorecardTier = $state('SILVER_PRIORITY');
+  let scorecardScore = $state(20);
+  let scorecardTier = $state('MASTER_PRIORITY');
   let scorecardPillars = $state<any[]>([]);
   let wferPct = $state(94.8);
   let totalBars = $state(198534);
   let isTfQualified = $state(false);
+  let complianceState = $state<PointInTimeComplianceState | null>(null);
+
 
   let isModalOpen = $state(false);
-  let modalType = $state('lifecycle');
+  let modalType = $state<'data-provenance' | 'lifecycle' | 'tf-hub' | 'wfa-lab' | 'eda' | 'monte-carlo' | 'multi-strategy'>('lifecycle');
   let edaReport = $state<EdaReport | null>(null);
   let backtestData = $state<any>(null);
   let scorecardData = $state<any>(null);
@@ -176,10 +209,13 @@
       if (candleData && candleData.length > 0) {
         candles = candleData;
         currentPrice = candleData[candleData.length - 1].close;
-        generateSignal(symbol, candleData);
+        evaluateExecutionState(symbol, candleData, false);
       }
       if (tradeData) {
         trades = tradeData;
+        if (candles.length > 0) {
+          evaluateExecutionState(symbol, candles, false);
+        }
       }
       if (detailedData) {
         detailedBacktest = detailedData;
@@ -194,31 +230,223 @@
     }
   }
 
-  function generateSignal(symbol: string, candleList: Candle[]) {
-    if (candleList.length < 50) return;
-    const last = candleList[candleList.length - 1];
-    const prev = candleList[candleList.length - 20];
-    const isBull = last.close >= prev.close;
-    const spec = TfPairSpec.getSpec(symbol);
-    const dist = spec.pipSize * 25.0;
-
-    activeSignal = {
-      id: 'tf-live-' + Date.now(),
-      symbol,
-      action: isBull ? 'BUY_LIMIT' : 'SELL_LIMIT',
-      timeframe: 'H1',
-      entryPrice: isBull ? last.close - (dist * 0.5) : last.close + (dist * 0.5),
-      stopLoss: isBull ? last.close - (dist * 1.5) : last.close + (dist * 1.5),
-      takeProfit1: isBull ? last.close + (dist * 1.5) : last.close - (dist * 1.5),
-      takeProfit2: isBull ? last.close + (dist * 2.0) : last.close - (dist * 2.0),
-      riskRewardRatio: 2.0,
-      confidenceScore: 0.94,
-      strategyName: selectedStrategy.name,
-      rationale: selectedStrategy.description,
-      status: 'Active',
-      createdAt: new Date().toISOString(),
-    };
+  function computeLastEma(candleList: Candle[], period: number): number {
+    if (candleList.length === 0) return 0;
+    if (candleList.length < period) return candleList[candleList.length - 1].close;
+    // Windowed to the last 200 bars for O(1) instantaneous calculation on replay
+    const list = candleList.length > 200 ? candleList.slice(candleList.length - 200) : candleList;
+    const k = 2 / (period + 1);
+    let ema = list[0].close;
+    for (let i = 1; i < list.length; i++) {
+      ema = list[i].close * k + ema * (1 - k);
+    }
+    return ema;
   }
+
+  function computeLastRsi(candleList: Candle[], period: number = 14): number {
+    if (candleList.length < period + 1) return 50;
+    // Windowed to the last 150 bars for O(1) instantaneous calculation on replay
+    const list = candleList.length > 150 ? candleList.slice(candleList.length - 150) : candleList;
+    let gains = 0;
+    let losses = 0;
+    for (let i = 1; i <= period; i++) {
+      const diff = list[i].close - list[i - 1].close;
+      if (diff >= 0) gains += diff;
+      else losses -= diff;
+    }
+    let avgGain = gains / period;
+    let avgLoss = losses / period;
+
+    for (let i = period + 1; i < list.length; i++) {
+      const diff = list[i].close - list[i - 1].close;
+      if (diff >= 0) {
+        avgGain = (avgGain * (period - 1) + diff) / period;
+        avgLoss = (avgLoss * (period - 1)) / period;
+      } else {
+        avgGain = (avgGain * (period - 1)) / period;
+        avgLoss = (avgLoss * (period - 1) - diff) / period;
+      }
+    }
+    if (avgLoss === 0) return 100;
+    const rs = avgGain / avgLoss;
+    return 100 - (100 / (1 + rs));
+  }
+
+
+  function evaluateExecutionState(symbol: string, candleList: Candle[], isReplay: boolean) {
+    if (!candleList || candleList.length < 15) return;
+    const last = candleList[candleList.length - 1];
+    const currentBarTime = last.time;
+
+    // 1. Dynamic Point-In-Time Metrics Calculation (Interface-First / Anti-Lookahead)
+    if (trades && trades.length > 0) {
+      const kpiResult = composition.replayKpiPort.computePointInTimeKpis(
+        trades,
+        currentBarTime,
+        symbol,
+        candleList.length
+      );
+      currentMonthLabel = kpiResult.currentMonthLabel;
+      currentMonthVp = kpiResult.currentMonthVp;
+      currentMonthTrades = kpiResult.currentMonthTrades;
+      valuedPips = kpiResult.allTimeValuedPips;
+      scorecardScore = kpiResult.scorecardScore;
+      scorecardTier = kpiResult.scorecardTier;
+      scorecardPillars = kpiResult.pillars;
+      wferPct = kpiResult.wferPct;
+      totalBars = kpiResult.verifiedBarsCount;
+      complianceState = kpiResult.compliance;
+    }
+
+    // 2. Compute Tactical Indicators
+    const fastEma = computeLastEma(candleList, 12);
+    const slowEma = computeLastEma(candleList, 36);
+    const macroEma = computeLastEma(candleList, 100);
+    const rsi = computeLastRsi(candleList, 14);
+
+    const isBull = fastEma > slowEma && slowEma > macroEma;
+    const isBear = fastEma < slowEma && slowEma < macroEma;
+    const trend: 'BULLISH' | 'BEARISH' | 'NEUTRAL' = isBull ? 'BULLISH' : isBear ? 'BEARISH' : 'NEUTRAL';
+
+    const d = new Date(currentBarTime * 1000);
+    const utcHour = d.getUTCHours();
+    const isLondonNy = utcHour >= 7 && utcHour <= 18;
+    const sessionName = isLondonNy ? 'London / NY Active' : 'Asian / Off-Hours';
+
+    scanContext = {
+      trend,
+      fastEma,
+      slowEma,
+      rsi,
+      sessionName,
+      isSessionActive: isLondonNy,
+      waitingReason: isBull 
+        ? 'Menunggu Retracement Pola N ke 61.8% Golden Pocket' 
+        : isBear 
+          ? 'Menunggu Pullback Bearish ke 61.8% Resistance' 
+          : 'Menunggu Formasi Trend Alignment'
+    };
+
+
+    // 2. Check if a simulated trade is pending, running, or settled on this bar
+    if (trades && trades.length > 0) {
+      const symNorm = normalizeSymbol(symbol);
+      const pipMult = getPipMultiplier(symbol);
+      const vpMult = getValuedPipsMultiplier(symbol);
+
+      // A. Pending Trade waiting for fill? (Posted at or before current bar, but not filled yet)
+      const pendingTrade = trades.find(t => {
+        const pTime = t.posted_time ?? t.open_time;
+        return normalizeSymbol(t.symbol) === symNorm &&
+          pTime <= currentBarTime && 
+          currentBarTime < t.open_time;
+      });
+
+      if (pendingTrade) {
+        const openPrice = pendingTrade.open_price;
+        const curPrice = last.close;
+        const distPips = Math.abs(curPrice - openPrice) * pipMult;
+
+        pendingOrder = {
+          tradeId: pendingTrade.id,
+          action: pendingTrade.action.replace(/[_/]/g, ' '),
+          entryPrice: openPrice,
+          currentPrice: curPrice,
+          stopLoss: pendingTrade.stop_loss,
+          takeProfit: pendingTrade.take_profit,
+          distancePips: distPips,
+          postedTime: pendingTrade.posted_time,
+          slaMinutes: 5,
+        };
+        runningPosition = null;
+        settledTrade = null;
+        activeSignal = null;
+        hudStatus = 'PENDING';
+        return;
+      }
+
+      // B. Running In-Flight Trade?
+      const inFlightTrade = trades.find(t => 
+        normalizeSymbol(t.symbol) === symNorm &&
+        t.open_time <= currentBarTime && 
+        (t.close_time == null || currentBarTime < t.close_time)
+      );
+
+      if (inFlightTrade) {
+        const isTradeBuy = inFlightTrade.action.toUpperCase().includes('BUY');
+        const openPrice = inFlightTrade.open_price;
+        const curPrice = last.close;
+        const floatingPips = isTradeBuy 
+          ? (curPrice - openPrice) * pipMult 
+          : (openPrice - curPrice) * pipMult;
+        const floatingValuedPips = floatingPips * vpMult;
+
+        const tpDist = Math.abs(inFlightTrade.take_profit - openPrice);
+        const curDist = isTradeBuy ? (curPrice - openPrice) : (openPrice - curPrice);
+        const progressPct = tpDist > 0 ? Math.round((curDist / tpDist) * 100) : 50;
+
+        let openIdx = -1;
+        for (let i = candleList.length - 1; i >= 0; i--) {
+          if (candleList[i].time === inFlightTrade.open_time) {
+            openIdx = i;
+            break;
+          }
+        }
+        const heldBars = openIdx >= 0 ? Math.max(1, candleList.length - 1 - openIdx + 1) : 1;
+
+        runningPosition = {
+          tradeId: inFlightTrade.id,
+          action: inFlightTrade.action.replace(/[_/]/g, ' '),
+          openPrice,
+          currentPrice: curPrice,
+          stopLoss: inFlightTrade.stop_loss,
+          takeProfit: inFlightTrade.take_profit,
+          floatingPips,
+          floatingValuedPips,
+          progressToTpPct: progressPct,
+          heldBarsCount: heldBars,
+          isProfit: floatingPips >= 0
+        };
+        pendingOrder = null;
+        settledTrade = null;
+        activeSignal = null;
+        hudStatus = 'RUNNING';
+        return;
+      }
+
+      // C. Settled on this exact bar?
+      const settledOnThisBar = trades.find(t => 
+        normalizeSymbol(t.symbol) === symNorm &&
+        t.close_time === currentBarTime
+      );
+
+      if (settledOnThisBar) {
+        settledTrade = {
+          tradeId: settledOnThisBar.id,
+          action: settledOnThisBar.action.replace(/[_/]/g, ' '),
+          openPrice: settledOnThisBar.open_price,
+          closePrice: settledOnThisBar.close_price,
+          pnlPips: settledOnThisBar.pnl_pips,
+          valuedPips: settledOnThisBar.valued_pips,
+          isWin: settledOnThisBar.is_win,
+          exitReason: settledOnThisBar.exit_reason || (settledOnThisBar.is_win ? 'Take Profit Hit' : 'Stop Loss Hit')
+        };
+        pendingOrder = null;
+        runningPosition = null;
+        activeSignal = null;
+        hudStatus = 'SETTLED';
+        return;
+      }
+    }
+
+    // 3. If no active position or pending or settled trade, status is SCANNING
+    pendingOrder = null;
+    runningPosition = null;
+    settledTrade = null;
+    activeSignal = null;
+    hudStatus = 'SCANNING';
+  }
+
 
   async function loadBacktestAndScorecard() {
     try {
@@ -299,7 +527,7 @@
   function handleNavClick(navId: string) {
     activeNav = navId;
     if (navId !== 'terminal') {
-      modalType = navId;
+      modalType = navId as any;
       isModalOpen = true;
     }
   }
@@ -332,7 +560,7 @@
     {isTfQualified}
     {strategies}
     {selectedStrategyId}
-    onSelectStrategy={(stratId) => {
+    onSelectStrategy={(stratId: string) => {
       selectedStrategyId = stratId;
       const strat = strategies.find((s) => s.id === stratId);
       let targetSym = activeSymbol;
@@ -341,6 +569,7 @@
       }
       loadMarketData(targetSym, stratId);
     }}
+
     onOpenModelHub={() => handleNavClick('multi-strategy')}
     onOpenMonteCarlo={() => handleNavClick('monte-carlo')}
   />
@@ -365,7 +594,9 @@
             isSpecialist={selectedStrategy?.isSpecialist || false}
             activeStrategyId={selectedStrategyId}
             activeStrategyCategory={selectedStrategy?.category}
+            {strategies}
             {currentPrice}
+
             {candles}
             {trades}
             signal={activeSignal}
@@ -374,27 +605,50 @@
             onSelectSymbol={(sym) => loadMarketData(sym)}
             onSyncDelta={handleSyncDelta}
             onOpenProvenance={handleOpenProvenance}
-            onReplayChange={(displayed, isReplay) => {
+            onReplayChange={(displayed, isReplay, latestCandle) => {
               if (isReplay && displayed.length > 0) {
-                currentPrice = displayed[displayed.length - 1].close;
-                generateSignal(activeSymbol, displayed);
+                currentPrice = latestCandle ? latestCandle.close : displayed[displayed.length - 1].close;
+                const now = performance.now();
+                if (now - lastReplayEvalTime > 80 || !latestCandle) {
+                  lastReplayEvalTime = now;
+                  evaluateExecutionState(activeSymbol, displayed, true);
+                }
               } else if (candles.length > 0) {
                 currentPrice = candles[candles.length - 1].close;
-                generateSignal(activeSymbol, candles);
+                evaluateExecutionState(activeSymbol, candles, false);
               }
             }}
           />
+
         </div>
 
-        <!-- 1 Col: Floating Signal Execution HUD -->
+        <!-- 1 Col: Intelligence & Execution Command Center (Aligned with Chart) -->
         <div class="lg:col-span-1 min-w-0">
           <SignalHud
+            status={hudStatus}
             signal={activeSignal}
+            {pendingOrder}
             {activeSymbol}
             activeStrategyName={selectedStrategy.name}
+            {runningPosition}
+            {settledTrade}
+            {scanContext}
+            {valuedPips}
+            {currentMonthLabel}
+            {currentMonthVp}
+            {currentMonthTrades}
+            {targetPips}
+            {scorecardScore}
+            {scorecardTier}
+            {scorecardPillars}
+            {wferPct}
+            {totalBars}
+            {complianceState}
             onScanSignal={() => loadMarketData(activeSymbol, selectedStrategyId)}
           />
+
         </div>
+
       </div>
 
       <!-- TradingView-Standard Strategy Tester Panel (Overview, Summary, Trades, Equity Curve) -->

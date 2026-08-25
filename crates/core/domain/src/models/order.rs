@@ -19,4 +19,6 @@ pub struct Order {
     pub open_time: DateTime<Utc>,
     pub close_time: Option<DateTime<Utc>>,
     pub realized_pnl: Option<Decimal>,
+    #[serde(default)]
+    pub posted_time: Option<DateTime<Utc>>,
 }

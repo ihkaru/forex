@@ -61,6 +61,10 @@ pub struct TradeAuditItem {
     pub valued_pips: Decimal,
     pub exit_reason: String,
     pub running_equity_pips: Decimal,
+    #[serde(default)]
+    pub posted_time: Option<DateTime<Utc>>,
+    #[serde(default)]
+    pub posted_epoch: Option<i64>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

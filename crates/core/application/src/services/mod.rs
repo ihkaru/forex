@@ -5,6 +5,7 @@ pub mod eda;
 pub mod ingestion;
 pub mod signal_engine;
 pub mod sync;
+pub mod tf_qualification_service;
 
 pub use audit::QuantAuditService;
 pub use backtest::{
@@ -16,3 +17,4 @@ pub use eda::{EdaReport, EdaService};
 pub use ingestion::MarketIngestionService;
 pub use signal_engine::SignalEngineService;
 pub use sync::DeltaSyncService;
+pub use tf_qualification_service::TfQualificationService;

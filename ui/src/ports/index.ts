@@ -1,7 +1,22 @@
-import type { Candle, Signal, BacktestReport, EdaReport } from '../domain/models';
+import type { Candle, Signal, BacktestReport, EdaReport, MarketDataSource, DeltaSyncReport } from '../domain/models';
 import type { SimulatedTrade } from './layers';
 
 export * from './layers';
+export * from './IReplayKpiPort';
+
+
+export interface StrategyParameterSchema {
+  key: string;
+  label: string;
+  param_type: string;
+  default_value: any;
+  min?: number | null;
+  max?: number | null;
+  step?: number | null;
+  options?: string[] | null;
+  group: string;
+  tooltip?: string | null;
+}
 
 export interface StrategyDescriptor {
   id: string;
@@ -21,7 +36,10 @@ export interface StrategyDescriptor {
   supportedSymbols: string[];
   isSpecialist?: boolean;
   specialistLabel?: string | null;
+  activeParametersSummary?: string;
+  parameters?: StrategyParameterSchema[];
 }
+
 
 export interface MonteCarloPercentilePoint {
   trade_index: number;
@@ -45,6 +63,29 @@ export interface MonteCarloReport {
   worst_case_ending_vp: number;
   confidence_interval_95: [number, number];
   equity_paths: MonteCarloPercentilePoint[];
+}
+
+export interface TfScorecardPillar {
+  code?: string;
+  name: string;
+  score: number;
+  max_score: number;
+  weight?: number;
+  weight_pct?: number;
+  status: string;
+  actual_value?: string | number;
+  value_label?: string;
+  benchmark_rule?: string;
+}
+
+export interface TfScorecardReport {
+  total_score: number;
+  max_score: number;
+  channel_level: string;
+  revenue_sharing_eligible: boolean;
+  revenue_share_tier: string;
+  revenue_share_pct: number;
+  pillars: TfScorecardPillar[];
 }
 
 export interface IMarketDataPort {
@@ -88,3 +129,4 @@ export interface IDeltaSyncPort {
 
 export * from './IUserPreferencesPort';
 export * from './IReplayEnginePort';
+
