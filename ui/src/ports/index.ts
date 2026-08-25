@@ -89,12 +89,13 @@ export interface TfScorecardReport {
 }
 
 export interface IMarketDataPort {
-  getCandles(symbol: string, timeframe?: string, limit?: number): Promise<Candle[]>;
-  getLatestPrice(symbol: string): Promise<number>;
+  getCandles(symbol: string, timeframe?: string, limit?: number, source?: MarketDataSource | string): Promise<Candle[]>;
+  getLatestPrice(symbol: string, source?: MarketDataSource | string): Promise<number>;
   /** Optional live candle stream; historical-only adapters may omit it. */
-  streamCandles?: (symbol: string, timeframe?: string) => AsyncIterable<Candle>;
+  streamCandles?: (symbol: string, timeframe?: string, source?: MarketDataSource | string) => AsyncIterable<Candle>;
   close?: () => void;
 }
+
 
 export interface ISignalPublisherPort {
   broadcastToTraderFamily(signal: Signal): Promise<{ success: boolean; postId: string }>;

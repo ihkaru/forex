@@ -84,6 +84,10 @@ struct MockProvider {
 
 #[async_trait]
 impl MarketDataPort for MockProvider {
+    fn source(&self) -> MarketDataSource {
+        MarketDataSource::DukascopyEcn
+    }
+
     async fn get_latest_tick(&self, symbol: &Symbol) -> Result<Tick, DomainError> {
         Ok(Tick {
             symbol: symbol.clone(),

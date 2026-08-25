@@ -26,6 +26,10 @@ struct HistoricalMarketFeed {
 
 #[async_trait]
 impl MarketDataPort for HistoricalMarketFeed {
+    fn source(&self) -> domain::models::MarketDataSource {
+        domain::models::MarketDataSource::DukascopyEcn
+    }
+
     async fn get_latest_tick(&self, symbol: &Symbol) -> Result<Tick, domain::errors::DomainError> {
         let spec = TfPairSpec::from_symbol(symbol);
         let last_close = self

@@ -21,6 +21,10 @@ struct AuditMarketFeed {
 
 #[async_trait]
 impl MarketDataPort for AuditMarketFeed {
+    fn source(&self) -> domain::models::MarketDataSource {
+        domain::models::MarketDataSource::SyntheticTest
+    }
+
     async fn get_latest_tick(&self, symbol: &Symbol) -> Result<Tick, DomainError> {
         let spec = TfPairSpec::from_symbol(symbol);
         let last_close = self.candles.last().map(|c| c.close).unwrap_or(dec!(1.0850));

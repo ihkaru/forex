@@ -223,6 +223,10 @@ impl BrokerConnector {
 
 #[async_trait]
 impl MarketDataPort for BrokerConnector {
+    fn source(&self) -> domain::models::MarketDataSource {
+        domain::models::MarketDataSource::MrgMetaTrader4
+    }
+
     async fn get_latest_tick(&self, symbol: &Symbol) -> Result<Tick, DomainError> {
         let lock = self.latest_ticks.read().await;
         if let Some(tick) = lock.get(symbol) {
@@ -317,8 +321,13 @@ impl CtraderOpenApiConnector {
 
 #[async_trait]
 impl MarketDataPort for CtraderOpenApiConnector {
+    fn source(&self) -> domain::models::MarketDataSource {
+        domain::models::MarketDataSource::CtraderOpenApi
+    }
+
     async fn get_latest_tick(&self, symbol: &Symbol) -> Result<Tick, DomainError> {
         // Fallback snapshot stream
+
         Ok(Tick {
             symbol: symbol.clone(),
             timestamp: Utc::now(),

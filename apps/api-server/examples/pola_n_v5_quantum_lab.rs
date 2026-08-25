@@ -27,6 +27,10 @@ pub struct InMemoryMarketAdapter {
 
 #[async_trait]
 impl MarketDataPort for InMemoryMarketAdapter {
+    fn source(&self) -> domain::models::MarketDataSource {
+        domain::models::MarketDataSource::DukascopyEcn
+    }
+
     async fn get_latest_tick(&self, symbol: &Symbol) -> Result<Tick, DomainError> {
         let last = self.candles.last().unwrap();
         Ok(Tick {

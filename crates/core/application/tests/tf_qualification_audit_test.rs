@@ -14,6 +14,10 @@ struct MockMarketFeed {
 
 #[async_trait::async_trait]
 impl MarketDataPort for MockMarketFeed {
+    fn source(&self) -> MarketDataSource {
+        MarketDataSource::SyntheticTest
+    }
+
     async fn get_latest_tick(&self, _symbol: &Symbol) -> Result<domain::models::Tick, DomainError> {
         Ok(domain::models::Tick {
             symbol: Symbol::new("XAU", "USD"),

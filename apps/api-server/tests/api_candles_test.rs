@@ -12,6 +12,11 @@ use tower::ServiceExt;
 fn build_test_state() -> Arc<AppState> {
     let market_adapter = Arc::new(RealHistoricalMarketAdapter::new());
     let broker_connector = Arc::new(broker_connector::BrokerConnector::new("TestBroker"));
+    let mut router = application::services::MarketDataRouterService::new();
+    router.register(market_adapter.clone());
+    router.register(broker_connector.clone());
+    let router = Arc::new(router);
+
     let strategy = Arc::new(PolaNStrategy::default());
     let storage = Arc::new(storage_db::InMemoryStorage::new());
     let ingestion_service = Arc::new(application::services::MarketIngestionService::new(
@@ -20,10 +25,29 @@ fn build_test_state() -> Arc<AppState> {
     Arc::new(AppState {
         market_adapter,
         broker_connector,
+        router,
         strategy,
         storage,
         ingestion_service,
     })
+}
+
+#[tokio::test]
+async fn test_market_candles_api_rejects_request_without_source() {
+    let state = build_test_state();
+    let app = create_router(state);
+
+    let req = Request::builder()
+        .uri("/api/market/candles/EURUSD")
+        .body(Body::empty())
+        .unwrap();
+
+    let resp = app.oneshot(req).await.unwrap();
+    assert_eq!(
+        resp.status(),
+        StatusCode::BAD_REQUEST,
+        "Request candle tanpa source harus ditolak demi Data Integrity"
+    );
 }
 
 #[tokio::test]
@@ -35,7 +59,10 @@ async fn test_market_candles_api_returns_real_historical_data() {
 
     for pair in pairs {
         let req = Request::builder()
-            .uri(format!("/api/market/candles/{}", pair))
+            .uri(format!(
+                "/api/market/candles/{}?source=dukascopy&limit=15000",
+                pair
+            ))
             .body(Body::empty())
             .unwrap();
 
@@ -57,6 +84,7 @@ async fn test_market_candles_api_returns_real_historical_data() {
         let mut prev_time = 0i64;
         for c in &candles {
             let time = c["time"].as_i64().expect("Missing time field");
+            assert_eq!(c["source"].as_str(), Some("DukascopyEcn"));
             assert!(
                 time > prev_time,
                 "Timestamp lilin harus strictly monotonic: {} <= {}",

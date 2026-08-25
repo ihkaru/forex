@@ -1,12 +1,20 @@
-import type { Candle } from '../../domain/models';
+import type { Candle, MarketDataSource } from '../../domain/models';
 import type { IMarketDataPort } from '../../ports';
 
 export class RestMarketDataAdapter implements IMarketDataPort {
   constructor(private readonly baseUrl: string = 'http://127.0.0.1:5000/api') {}
 
-  async getCandles(symbol: string, timeframe: string = 'H1', limit: number = 300): Promise<Candle[]> {
+  async getCandles(
+    symbol: string,
+    timeframe: string = 'H1',
+    limit: number = 300,
+    source: MarketDataSource | string = 'dukascopy'
+  ): Promise<Candle[]> {
     try {
-      const res = await fetch(`${this.baseUrl}/market/candles/${symbol}?timeframe=${timeframe}&limit=${limit}`);
+      const srcParam = typeof source === 'string' ? source.toLowerCase() : 'dukascopy';
+      const res = await fetch(
+        `${this.baseUrl}/market/candles/${symbol}?source=${srcParam}&timeframe=${timeframe}&limit=${limit}`
+      );
       if (res.ok) {
         return await res.json();
       }
@@ -22,11 +30,12 @@ export class RestMarketDataAdapter implements IMarketDataPort {
     return [];
   }
 
-  async getLatestPrice(symbol: string): Promise<number> {
-    const candles = await this.getCandles(symbol, 'H1', 1);
+  async getLatestPrice(symbol: string, source: MarketDataSource | string = 'dukascopy'): Promise<number> {
+    const candles = await this.getCandles(symbol, 'H1', 1, source);
     if (candles.length > 0) {
       return candles[candles.length - 1].close;
     }
     return 1.0850;
   }
 }
+

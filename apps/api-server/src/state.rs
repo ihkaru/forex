@@ -138,6 +138,10 @@ impl RealHistoricalMarketAdapter {
 
 #[async_trait]
 impl MarketDataPort for RealHistoricalMarketAdapter {
+    fn source(&self) -> domain::models::MarketDataSource {
+        domain::models::MarketDataSource::DukascopyEcn
+    }
+
     async fn get_latest_tick(&self, symbol: &Symbol) -> Result<Tick, DomainError> {
         let map = self
             .candles_map
@@ -216,6 +220,7 @@ impl MarketDataPort for RealHistoricalMarketAdapter {
 pub struct AppState {
     pub market_adapter: Arc<RealHistoricalMarketAdapter>,
     pub broker_connector: Arc<broker_connector::BrokerConnector>,
+    pub router: Arc<application::services::MarketDataRouterService>,
     pub strategy: Arc<PolaNStrategy>,
     pub storage: Arc<storage_db::InMemoryStorage>,
     pub ingestion_service: Arc<application::services::MarketIngestionService>,

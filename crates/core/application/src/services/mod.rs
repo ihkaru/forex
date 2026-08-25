@@ -3,6 +3,7 @@ pub mod backtest;
 pub mod benchmark;
 pub mod eda;
 pub mod ingestion;
+pub mod market_router;
 pub mod signal_engine;
 pub mod sync;
 pub mod tf_qualification_service;
@@ -15,6 +16,7 @@ pub use backtest::{
 pub use benchmark::{StrategyBenchmarkService, StrategyLeaderboardEntry};
 pub use eda::{EdaReport, EdaService};
 pub use ingestion::MarketIngestionService;
+pub use market_router::MarketDataRouterService;
 pub use signal_engine::SignalEngineService;
 pub use sync::DeltaSyncService;
 pub use tf_qualification_service::TfQualificationService;

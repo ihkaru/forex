@@ -417,6 +417,10 @@ impl DukascopyDownloader {
 
 #[async_trait::async_trait]
 impl domain::ports::MarketDataPort for DukascopyDownloader {
+    fn source(&self) -> domain::models::MarketDataSource {
+        domain::models::MarketDataSource::DukascopyEcn
+    }
+
     async fn get_latest_tick(&self, symbol: &Symbol) -> Result<Tick, DomainError> {
         // Dukascopy historical feed snapshot
         Ok(Tick {

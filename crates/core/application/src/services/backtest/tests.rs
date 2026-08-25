@@ -17,6 +17,10 @@ mod tests {
 
     #[async_trait]
     impl MarketDataPort for MockMarketData {
+        fn source(&self) -> domain::models::MarketDataSource {
+            domain::models::MarketDataSource::SyntheticTest
+        }
+
         async fn get_latest_tick(&self, symbol: &Symbol) -> Result<Tick, DomainError> {
             Ok(Tick {
                 symbol: symbol.clone(),

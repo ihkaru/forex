@@ -197,12 +197,15 @@
     }
   }
 
-  async function loadMarketData(symbol: string, strategyId?: string) {
+  let selectedMarketSource = $state<'dukascopy' | 'mrg_mt4'>('dukascopy');
+
+  async function loadMarketData(symbol: string, strategyId?: string, source?: 'dukascopy' | 'mrg_mt4') {
     activeSymbol = symbol;
     const stratId = strategyId || selectedStrategyId;
+    const src = source || selectedMarketSource;
     try {
       const [candleData, tradeData, detailedData] = await Promise.all([
-        composition.marketDataPort.getCandles(symbol),
+        composition.marketDataPort.getCandles(symbol, 'H1', 15000, src),
         composition.backtestPort.getTrades(symbol, stratId),
         composition.testerPort.getDetailedBacktestReport(symbol, stratId).catch(() => null),
       ]);
@@ -211,6 +214,7 @@
         currentPrice = candleData[candleData.length - 1].close;
         evaluateExecutionState(symbol, candleData, false);
       }
+
       if (tradeData) {
         trades = tradeData;
         if (candles.length > 0) {
@@ -601,10 +605,16 @@
             {trades}
             signal={activeSignal}
             {syncStatusMessage}
+            selectedSource={selectedMarketSource}
             preferencesPort={composition.preferencesPort}
             onSelectSymbol={(sym) => loadMarketData(sym)}
+            onSelectSource={(newSrc) => {
+              selectedMarketSource = newSrc;
+              loadMarketData(activeSymbol, selectedStrategyId, newSrc);
+            }}
             onSyncDelta={handleSyncDelta}
             onOpenProvenance={handleOpenProvenance}
+
             onReplayChange={(displayed, isReplay, latestCandle) => {
               if (isReplay && displayed.length > 0) {
                 currentPrice = latestCandle ? latestCandle.close : displayed[displayed.length - 1].close;

@@ -15,17 +15,16 @@ async fn main() -> anyhow::Result<()> {
 
     info!("🌐 Memulai Hexagon Quantitative REST API Server...");
 
-    // Composition Root: Instantiate Adapters & Strategies
     let market_adapter = Arc::new(RealHistoricalMarketAdapter::new());
-    let strategy = Arc::new(PolaNStrategy::with_params(
-        "TF-PolaN-Production",
-        5,
-        3,
-        rust_decimal_macros::dec!(0.00020),
-        rust_decimal_macros::dec!(1.3),
-    ));
     let broker_connector = Arc::new(broker_connector::BrokerConnector::new("MRG_MT4_Bridge"));
+    let mut router = application::services::MarketDataRouterService::new();
+    router.register(market_adapter.clone());
+    router.register(broker_connector.clone());
+    let router = Arc::new(router);
+
+    let strategy = Arc::new(PolaNStrategy::default());
     let storage = Arc::new(storage_db::InMemoryStorage::new());
+
     let ingestion_service = Arc::new(application::services::MarketIngestionService::new(
         storage.clone(),
     ));
@@ -33,6 +32,7 @@ async fn main() -> anyhow::Result<()> {
     let state = Arc::new(AppState {
         market_adapter,
         broker_connector,
+        router,
         strategy,
         storage,
         ingestion_service,

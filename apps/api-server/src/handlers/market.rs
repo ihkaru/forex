@@ -3,22 +3,24 @@ use application::services::{EdaReport, EdaService};
 use axum::extract::{Path as AxumPath, State};
 use axum::http::StatusCode;
 use axum::Json;
-use domain::models::{RiskProfile, Signal, Symbol, Tick, Timeframe};
-use domain::ports::{MarketContext, MarketDataPort, StrategyPort};
+use domain::models::{CandleQuery, MarketDataSource, RiskProfile, Signal, Symbol, Tick, Timeframe};
+use domain::ports::{MarketContext, StrategyPort};
 
 use rust_decimal::Decimal;
 use rust_decimal_macros::dec;
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 
 use axum::extract::Query;
-use serde::Deserialize;
+use chrono::TimeZone;
 
 #[derive(Debug, Deserialize)]
 pub struct MarketCandlesQuery {
     pub source: Option<String>,
     pub timeframe: Option<String>,
     pub limit: Option<usize>,
+    pub from: Option<i64>,
+    pub to: Option<i64>,
 }
 
 #[derive(Serialize)]
@@ -33,76 +35,111 @@ pub struct CandleDto {
 }
 
 pub async fn market_candles_handler(
-    AxumPath(symbol): AxumPath<String>,
+    AxumPath(symbol_raw): AxumPath<String>,
     Query(query): Query<MarketCandlesQuery>,
     State(state): State<Arc<AppState>>,
-) -> Result<Json<Vec<CandleDto>>, StatusCode> {
-    let sym_str = symbol.to_uppercase();
-    let sym = Symbol::from_symbol_str(&sym_str).ok_or(StatusCode::NOT_FOUND)?;
+) -> Result<Json<Vec<CandleDto>>, (StatusCode, Json<serde_json::Value>)> {
+    // 1. Dukungan TradingView Compound Symbol (contoh: DUKASCOPY:XAUUSD atau MRG:XAUUSD)
+    let (detected_source, clean_symbol_str) =
+        if let Some((prefix, sym)) = symbol_raw.split_once(':') {
+            (Some(prefix.to_string()), sym.to_string())
+        } else {
+            (None, symbol_raw)
+        };
+
+    let sym_str = clean_symbol_str.to_uppercase();
+    let sym = Symbol::from_symbol_str(&sym_str).ok_or_else(|| {
+        (
+            StatusCode::NOT_FOUND,
+            Json(serde_json::json!({
+                "error": "SymbolNotFound",
+                "message": format!("Simbol '{}' tidak dikenali", sym_str)
+            })),
+        )
+    })?;
+
+    // 2. Penegakan Sumber Data Non-Opsional (Zero Silent Fallback)
+    let source_str = query
+        .source
+        .as_deref()
+        .or(detected_source.as_deref())
+        .ok_or_else(|| {
+            (
+                StatusCode::BAD_REQUEST,
+                Json(serde_json::json!({
+                    "error": "MissingRequiredSource",
+                    "message": "Query parameter 'source' (e.g. ?source=dukascopy atau ?source=mrg_mt4) atau prefix compound symbol (e.g. DUKASCOPY:XAUUSD) WAJIB disertakan untuk integritas data pasar (Interface-First Policy).",
+                    "supported_sources": ["dukascopy", "mrg_mt4", "ctrader"]
+                })),
+            )
+        })?;
+
+    let source = MarketDataSource::from_source_str(source_str).map_err(|e| {
+        (
+            StatusCode::BAD_REQUEST,
+            Json(serde_json::json!({
+                "error": "InvalidSource",
+                "message": e.to_string(),
+                "supported_sources": ["dukascopy", "mrg_mt4", "ctrader"]
+            })),
+        )
+    })?;
 
     let tf = match query.timeframe.as_deref() {
-        Some("H4") => Timeframe::H4,
-        Some("M30") => Timeframe::M30,
-        Some("M15") => Timeframe::M15,
-        Some("M5") => Timeframe::M5,
-        Some("M1") => Timeframe::M1,
+        Some("H4") | Some("4H") | Some("240") => Timeframe::H4,
+        Some("M30") | Some("30M") | Some("30") => Timeframe::M30,
+        Some("M15") | Some("15M") | Some("15") => Timeframe::M15,
+        Some("M5") | Some("5M") | Some("5") => Timeframe::M5,
+        Some("M1") | Some("1M") | Some("1") => Timeframe::M1,
         _ => Timeframe::H1,
     };
 
-    let requested_source = query
-        .source
-        .as_deref()
-        .unwrap_or("dukascopy")
-        .to_lowercase();
-
-    if requested_source == "mrg"
-        || requested_source == "mt4"
-        || requested_source == "live"
-        || requested_source == "broker"
-    {
-        let limit = query.limit.unwrap_or(1000);
-        let live_candles = state
-            .broker_connector
-            .get_recent_candles(&sym, tf, limit)
-            .await
-            .unwrap_or_default();
-
-        let dtos: Vec<CandleDto> = live_candles
-            .iter()
-            .map(|c| CandleDto {
-                time: c.timestamp.timestamp(),
-                source: c.source,
-                open: c.open,
-                high: c.high,
-                low: c.low,
-                close: c.close,
-                volume: c.volume,
-            })
-            .collect();
-        return Ok(Json(dtos));
+    // 3. Konstruksi CandleQuery Terstandarisasi
+    let mut candle_query = CandleQuery::new(sym, tf, source);
+    if let (Some(from_sec), Some(to_sec)) = (query.from, query.to) {
+        let from_dt = chrono::Utc
+            .timestamp_opt(from_sec, 0)
+            .single()
+            .unwrap_or(chrono::Utc::now());
+        let to_dt = chrono::Utc
+            .timestamp_opt(to_sec, 0)
+            .single()
+            .unwrap_or(chrono::Utc::now());
+        candle_query = candle_query.with_range(from_dt, to_dt);
+    } else {
+        let limit = query.limit.unwrap_or(300);
+        candle_query = candle_query.with_limit(limit);
     }
 
-    if let Ok(map) = state.market_adapter.candles_map.read() {
-        if let Some(candles) = map.get(&sym.to_compact_string()) {
-            let limit = query.limit.unwrap_or(candles.len());
-            let start = candles.len().saturating_sub(limit);
-            let dtos: Vec<CandleDto> = candles[start..]
-                .iter()
-                .map(|c| CandleDto {
-                    time: c.timestamp.timestamp(),
-                    source: c.source,
-                    open: c.open,
-                    high: c.high,
-                    low: c.low,
-                    close: c.close,
-                    volume: c.volume,
-                })
-                .collect();
-            return Ok(Json(dtos));
-        }
-    }
+    // 4. Eksekusi Router Kuantitatif
+    let candles = state
+        .router
+        .query_candles(&candle_query)
+        .await
+        .map_err(|e| {
+            (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                Json(serde_json::json!({
+                    "error": "MarketRouterError",
+                    "message": e.to_string()
+                })),
+            )
+        })?;
 
-    Err(StatusCode::NOT_FOUND)
+    let dtos: Vec<CandleDto> = candles
+        .iter()
+        .map(|c| CandleDto {
+            time: c.timestamp.timestamp(),
+            source: c.source,
+            open: c.open,
+            high: c.high,
+            low: c.low,
+            close: c.close,
+            volume: c.volume,
+        })
+        .collect();
+
+    Ok(Json(dtos))
 }
 
 pub async fn eda_handler(

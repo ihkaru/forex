@@ -56,8 +56,10 @@
     trades: SimulatedTrade[];
     signal: Signal | null;
     syncStatusMessage?: string | null;
+    selectedSource?: 'dukascopy' | 'mrg_mt4';
     preferencesPort?: IUserPreferencesPort;
     onSelectSymbol: (symbol: string) => void;
+    onSelectSource?: (source: 'dukascopy' | 'mrg_mt4') => void;
     onSyncDelta?: () => void;
     onOpenProvenance?: () => void;
     onReplayChange?: (displayedCandles: Candle[], isReplayActive: boolean, latestCandle?: Candle) => void;
@@ -77,12 +79,15 @@
     trades = [],
     signal = null,
     syncStatusMessage = null,
+    selectedSource = 'dukascopy',
     preferencesPort = undefined,
     onSelectSymbol,
+    onSelectSource,
     onSyncDelta,
     onOpenProvenance,
     onReplayChange
   }: Props = $props();
+
 
 
   let displayPairs = $derived(
@@ -789,15 +794,33 @@
         <span>{replayState.isActive ? 'REPLAYING' : 'BAR REPLAY'}</span>
       </button>
 
-      <!-- Provenance Info Badge -->
+      <!-- Interactive Provenance Source Switcher Pill -->
+      <div class="flex items-center rounded-lg bg-[#131722] border border-[#2a2e39] p-0.5 font-mono text-[10px]">
+        <button
+          onclick={() => onSelectSource?.('dukascopy')}
+          class="px-2 py-0.5 rounded font-bold transition-all {selectedSource === 'dukascopy' ? 'bg-[#089981] text-white shadow-sm' : 'text-[#787b86] hover:text-white'}"
+          title="Gunakan Data 10 Tahun Dukascopy ECN (Backtest / Research)"
+        >
+          🇨🇭 DUKASCOPY (10Y)
+        </button>
+        <button
+          onclick={() => onSelectSource?.('mrg_mt4')}
+          class="px-2 py-0.5 rounded font-bold transition-all {selectedSource === 'mrg_mt4' ? 'bg-[#2962ff] text-white shadow-sm' : 'text-[#787b86] hover:text-white'}"
+          title="Gunakan Data Live MT4 Broker MRG (Execution / Forward Live)"
+        >
+          ⚡ MRG MT4 LIVE
+        </button>
+      </div>
+
+      <!-- Provenance Info Icon Button -->
       <button
         onclick={onOpenProvenance}
-        class="text-[10px] font-bold px-2.5 py-1 rounded-lg bg-[#089981]/15 hover:bg-[#089981]/25 text-[#089981] hover:text-[#26a69a] border border-[#089981]/40 hover:border-[#089981] font-mono flex items-center gap-1.5 transition-all cursor-pointer shadow-sm"
-        title="Klik untuk membuka Inspektur Asal-Usul & Provenance Data Pasar"
+        class="p-1.5 rounded-lg bg-[#131722] hover:bg-[#2a2e39] text-[#787b86] hover:text-white border border-[#2a2e39] transition-all shadow-sm"
+        title="Buka Inspektur Asal-Usul & Provenance Data Pasar"
       >
-        <span>🇨🇭 DUKASCOPY ECN</span>
-        <Info class="w-3 h-3 text-[#089981]" />
+        <Info class="w-3.5 h-3.5" />
       </button>
+
 
       <!-- Delta Sync Icon Trigger -->
       {#if onSyncDelta}

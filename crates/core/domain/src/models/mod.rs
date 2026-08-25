@@ -7,7 +7,8 @@ pub mod signal;
 pub mod symbol;
 pub mod tf_spec;
 
-pub use candle::{Candle, MarketDataSource, Tick, Timeframe};
+pub use candle::{Candle, CandleQuery, MarketDataSource, Tick, Timeframe};
+
 pub use config::{
     AppConfig, BacktestConfig, BrokerSettings, PolaNConfig, RiskConfig, TelegramSettings,
     TradersFamilySettings,
