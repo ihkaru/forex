@@ -9,7 +9,9 @@ license.workspace = true
 domain = { workspace = true }
 application = { workspace = true }
 storage-db = { workspace = true }
+broker-connector = { workspace = true }
 tokio = { workspace = true }
+
 tracing = { workspace = true }
 tracing-subscriber = { workspace = true }
 anyhow = { workspace = true }

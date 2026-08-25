@@ -215,6 +215,7 @@ impl MarketDataPort for RealHistoricalMarketAdapter {
 
 pub struct AppState {
     pub market_adapter: Arc<RealHistoricalMarketAdapter>,
+    pub broker_connector: Arc<broker_connector::BrokerConnector>,
     pub strategy: Arc<PolaNStrategy>,
     pub storage: Arc<storage_db::InMemoryStorage>,
     pub ingestion_service: Arc<application::services::MarketIngestionService>,

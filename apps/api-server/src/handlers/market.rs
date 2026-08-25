@@ -4,11 +4,22 @@ use axum::extract::{Path as AxumPath, State};
 use axum::http::StatusCode;
 use axum::Json;
 use domain::models::{RiskProfile, Signal, Symbol, Tick, Timeframe};
-use domain::ports::{MarketContext, StrategyPort};
+use domain::ports::{MarketContext, MarketDataPort, StrategyPort};
+
 use rust_decimal::Decimal;
 use rust_decimal_macros::dec;
 use serde::Serialize;
 use std::sync::Arc;
+
+use axum::extract::Query;
+use serde::Deserialize;
+
+#[derive(Debug, Deserialize)]
+pub struct MarketCandlesQuery {
+    pub source: Option<String>,
+    pub timeframe: Option<String>,
+    pub limit: Option<usize>,
+}
 
 #[derive(Serialize)]
 pub struct CandleDto {
@@ -23,28 +34,74 @@ pub struct CandleDto {
 
 pub async fn market_candles_handler(
     AxumPath(symbol): AxumPath<String>,
+    Query(query): Query<MarketCandlesQuery>,
     State(state): State<Arc<AppState>>,
 ) -> Result<Json<Vec<CandleDto>>, StatusCode> {
     let sym_str = symbol.to_uppercase();
-    if let Some(sym) = Symbol::from_symbol_str(&sym_str) {
-        if let Ok(map) = state.market_adapter.candles_map.read() {
-            if let Some(candles) = map.get(&sym.to_compact_string()) {
-                let dtos: Vec<CandleDto> = candles
-                    .iter()
-                    .map(|c| CandleDto {
-                        time: c.timestamp.timestamp(),
-                        source: c.source,
-                        open: c.open,
-                        high: c.high,
-                        low: c.low,
-                        close: c.close,
-                        volume: c.volume,
-                    })
-                    .collect();
-                return Ok(Json(dtos));
-            }
+    let sym = Symbol::from_symbol_str(&sym_str).ok_or(StatusCode::NOT_FOUND)?;
+
+    let tf = match query.timeframe.as_deref() {
+        Some("H4") => Timeframe::H4,
+        Some("M30") => Timeframe::M30,
+        Some("M15") => Timeframe::M15,
+        Some("M5") => Timeframe::M5,
+        Some("M1") => Timeframe::M1,
+        _ => Timeframe::H1,
+    };
+
+    let requested_source = query
+        .source
+        .as_deref()
+        .unwrap_or("dukascopy")
+        .to_lowercase();
+
+    if requested_source == "mrg"
+        || requested_source == "mt4"
+        || requested_source == "live"
+        || requested_source == "broker"
+    {
+        let limit = query.limit.unwrap_or(1000);
+        let live_candles = state
+            .broker_connector
+            .get_recent_candles(&sym, tf, limit)
+            .await
+            .unwrap_or_default();
+
+        let dtos: Vec<CandleDto> = live_candles
+            .iter()
+            .map(|c| CandleDto {
+                time: c.timestamp.timestamp(),
+                source: c.source,
+                open: c.open,
+                high: c.high,
+                low: c.low,
+                close: c.close,
+                volume: c.volume,
+            })
+            .collect();
+        return Ok(Json(dtos));
+    }
+
+    if let Ok(map) = state.market_adapter.candles_map.read() {
+        if let Some(candles) = map.get(&sym.to_compact_string()) {
+            let limit = query.limit.unwrap_or(candles.len());
+            let start = candles.len().saturating_sub(limit);
+            let dtos: Vec<CandleDto> = candles[start..]
+                .iter()
+                .map(|c| CandleDto {
+                    time: c.timestamp.timestamp(),
+                    source: c.source,
+                    open: c.open,
+                    high: c.high,
+                    low: c.low,
+                    close: c.close,
+                    volume: c.volume,
+                })
+                .collect();
+            return Ok(Json(dtos));
         }
     }
+
     Err(StatusCode::NOT_FOUND)
 }
 

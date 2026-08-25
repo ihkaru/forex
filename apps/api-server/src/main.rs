@@ -24,6 +24,7 @@ async fn main() -> anyhow::Result<()> {
         rust_decimal_macros::dec!(0.00020),
         rust_decimal_macros::dec!(1.3),
     ));
+    let broker_connector = Arc::new(broker_connector::BrokerConnector::new("MRG_MT4_Bridge"));
     let storage = Arc::new(storage_db::InMemoryStorage::new());
     let ingestion_service = Arc::new(application::services::MarketIngestionService::new(
         storage.clone(),
@@ -31,6 +32,7 @@ async fn main() -> anyhow::Result<()> {
 
     let state = Arc::new(AppState {
         market_adapter,
+        broker_connector,
         strategy,
         storage,
         ingestion_service,

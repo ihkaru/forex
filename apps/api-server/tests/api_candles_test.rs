@@ -11,6 +11,7 @@ use tower::ServiceExt;
 
 fn build_test_state() -> Arc<AppState> {
     let market_adapter = Arc::new(RealHistoricalMarketAdapter::new());
+    let broker_connector = Arc::new(broker_connector::BrokerConnector::new("TestBroker"));
     let strategy = Arc::new(PolaNStrategy::default());
     let storage = Arc::new(storage_db::InMemoryStorage::new());
     let ingestion_service = Arc::new(application::services::MarketIngestionService::new(
@@ -18,6 +19,7 @@ fn build_test_state() -> Arc<AppState> {
     ));
     Arc::new(AppState {
         market_adapter,
+        broker_connector,
         strategy,
         storage,
         ingestion_service,
