@@ -13,13 +13,19 @@ export class LiveDukascopyAdapter implements IMarketDataPort {
     this.fallback = new RestMarketDataAdapter(apiBaseUrl);
   }
 
-  async getCandles(symbol: string, timeframe = 'H1', limit = 300): Promise<Candle[]> {
-    return this.fallback.getCandles(symbol, timeframe, limit);
+  async getCandles(
+    symbol: string,
+    timeframe = 'H1',
+    limit = 300,
+    source?: MarketDataSource | string
+  ): Promise<Candle[]> {
+    return this.fallback.getCandles(symbol, timeframe, limit, source);
   }
 
-  async getLatestPrice(symbol: string): Promise<number> {
-    return this.tickCache.get(symbol)?.close ?? this.fallback.getLatestPrice(symbol);
+  async getLatestPrice(symbol: string, source?: MarketDataSource | string): Promise<number> {
+    return this.tickCache.get(symbol)?.close ?? this.fallback.getLatestPrice(symbol, source);
   }
+
 
   async *streamCandles(symbol: string, timeframe = 'M1'): AsyncIterable<Candle> {
     this.isClosed = false;

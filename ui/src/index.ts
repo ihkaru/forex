@@ -3,8 +3,9 @@
  * Wires together Ports, Adapters, and UI Controllers via Pure Constructor Dependency Injection.
  */
 
-import { LiveDukascopyAdapter } from './adapters/driven/LiveDukascopyAdapter';
+import { RestMarketDataAdapter } from './adapters/driven/RestMarketDataAdapter';
 import { RestBacktestAdapter } from './adapters/driven/RestBacktestAdapter';
+
 import { RestEdaAdapter } from './adapters/driven/RestEdaAdapter';
 import { RestStrategyAdapter, RestMonteCarloAdapter } from './adapters/driven/RestStrategyAdapter';
 import { RestTesterAdapter } from './adapters/driven/RestTesterAdapter';
@@ -38,8 +39,9 @@ export class AppCompositionRoot {
 
   constructor(apiBaseUrl: string = 'http://127.0.0.1:5000/api') {
     // 1. Instantiate Driven Adapters (I/O) & Services
-    this.marketDataPort = new LiveDukascopyAdapter(apiBaseUrl);
+    this.marketDataPort = new RestMarketDataAdapter(apiBaseUrl);
     this.backtestPort = new RestBacktestAdapter(apiBaseUrl);
+
     this.edaPort = new RestEdaAdapter(apiBaseUrl);
     this.strategyPort = new RestStrategyAdapter(apiBaseUrl);
     this.monteCarloPort = new RestMonteCarloAdapter(apiBaseUrl);

@@ -131,9 +131,10 @@
   const layerManager = new ChartLayerManager();
   const replayEngine = new ReplayEngineService();
 
-  let lastRenderedSource = $state<string>(selectedSource);
+  let lastRenderedSource = '';
   let replayState = $state(replayEngine.getState());
   let displayedCandles: Candle[] = [];
+
 
 
   replayEngine.subscribe((st, sliced, latestCandle, isStepForward) => {
