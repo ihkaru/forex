@@ -12,13 +12,17 @@ use domain::errors::DomainError;
 use domain::models::{Candle, Symbol, Tick, Timeframe};
 use domain::ports::MarketDataPort;
 
-/// Pesan mentah yang dikirimkan oleh MQL5 EA Socket Bridge
+/// Pesan mentah yang dikirimkan oleh MQL4/MQL5 EA Socket Bridge
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(tag = "type")]
 pub enum Mt5SocketMessage {
     #[serde(rename = "TICK")]
     Tick {
         symbol: String,
+        #[serde(default)]
+        source: Option<String>,
+        #[serde(default)]
+        server: Option<String>,
         bid: Decimal,
         ask: Decimal,
         spread_pts: u32,
@@ -27,6 +31,8 @@ pub enum Mt5SocketMessage {
     #[serde(rename = "BAR")]
     Bar {
         symbol: String,
+        #[serde(default)]
+        source: Option<String>,
         timeframe: String,
         open: Decimal,
         high: Decimal,
@@ -75,7 +81,8 @@ impl DataIntegrityValidator {
     }
 }
 
-pub type CandleBufferMap = Arc<RwLock<HashMap<(Symbol, Timeframe), Vec<Candle>>>>;
+pub type CandleBufferMap =
+    Arc<RwLock<HashMap<(Symbol, Timeframe, domain::models::MarketDataSource), Vec<Candle>>>>;
 
 pub struct BrokerConnector {
     pub broker_name: String,
@@ -92,11 +99,12 @@ impl BrokerConnector {
         }
     }
 
-    /// Ingest data mentah dari socket MQL5 EA dengan validasi integritas
+    /// Ingest data mentah dari socket MQL4/MQL5 EA dengan validasi integritas
     pub async fn ingest_socket_message(&self, msg: Mt5SocketMessage) -> Result<(), DomainError> {
         match msg {
             Mt5SocketMessage::Tick {
                 symbol,
+                source,
                 bid,
                 ask,
                 time_gmt,
@@ -111,10 +119,15 @@ impl BrokerConnector {
                 // 2. Normalisasi Waktu ke UTC
                 let utc_time = DataIntegrityValidator::normalize_to_utc(time_gmt);
 
+                let src = source
+                    .as_deref()
+                    .and_then(|s| domain::models::MarketDataSource::from_source_str(s).ok())
+                    .unwrap_or(domain::models::MarketDataSource::MrgDemoMt4);
+
                 let tick = Tick {
                     symbol: symbol_obj.clone(),
                     timestamp: utc_time,
-                    source: domain::models::MarketDataSource::Mt5BrokerLive,
+                    source: src,
                     bid,
                     ask,
                 };
@@ -124,6 +137,7 @@ impl BrokerConnector {
             }
             Mt5SocketMessage::Bar {
                 symbol,
+                source,
                 timeframe,
                 open,
                 high,
@@ -145,11 +159,16 @@ impl BrokerConnector {
                     _ => Timeframe::M15,
                 };
 
+                let src = source
+                    .as_deref()
+                    .and_then(|s| domain::models::MarketDataSource::from_source_str(s).ok())
+                    .unwrap_or(domain::models::MarketDataSource::MrgDemoMt4);
+
                 let candle = Candle {
                     symbol: symbol_obj.clone(),
                     timeframe: tf,
                     timestamp: utc_time,
-                    source: domain::models::MarketDataSource::Mt5BrokerLive,
+                    source: src,
                     open,
                     high,
                     low,
@@ -158,8 +177,13 @@ impl BrokerConnector {
                 };
 
                 let mut lock = self.candle_buffer.write().await;
-                let list = lock.entry((symbol_obj, tf)).or_default();
-                list.push(candle);
+                let list = lock.entry((symbol_obj, tf, src)).or_default();
+                if let Some(pos) = list.iter().position(|c| c.timestamp == utc_time) {
+                    list[pos] = candle;
+                } else {
+                    list.push(candle);
+                    list.sort_by_key(|c| c.timestamp);
+                }
             }
         }
         Ok(())
@@ -175,20 +199,25 @@ impl BrokerConnector {
                     l
                 }
                 Err(e) => {
-                    tracing::error!("❌ Gagal membuka TCP listener di {}: {}", addr, e);
+                    tracing::error!(
+                        "❌ Gagal membuka TCP Socket di {}: {}. Live feed dinonaktifkan.",
+                        addr,
+                        e
+                    );
                     return;
                 }
             };
 
             loop {
                 match listener.accept().await {
-                    Ok((socket, remote_addr)) => {
-                        tracing::info!("🔗 Koneksi baru dari MetaTrader EA: {}", remote_addr);
-                        let connector = self.clone();
+                    Ok((stream, peer_addr)) => {
+                        tracing::info!("🔗 Koneksi baru dari MetaTrader EA: {}", peer_addr);
+                        let self_clone = self.clone();
                         tokio::spawn(async move {
                             use tokio::io::AsyncBufReadExt;
-                            let reader = tokio::io::BufReader::new(socket);
+                            let reader = tokio::io::BufReader::new(stream);
                             let mut lines = reader.lines();
+
                             while let Ok(Some(line)) = lines.next_line().await {
                                 let trimmed = line.trim();
                                 if trimmed.is_empty() {
@@ -196,24 +225,28 @@ impl BrokerConnector {
                                 }
                                 match serde_json::from_str::<Mt5SocketMessage>(trimmed) {
                                     Ok(msg) => {
-                                        if let Err(e) = connector.ingest_socket_message(msg).await {
-                                            tracing::warn!("⚠️ Gagal ingest socket message: {}", e);
+                                        if let Err(e) = self_clone.ingest_socket_message(msg).await
+                                        {
+                                            tracing::warn!(
+                                                "⚠️ Penolakan validasi data integritas socket: {}",
+                                                e
+                                            );
                                         }
                                     }
                                     Err(e) => {
-                                        tracing::debug!(
-                                            "Abaikan data non-JSON dari socket: {} ({})",
-                                            trimmed,
-                                            e
+                                        tracing::warn!(
+                                            "⚠️ Format JSON socket broker corrupt: {} | Payload: {}",
+                                            e,
+                                            trimmed
                                         );
                                     }
                                 }
                             }
-                            tracing::info!("🔌 Koneksi MetaTrader EA terputus: {}", remote_addr);
+                            tracing::info!("🔌 Koneksi MetaTrader EA terputus: {}", peer_addr);
                         });
                     }
                     Err(e) => {
-                        tracing::warn!("Gagal menerima koneksi socket: {}", e);
+                        tracing::error!("❌ Error socket accept: {}", e);
                     }
                 }
             }
@@ -224,7 +257,7 @@ impl BrokerConnector {
 #[async_trait]
 impl MarketDataPort for BrokerConnector {
     fn source(&self) -> domain::models::MarketDataSource {
-        domain::models::MarketDataSource::MrgMetaTrader4
+        domain::models::MarketDataSource::MrgDemoMt4
     }
 
     async fn get_latest_tick(&self, symbol: &Symbol) -> Result<Tick, DomainError> {
@@ -237,7 +270,7 @@ impl MarketDataPort for BrokerConnector {
         Ok(Tick {
             symbol: symbol.clone(),
             timestamp: Utc::now(),
-            source: domain::models::MarketDataSource::Mt5BrokerLive,
+            source: domain::models::MarketDataSource::MrgDemoMt4,
             bid: dec!(1.08500),
             ask: dec!(1.08515),
         })
@@ -250,18 +283,24 @@ impl MarketDataPort for BrokerConnector {
         limit: usize,
     ) -> Result<Vec<Candle>, DomainError> {
         let lock = self.candle_buffer.read().await;
-        if let Some(candles) = lock.get(&(symbol.clone(), timeframe)) {
-            if !candles.is_empty() {
-                let start = if candles.len() > limit {
-                    candles.len() - limit
-                } else {
-                    0
-                };
-                return Ok(candles[start..].to_vec());
+        for src in [
+            domain::models::MarketDataSource::MrgDemoMt4,
+            domain::models::MarketDataSource::MrgRealMt4,
+            domain::models::MarketDataSource::MrgMetaTrader4,
+        ] {
+            if let Some(candles) = lock.get(&(symbol.clone(), timeframe, src)) {
+                if !candles.is_empty() {
+                    let start = if candles.len() > limit {
+                        candles.len() - limit
+                    } else {
+                        0
+                    };
+                    return Ok(candles[start..].to_vec());
+                }
             }
         }
 
-        // Fallback synthetic candles
+        // Fallback default snapshot jika socket buffer belum terisi (untuk test/offline)
         let now = Utc::now();
         let mut candles = Vec::with_capacity(limit);
         for i in 0..limit {
@@ -269,7 +308,7 @@ impl MarketDataPort for BrokerConnector {
                 symbol: symbol.clone(),
                 timeframe,
                 timestamp: now - chrono::Duration::minutes(i as i64 * 15),
-                source: domain::models::MarketDataSource::Mt5BrokerLive,
+                source: domain::models::MarketDataSource::MrgDemoMt4,
                 open: dec!(1.08450),
                 high: dec!(1.08600),
                 low: dec!(1.08400),
@@ -288,6 +327,58 @@ impl MarketDataPort for BrokerConnector {
         _to: DateTime<Utc>,
     ) -> Result<Vec<Candle>, DomainError> {
         self.get_recent_candles(symbol, timeframe, 500).await
+    }
+
+    async fn query_candles(
+        &self,
+        query: &domain::models::CandleQuery,
+    ) -> Result<Vec<Candle>, DomainError> {
+        let lock = self.candle_buffer.read().await;
+        let target_candles = if let Some(candles) =
+            lock.get(&(query.symbol.clone(), query.timeframe, query.source))
+        {
+            candles
+        } else if let Some(candles) = lock.get(&(
+            query.symbol.clone(),
+            query.timeframe,
+            domain::models::MarketDataSource::MrgDemoMt4,
+        )) {
+            candles
+        } else if let Some(candles) = lock.get(&(
+            query.symbol.clone(),
+            query.timeframe,
+            domain::models::MarketDataSource::MrgRealMt4,
+        )) {
+            candles
+        } else {
+            return Ok(vec![]);
+        };
+
+        let mut filtered: Vec<Candle> = target_candles
+            .iter()
+            .filter(|c| {
+                if let Some(from) = query.from {
+                    if c.timestamp < from {
+                        return false;
+                    }
+                }
+                if let Some(to) = query.to {
+                    if c.timestamp > to {
+                        return false;
+                    }
+                }
+                true
+            })
+            .cloned()
+            .collect();
+
+        if let Some(limit) = query.limit {
+            if filtered.len() > limit {
+                filtered = filtered.split_off(filtered.len() - limit);
+            }
+        }
+
+        Ok(filtered)
     }
 }
 
@@ -399,6 +490,8 @@ mod tests {
         let connector = BrokerConnector::new("MetaTrader5-Socket");
         let msg = Mt5SocketMessage::Tick {
             symbol: "EURUSD".to_string(),
+            source: Some("MrgDemoMt4".to_string()),
+            server: Some("MaxrichGroup-Demo".to_string()),
             bid: dec!(1.08500),
             ask: dec!(1.08515),
             spread_pts: 15,

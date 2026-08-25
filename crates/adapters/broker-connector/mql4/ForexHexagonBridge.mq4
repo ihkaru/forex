@@ -60,10 +60,15 @@ void OnTick()
       if(!is_connected) return;
    }
 
+   bool is_real = (AccountInfoInteger(ACCOUNT_TRADE_MODE) == ACCOUNT_TRADE_MODE_REAL);
+   string src = is_real ? "MrgRealMt4" : "MrgDemoMt4";
+
    // Format Payload JSON
    string json = StringFormat(
-      "{\"type\":\"TICK\",\"symbol\":\"%s\",\"bid\":%.5f,\"ask\":%.5f,\"spread_pts\":%d,\"time_gmt\":%lld}\n",
+      "{\"type\":\"TICK\",\"symbol\":\"%s\",\"source\":\"%s\",\"server\":\"%s\",\"bid\":%.5f,\"ask\":%.5f,\"spread_pts\":%d,\"time_gmt\":%lld}\n",
       _Symbol,
+      src,
+      AccountServer(),
       Bid,
       Ask,
       (int)((Ask - Bid) / _Point),
@@ -80,7 +85,10 @@ void SendHistoricalH1Bars()
 {
    int total_h1_bars = iBars(_Symbol, PERIOD_H1);
    int bars_to_send = MathMin(InpHistoryLimit, total_h1_bars);
-   Print("📦 Mengirim seluruh ", bars_to_send, " bar histori H1 ", _Symbol, " ke Rust Quant Engine...");
+   bool is_real = (AccountInfoInteger(ACCOUNT_TRADE_MODE) == ACCOUNT_TRADE_MODE_REAL);
+   string src = is_real ? "MrgRealMt4" : "MrgDemoMt4";
+
+   Print("📦 Mengirim seluruh ", bars_to_send, " bar histori H1 ", _Symbol, " (Source: ", src, " [", AccountServer(), "]) ke Rust Quant Engine...");
 
    for(int i = bars_to_send - 1; i >= 0; i--)
    {
@@ -92,8 +100,9 @@ void SendHistoricalH1Bars()
       long   bar_vol    = iVolume(_Symbol, PERIOD_H1, i);
 
       string json = StringFormat(
-         "{\"type\":\"BAR\",\"symbol\":\"%s\",\"timeframe\":\"H1\",\"open\":%.5f,\"high\":%.5f,\"low\":%.5f,\"close\":%.5f,\"volume\":%.2f,\"time_gmt\":%lld}\n",
+         "{\"type\":\"BAR\",\"symbol\":\"%s\",\"source\":\"%s\",\"timeframe\":\"H1\",\"open\":%.5f,\"high\":%.5f,\"low\":%.5f,\"close\":%.5f,\"volume\":%.2f,\"time_gmt\":%lld}\n",
          _Symbol,
+         src,
          bar_open, bar_high, bar_low, bar_close, (double)bar_vol,
          (long)bar_time
       );
@@ -101,6 +110,7 @@ void SendHistoricalH1Bars()
    }
    Print("✅ Sukses sinkronisasi ", bars_to_send, " bar H1 ke Rust Engine.");
 }
+
 
 
 //+------------------------------------------------------------------+

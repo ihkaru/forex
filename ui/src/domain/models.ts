@@ -25,7 +25,8 @@ export interface ChartTypeOption {
   isDerived?: boolean;
 }
 
-export type MarketDataSource = 'DukascopyEcn' | 'Mt5BrokerLive' | 'CtraderOpenApi' | 'SyntheticTest';
+export type MarketDataSource = 'DukascopyEcn' | 'Mt5BrokerLive' | 'MrgMetaTrader4' | 'CtraderOpenApi' | 'SyntheticTest';
+
 
 export interface Candle {
   time: number; // Unix timestamp in seconds

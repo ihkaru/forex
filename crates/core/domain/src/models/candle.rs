@@ -20,6 +20,8 @@ pub enum Timeframe {
 pub enum MarketDataSource {
     #[default]
     DukascopyEcn,
+    MrgDemoMt4,
+    MrgRealMt4,
     Mt5BrokerLive,
     MrgMetaTrader4,
     CtraderOpenApi,
@@ -32,12 +34,14 @@ impl MarketDataSource {
         let clean = s.trim().to_lowercase();
         match clean.as_str() {
             "dukascopy" | "dukascopy_ecn" | "dukascopyecn" | "ecn" => Ok(Self::DukascopyEcn),
-            "mrg" | "mrg_mt4" | "mrgmetatrader4" | "mt4" => Ok(Self::MrgMetaTrader4),
+            "mrg_demo" | "mrg_demo_mt4" | "mrgdemo" | "demo" => Ok(Self::MrgDemoMt4),
+            "mrg_real" | "mrg_real_mt4" | "mrgreal" | "real" => Ok(Self::MrgRealMt4),
+            "mrg" | "mrg_mt4" | "mrgmetatrader4" | "mt4" => Ok(Self::MrgDemoMt4),
             "mt5" | "mt5_live" | "mt5brokerlive" | "live" => Ok(Self::Mt5BrokerLive),
             "ctrader" | "ctrader_openapi" | "ctraderopenapi" => Ok(Self::CtraderOpenApi),
             "synthetic" | "synthetic_test" | "synthetictest" | "test" => Ok(Self::SyntheticTest),
             _ => Err(crate::errors::DomainError::ValidationError(format!(
-                "Sumber data pasar '{}' tidak valid. Sumber yang didukung: 'dukascopy', 'mrg_mt4', 'mt5_live', 'ctrader'",
+                "Sumber data pasar '{}' tidak valid. Sumber yang didukung: 'dukascopy', 'mrg_demo', 'mrg_real', 'ctrader'",
                 s
             ))),
         }
@@ -46,6 +50,8 @@ impl MarketDataSource {
     pub fn as_str(&self) -> &'static str {
         match self {
             Self::DukascopyEcn => "dukascopy",
+            Self::MrgDemoMt4 => "mrg_demo",
+            Self::MrgRealMt4 => "mrg_real",
             Self::MrgMetaTrader4 => "mrg_mt4",
             Self::Mt5BrokerLive => "mt5_live",
             Self::CtraderOpenApi => "ctrader",
@@ -56,7 +62,9 @@ impl MarketDataSource {
     pub fn display_name(&self) -> &'static str {
         match self {
             Self::DukascopyEcn => "Dukascopy ECN (10-Yr Historical Tick)",
-            Self::MrgMetaTrader4 => "MRG MetaTrader 4 (Broker Live Feed)",
+            Self::MrgDemoMt4 => "MRG MetaTrader 4 Demo (MaxrichGroup-Demo)",
+            Self::MrgRealMt4 => "MRG MetaTrader 4 Real (MRGMega-Live)",
+            Self::MrgMetaTrader4 => "MRG MetaTrader 4 Live Feed",
             Self::Mt5BrokerLive => "MetaTrader 5 Live Feed",
             Self::CtraderOpenApi => "cTrader Open API",
             Self::SyntheticTest => "Synthetic Test Data",
@@ -66,7 +74,11 @@ impl MarketDataSource {
     pub fn is_live(&self) -> bool {
         matches!(
             self,
-            Self::MrgMetaTrader4 | Self::Mt5BrokerLive | Self::CtraderOpenApi
+            Self::MrgDemoMt4
+                | Self::MrgRealMt4
+                | Self::MrgMetaTrader4
+                | Self::Mt5BrokerLive
+                | Self::CtraderOpenApi
         )
     }
 }

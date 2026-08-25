@@ -32,6 +32,11 @@ impl MarketDataRouterService {
         self.adapters.insert(source, adapter);
     }
 
+    /// Daftarkan adapter untuk sumber spesifik (misal satu connector melayani Demo & Real)
+    pub fn register_for(&mut self, source: MarketDataSource, adapter: Arc<dyn MarketDataPort>) {
+        self.adapters.insert(source, adapter);
+    }
+
     /// Ambil adapter untuk sumber tertentu
     pub fn get_adapter(
         &self,

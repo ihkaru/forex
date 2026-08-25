@@ -56,10 +56,10 @@
     trades: SimulatedTrade[];
     signal: Signal | null;
     syncStatusMessage?: string | null;
-    selectedSource?: 'dukascopy' | 'mrg_mt4';
+    selectedSource?: 'dukascopy' | 'mrg_demo' | 'mrg_real';
     preferencesPort?: IUserPreferencesPort;
     onSelectSymbol: (symbol: string) => void;
-    onSelectSource?: (source: 'dukascopy' | 'mrg_mt4') => void;
+    onSelectSource?: (source: 'dukascopy' | 'mrg_demo' | 'mrg_real') => void;
     onSyncDelta?: () => void;
     onOpenProvenance?: () => void;
     onReplayChange?: (displayedCandles: Candle[], isReplayActive: boolean, latestCandle?: Candle) => void;
@@ -87,6 +87,7 @@
     onOpenProvenance,
     onReplayChange
   }: Props = $props();
+
 
 
 
@@ -804,13 +805,21 @@
           🇨🇭 DUKASCOPY (10Y)
         </button>
         <button
-          onclick={() => onSelectSource?.('mrg_mt4')}
-          class="px-2 py-0.5 rounded font-bold transition-all {selectedSource === 'mrg_mt4' ? 'bg-[#2962ff] text-white shadow-sm' : 'text-[#787b86] hover:text-white'}"
-          title="Gunakan Data Live MT4 Broker MRG (Execution / Forward Live)"
+          onclick={() => onSelectSource?.('mrg_demo')}
+          class="px-2 py-0.5 rounded font-bold transition-all {selectedSource === 'mrg_demo' ? 'bg-[#2962ff] text-white shadow-sm' : 'text-[#787b86] hover:text-white'}"
+          title="Gunakan Data Live MT4 Broker MRG Demo (Simulasi / Staging Feed)"
         >
-          ⚡ MRG MT4 LIVE
+          🧪 MRG DEMO
+        </button>
+        <button
+          onclick={() => onSelectSource?.('mrg_real')}
+          class="px-2 py-0.5 rounded font-bold transition-all {selectedSource === 'mrg_real' ? 'bg-[#f23645] text-white shadow-sm' : 'text-[#787b86] hover:text-white'}"
+          title="Gunakan Data Live MT4 Broker MRG Real (Live Market LP Feed)"
+        >
+          🔴 MRG REAL
         </button>
       </div>
+
 
       <!-- Provenance Info Icon Button -->
       <button

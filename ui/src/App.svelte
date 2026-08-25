@@ -197,12 +197,17 @@
     }
   }
 
-  let selectedMarketSource = $state<'dukascopy' | 'mrg_mt4'>('dukascopy');
+  let selectedMarketSource = $state<'dukascopy' | 'mrg_demo' | 'mrg_real'>('dukascopy');
 
-  async function loadMarketData(symbol: string, strategyId?: string, source?: 'dukascopy' | 'mrg_mt4') {
+  async function loadMarketData(
+    symbol: string,
+    strategyId?: string,
+    source?: 'dukascopy' | 'mrg_demo' | 'mrg_real'
+  ) {
     activeSymbol = symbol;
     const stratId = strategyId || selectedStrategyId;
     const src = source || selectedMarketSource;
+
     try {
       const [candleData, tradeData, detailedData] = await Promise.all([
         composition.marketDataPort.getCandles(symbol, 'H1', 15000, src),

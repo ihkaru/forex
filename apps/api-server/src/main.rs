@@ -17,9 +17,25 @@ async fn main() -> anyhow::Result<()> {
 
     let market_adapter = Arc::new(RealHistoricalMarketAdapter::new());
     let broker_connector = Arc::new(broker_connector::BrokerConnector::new("MRG_MT4_Bridge"));
+    // Aktifkan TCP Socket Bridge di port 5555 untuk menerima live stream dari MetaTrader 4 MRG
+    broker_connector
+        .clone()
+        .start_tcp_listener("127.0.0.1", 5555);
+
     let mut router = application::services::MarketDataRouterService::new();
     router.register(market_adapter.clone());
-    router.register(broker_connector.clone());
+    router.register_for(
+        domain::models::MarketDataSource::MrgDemoMt4,
+        broker_connector.clone(),
+    );
+    router.register_for(
+        domain::models::MarketDataSource::MrgRealMt4,
+        broker_connector.clone(),
+    );
+    router.register_for(
+        domain::models::MarketDataSource::MrgMetaTrader4,
+        broker_connector.clone(),
+    );
     let router = Arc::new(router);
 
     let strategy = Arc::new(PolaNStrategy::default());
