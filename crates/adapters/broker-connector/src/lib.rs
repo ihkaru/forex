@@ -52,8 +52,13 @@ impl DataIntegrityValidator {
             ));
         }
         let spread = ask - bid;
-        // Misal spread > 50 pips (0.00500 pada pair 5 digit) dianggap outlier / anomaly
-        if spread > dec!(0.00500) {
+        // Kalibrasi peringatan anomali spread: Forex > 100 pips (0.0100) atau Gold > 500 pips ($5.00)
+        let is_anomaly = if bid > dec!(100.0) {
+            spread > dec!(5.00)
+        } else {
+            spread > dec!(0.0100)
+        };
+        if is_anomaly {
             warn!(
                 "⚠️ Peringatan Anomali Pasar: Spread melebar drastis ({})",
                 spread
@@ -119,21 +124,30 @@ impl BrokerConnector {
             }
             Mt5SocketMessage::Bar {
                 symbol,
+                timeframe,
                 open,
                 high,
                 low,
                 close,
                 volume,
                 time_gmt,
-                ..
             } => {
                 let symbol_obj =
                     Symbol::from_symbol_str(&symbol).ok_or(DomainError::InvalidSymbol(symbol))?;
                 let utc_time = DataIntegrityValidator::normalize_to_utc(time_gmt);
+                let tf = match timeframe.to_uppercase().as_str() {
+                    "H1" | "1H" | "60" => Timeframe::H1,
+                    "H4" | "4H" | "240" => Timeframe::H4,
+                    "M30" | "30" => Timeframe::M30,
+                    "M5" | "5" => Timeframe::M5,
+                    "M1" | "1" => Timeframe::M1,
+                    "D1" | "1D" | "1440" => Timeframe::D1,
+                    _ => Timeframe::M15,
+                };
 
                 let candle = Candle {
                     symbol: symbol_obj.clone(),
-                    timeframe: Timeframe::M15,
+                    timeframe: tf,
                     timestamp: utc_time,
                     source: domain::models::MarketDataSource::Mt5BrokerLive,
                     open,
@@ -144,11 +158,66 @@ impl BrokerConnector {
                 };
 
                 let mut lock = self.candle_buffer.write().await;
-                let list = lock.entry((symbol_obj, Timeframe::M15)).or_default();
+                let list = lock.entry((symbol_obj, tf)).or_default();
                 list.push(candle);
             }
         }
         Ok(())
+    }
+
+    /// Menjalankan TCP Socket Server non-blocking untuk menerima stream dari MT4/MT5 EA
+    pub fn start_tcp_listener(self: Arc<Self>, host: &str, port: u16) {
+        let addr = format!("{}:{}", host, port);
+        tokio::spawn(async move {
+            let listener = match tokio::net::TcpListener::bind(&addr).await {
+                Ok(l) => {
+                    tracing::info!("📡 Broker TCP Socket Bridge mendengarkan di {}", addr);
+                    l
+                }
+                Err(e) => {
+                    tracing::error!("❌ Gagal membuka TCP listener di {}: {}", addr, e);
+                    return;
+                }
+            };
+
+            loop {
+                match listener.accept().await {
+                    Ok((socket, remote_addr)) => {
+                        tracing::info!("🔗 Koneksi baru dari MetaTrader EA: {}", remote_addr);
+                        let connector = self.clone();
+                        tokio::spawn(async move {
+                            use tokio::io::AsyncBufReadExt;
+                            let reader = tokio::io::BufReader::new(socket);
+                            let mut lines = reader.lines();
+                            while let Ok(Some(line)) = lines.next_line().await {
+                                let trimmed = line.trim();
+                                if trimmed.is_empty() {
+                                    continue;
+                                }
+                                match serde_json::from_str::<Mt5SocketMessage>(trimmed) {
+                                    Ok(msg) => {
+                                        if let Err(e) = connector.ingest_socket_message(msg).await {
+                                            tracing::warn!("⚠️ Gagal ingest socket message: {}", e);
+                                        }
+                                    }
+                                    Err(e) => {
+                                        tracing::debug!(
+                                            "Abaikan data non-JSON dari socket: {} ({})",
+                                            trimmed,
+                                            e
+                                        );
+                                    }
+                                }
+                            }
+                            tracing::info!("🔌 Koneksi MetaTrader EA terputus: {}", remote_addr);
+                        });
+                    }
+                    Err(e) => {
+                        tracing::warn!("Gagal menerima koneksi socket: {}", e);
+                    }
+                }
+            }
+        });
     }
 }
 

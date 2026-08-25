@@ -36,6 +36,10 @@ async fn main() -> anyhow::Result<()> {
         config.broker.mt5_socket_host, config.broker.mt5_socket_port
     );
     let market_data = Arc::new(BrokerConnector::new(&broker_name));
+    market_data.clone().start_tcp_listener(
+        &config.broker.mt5_socket_host,
+        config.broker.mt5_socket_port,
+    );
 
     let tf_config = TraderFamilyConfig {
         base_url: config.traders_family.api_base_url.clone(),
@@ -91,15 +95,26 @@ async fn main() -> anyhow::Result<()> {
 
     info!("Memantau pasang mata uang aktif: {:?}", watched_symbols);
 
-    // 6. Main Autonomous Loop
-    for symbol in &watched_symbols {
-        let result = engine.process_symbol(symbol, timeframe).await?;
-        if let Some(sig) = result {
-            info!("🎯 Sinyal aktif lolos kepatuhan TF & diposting: {}", sig.id);
-        }
-        tokio::time::sleep(Duration::from_millis(100)).await;
-    }
+    // 6. Main Continuous Autonomous Loop
+    let poll_interval = Duration::from_secs(10);
+    info!(
+        "🔄 Memulai continuous monitoring loop (Interval: {:?})",
+        poll_interval
+    );
 
-    info!("Siklus pemindaian selesai.");
-    Ok(())
+    loop {
+        for symbol in &watched_symbols {
+            match engine.process_symbol(symbol, timeframe).await {
+                Ok(Some(sig)) => {
+                    info!("🎯 Sinyal aktif lolos kepatuhan TF & diposting: {}", sig.id);
+                }
+                Ok(None) => {}
+                Err(e) => {
+                    tracing::warn!("⚠️ Error evaluasi simbol {}: {}", symbol, e);
+                }
+            }
+            tokio::time::sleep(Duration::from_millis(100)).await;
+        }
+        tokio::time::sleep(poll_interval).await;
+    }
 }

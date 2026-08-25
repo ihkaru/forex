@@ -22,6 +22,12 @@ impl Symbol {
                 base: clean[0..3].to_string(),
                 quote: clean[3..6].to_string(),
             })
+        } else if clean.len() > 6 {
+            // Support broker suffixes like XAUUSD_MRG, EURUSD_MRG, USDJPY.m, etc.
+            Some(Self {
+                base: clean[0..3].to_string(),
+                quote: clean[3..6].to_string(),
+            })
         } else {
             None
         }
