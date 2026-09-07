@@ -22,13 +22,27 @@ venv/
 *.feather
 *.h5
 
-# Reverse Engineering dumps & secrets
+# Reverse Engineering dumps, APK extracts & decompiled outputs
 *.apk
+*.aab
+*.xapk
+*.apks
 *.dex
+*.so
+*.dylib
+*.dll
+*.smali
 *.pcap
+*.pcapng
 *.mitm
-reverse-engineering/trader-family/apks/
-reverse-engineering/trader-family/jadx/
+*.har
+**/apks/
+**/jadx/
+**/apktool/
+**/decompiled/
+**/extracted/
+reverse-engineering/**/sources/
+reverse-engineering/**/resources/
 .env
 .env.*
 !.env.example
