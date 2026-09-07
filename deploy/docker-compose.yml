@@ -25,6 +25,12 @@ services:
       - TF_PASSWORD=${TF_PASSWORD:-}
       - TF_CHANNEL_ID=${TF_CHANNEL_ID:-}
       - TF_AUTH_TOKEN=${TF_AUTH_TOKEN:-}
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://127.0.0.1:5000/api/health || exit 1"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+      start_period: 5s
     volumes:
       - forex_market_data:/app/data
       - forex_reports:/app/reports
@@ -45,6 +51,12 @@ services:
       - "3000:80"
     environment:
       - PORT=80
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://127.0.0.1/health || exit 1"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+      start_period: 5s
 
 volumes:
   forex_market_data:
