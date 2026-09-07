@@ -6,7 +6,7 @@ services:
   # ==============================================================================
   api-server:
     build:
-      context: ..
+      context: .
       dockerfile: deploy/Dockerfile.backend
     image: forex-quant-api:latest
     container_name: forex_api_server
@@ -19,6 +19,7 @@ services:
       - MT4_SOCKET_HOST=0.0.0.0
       - MT4_SOCKET_PORT=5555
       - PORT=5000
+      # Kredensial Traders Family (Dapat diisi via Coolify Environment Variables)
       - TF_BASE_URL=${TF_BASE_URL:-https://api.tradersfamily.id}
       - TF_EMAIL=${TF_EMAIL:-}
       - TF_PASSWORD=${TF_PASSWORD:-}
@@ -33,7 +34,7 @@ services:
   # ==============================================================================
   ui:
     build:
-      context: ..
+      context: .
       dockerfile: deploy/Dockerfile.frontend
     image: forex-quant-ui:latest
     container_name: forex_ui
