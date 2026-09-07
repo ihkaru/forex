@@ -1,4 +1,15 @@
 {
+  "name": "forex-quant-workspace",
+  "private": true,
+  "packageManager": "bun@1.4.2",
+  "engines": {
+    "npm": "please-use-bun",
+    "yarn": "please-use-bun",
+    "pnpm": "please-use-bun"
+  },
+  "scripts": {
+    "preinstall": "node -e 'const ua = process.env.npm_config_user_agent || \"\"; if (ua.startsWith(\"npm\") || ua.startsWith(\"yarn\") || ua.startsWith(\"pnpm\")) { console.error(\"\\n\\x1b[1;31m❌ [BLOCKED] DILARANG MENGGUNAKAN NPM/NPX/YARN/PNPM!\\nProyek ini menggunakan 100% Bun (v1.4.2).\\nSilakan jalankan: bun install\\x1b[0m\\n\"); process.exit(1); }'"
+  },
   "devDependencies": {
     "dukascopy-node": "^1.50.0",
     "https-proxy-agent": "^9.1.0",

@@ -1,16 +1,16 @@
 # ==============================================================================
-# STAGE 1: Build Svelte 5 + Vite Production Bundle
+# STAGE 1: Build Svelte 5 + Vite Production Bundle using Bun v1.4.2
 # ==============================================================================
-FROM node:20-alpine AS builder
+FROM oven/bun:1.4.2-alpine AS builder
 WORKDIR /app
 
-# Install dependencies using clean install
-COPY ui/package.json ui/package-lock.json ./
-RUN npm ci
+# Install dependencies using Bun frozen lockfile
+COPY ui/package.json ui/bun.lock ./
+RUN bun install --frozen-lockfile
 
-# Copy frontend source code and compile
+# Copy frontend source code and compile using Bun
 COPY ui/ ./
-RUN npm run build
+RUN bun run build
 
 # ==============================================================================
 # STAGE 2: High-Performance Nginx Alpine Runtime

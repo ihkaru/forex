@@ -41,6 +41,14 @@ ui/node_modules/
 ui/dist/
 ui/.svelte-kit/
 
+# Lockfiles: Only Bun is permitted! Block npm/yarn/pnpm lockfiles
+package-lock.json
+*/package-lock.json
+yarn.lock
+*/yarn.lock
+pnpm-lock.yaml
+*/pnpm-lock.yaml
+
 # Logs & Database files
 *.log
 *.sqlite

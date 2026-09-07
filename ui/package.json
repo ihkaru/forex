@@ -3,7 +3,14 @@
   "private": true,
   "version": "0.1.0",
   "type": "module",
+  "packageManager": "bun@1.4.2",
+  "engines": {
+    "npm": "please-use-bun",
+    "yarn": "please-use-bun",
+    "pnpm": "please-use-bun"
+  },
   "scripts": {
+    "preinstall": "node -e 'const ua = process.env.npm_config_user_agent || \"\"; if (ua.startsWith(\"npm\") || ua.startsWith(\"yarn\") || ua.startsWith(\"pnpm\")) { console.error(\"\\n\\x1b[1;31m❌ [BLOCKED] DILARANG MENGGUNAKAN NPM/NPX/YARN/PNPM!\\nProyek ini menggunakan 100% Bun (v1.4.2).\\nSilakan jalankan: bun install / bun run dev\\x1b[0m\\n\"); process.exit(1); }'",
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",

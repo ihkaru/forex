@@ -150,5 +150,5 @@ Prosedur multi-langkah tersedia sebagai Skills — dimuat agen otomatis saat rel
 
 **Rust Backend**: `tokio` · `sqlx` (TimescaleDB) · `rust_decimal` · `chrono` · `anyhow/thiserror`  
 **Data**: Dukascopy `.bi5` → DuckDB+Parquet (historical) · MT5 Bridge + cTrader (live)  
-**Frontend**: Svelte 5 Runes · Tailwind CSS v4 · TradingView Lightweight Charts v5  
+**Frontend**: Svelte 5 Runes · Tailwind CSS v4 · TradingView Lightweight Charts v5 · **Bun v1.4.2** (npm/yarn/pnpm strictly disabled)  
 **CI Gates**: `rustfmt` · `clippy -D warnings` · `cargo-nextest` · `cargo-deny`
