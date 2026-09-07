@@ -2,7 +2,7 @@
 # STAGE 1: Cargo Chef Planner
 # Prepares the recipe.json containing exact workspace dependency specifications
 # ==============================================================================
-FROM lukemathwalker/cargo-chef:latest-rust-1.78-bookworm AS chef
+FROM lukemathwalker/cargo-chef:latest-rust-bookworm AS chef
 WORKDIR /app
 
 FROM chef AS planner
