@@ -22,4 +22,10 @@ pub enum DomainError {
 
     #[error("Validation failed: {0}")]
     ValidationError(String),
+
+    #[error("Data unavailable: {0}")]
+    DataUnavailable(String),
+
+    #[error("Not implemented: {0}")]
+    NotImplemented(String),
 }

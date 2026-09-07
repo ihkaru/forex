@@ -27,6 +27,8 @@ venv/
 *.dex
 *.pcap
 *.mitm
+reverse-engineering/trader-family/apks/
+reverse-engineering/trader-family/jadx/
 .env
 .env.*
 !.env.example
@@ -46,3 +48,9 @@ ui/.svelte-kit/
 data/*
 !data/historical/
 !data/historical/*.json
+
+# MetaTrader compiled binaries & profiles
+*.ex4
+*.ex5
+*.srv
+

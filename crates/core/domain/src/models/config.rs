@@ -75,15 +75,21 @@ pub struct TradersFamilySettings {
     pub channel_id: String,
     pub auth_token: String,
     pub user_agent: String,
+    #[serde(default)]
+    pub email: String,
+    #[serde(default)]
+    pub password: String,
 }
 
 impl Default for TradersFamilySettings {
     fn default() -> Self {
         Self {
-            api_base_url: "https://api.tradersfamily.id".to_string(),
-            channel_id: "tf_priority_quant_channel".to_string(),
+            api_base_url: "https://app3.tradersfamily.app".to_string(),
+            channel_id: "341232".to_string(),
             auth_token: String::new(),
-            user_agent: "TradersFamily-Android/3.0".to_string(),
+            user_agent: "Dart/3.4 (dart:io)".to_string(),
+            email: String::new(),
+            password: String::new(),
         }
     }
 }
@@ -187,10 +193,25 @@ impl AppConfig {
         if let Ok(content) = std::fs::read_to_string(path) {
             match Self::from_toml_str(&content) {
                 Ok(mut config) => {
-                    // Override token dari environment variable jika tersedia
+                    // Override token dan kredensial dari environment variable jika tersedia
                     if let Ok(token) = std::env::var("TF_AUTH_TOKEN") {
                         if !token.is_empty() {
                             config.traders_family.auth_token = token;
+                        }
+                    }
+                    if let Ok(email) = std::env::var("TF_EMAIL") {
+                        if !email.is_empty() {
+                            config.traders_family.email = email;
+                        }
+                    }
+                    if let Ok(pwd) = std::env::var("TF_PASSWORD") {
+                        if !pwd.is_empty() {
+                            config.traders_family.password = pwd;
+                        }
+                    }
+                    if let Ok(ch) = std::env::var("TF_CHANNEL_ID") {
+                        if !ch.is_empty() {
+                            config.traders_family.channel_id = ch;
                         }
                     }
                     if let Ok(tg_token) = std::env::var("TELEGRAM_BOT_TOKEN") {

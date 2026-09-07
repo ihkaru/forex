@@ -643,6 +643,8 @@ async fn main() -> anyhow::Result<()> {
         auth_token: config.traders_family.auth_token.clone(),
         channel_id: config.traders_family.channel_id.clone(),
         user_agent: config.traders_family.user_agent.clone(),
+        email: config.traders_family.email.clone(),
+        password: config.traders_family.password.clone(),
     })?;
 
     let receipt = tf_publisher.publish_signal(&sample_signal).await?;

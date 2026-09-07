@@ -1,7 +1,5 @@
 use async_trait::async_trait;
-use chrono::Utc;
 use reqwest::Client;
-use rust_decimal_macros::dec;
 use tracing::info;
 
 use domain::errors::DomainError;
@@ -32,13 +30,10 @@ impl SentimentPort for MyfxbookScraper {
     async fn fetch_sentiment(&self, symbol: &Symbol) -> Result<SentimentData, DomainError> {
         info!("Scraping sentimen retail Myfxbook untuk {}", symbol);
 
-        // Mocking rasio sentimen retail (misal EUR/USD 65% retail Buy -> Market maker sell)
-        Ok(SentimentData {
-            symbol: symbol.clone(),
-            long_percentage: dec!(65.0),
-            short_percentage: dec!(35.0),
-            total_positions: 14200,
-            fetched_at: Utc::now(),
-        })
+        // FAIL-FAST: Dilarang menggunakan sentimen retail mock!
+        Err(DomainError::DataUnavailable(format!(
+            "FAIL-FAST: Live retail sentiment scraper Myfxbook belum menerima data riil untuk {}. Menolak fake sentiment.",
+            symbol
+        )))
     }
 }

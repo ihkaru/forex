@@ -245,6 +245,56 @@ impl TfComplianceGuard {
 
         Ok(())
     }
+
+    /// Validasi kuota maksimal 2 sinyal aktif per pair dan kepatuhan anti-martingale (jarak pending searah)
+    /// serta penjagaan idempotensi sinyal (mencegah penumpukan duplicate limit/stop order)
+    pub fn validate_concurrent_signals(
+        new_signal: &Signal,
+        active_signals: &[Signal],
+    ) -> Result<(), DomainError> {
+        let active_for_symbol: Vec<&Signal> = active_signals
+            .iter()
+            .filter(|s| s.symbol == new_signal.symbol)
+            .collect();
+
+        // 1. Invariant TF Rule #4: Maksimal 2 sinyal aktif per pair
+        if active_for_symbol.len() >= 2 {
+            return Err(DomainError::ValidationError(format!(
+                "Kuota sinyal aktif untuk pair {} sudah penuh (maksimal 2 sinyal bersamaan)",
+                new_signal.symbol
+            )));
+        }
+
+        let spec = TfPairSpec::from_symbol(&new_signal.symbol);
+
+        for existing in active_for_symbol {
+            // 2. Idempotensi Mutlak (FIX Tag 11 / ClOrdID): Dilarang order identik di level harga yang sama
+            if existing.action == new_signal.action
+                && existing.entry_price == new_signal.entry_price
+            {
+                return Err(DomainError::ValidationError(format!(
+                    "Sinyal duplikat terdeteksi (Idempotency check failed): Sinyal {:?} di level {} untuk {} sudah aktif",
+                    new_signal.action, new_signal.entry_price, new_signal.symbol
+                )));
+            }
+
+            // 3. Jarak Pending Searah (Anti-Martingale TF Rule #5):
+            // Tier 1 >= 50 pips, Tier 2 >= 75 pips, Tier 3/4 >= 100 pips
+            if existing.action == new_signal.action {
+                let diff = (new_signal.entry_price - existing.entry_price).abs();
+                let diff_pips = spec.price_diff_to_pips(diff);
+
+                if diff_pips < spec.min_same_direction_gap_pips {
+                    return Err(DomainError::ValidationError(format!(
+                        "Pelanggaran Anti-Martingale TF: Jarak pending order searah ({:.1} pips) kurang dari batas minimal tier {} ({:.1} pips)",
+                        diff_pips, spec.symbol, spec.min_same_direction_gap_pips
+                    )));
+                }
+            }
+        }
+
+        Ok(())
+    }
 }
 
 /// Status Evaluasi Kualifikasi Bulanan Analis Traders Family
@@ -438,5 +488,76 @@ mod tests {
         assert!(!status_low_vp.is_valued_pips_passed);
         assert_eq!(status_low_vp.rejection_reasons.len(), 1);
         assert!(status_low_vp.rejection_reasons[0].contains("Akumulasi Valued Pips (180.0 VP)"));
+    }
+
+    #[test]
+    fn test_concurrent_signals_idempotency_and_anti_martingale() {
+        let symbol = Symbol::new("EUR", "USD"); // Tier 2 (min gap 75.0 pips)
+        let base_signal = Signal {
+            id: Uuid::new_v4(),
+            symbol: symbol.clone(),
+            action: SignalAction::BuyLimit,
+            timeframe: Timeframe::H1,
+            entry_price: dec!(1.08000),
+            stop_loss: dec!(1.07700),
+            take_profit_1: dec!(1.08500),
+            take_profit_2: None,
+            take_profit_3: None,
+            risk_reward_ratio: dec!(1.67),
+            confidence_score: 0.9,
+            strategy_name: "Pola-N".to_string(),
+            rationale: "Base signal".to_string(),
+            status: SignalStatus::Pending,
+            created_at: Utc::now(),
+            expires_at: None,
+        };
+
+        // 1. Kasus Duplikat Identik (Idempotency failure)
+        let dup_signal = base_signal.clone();
+        let err_dup = TfComplianceGuard::validate_concurrent_signals(
+            &dup_signal,
+            std::slice::from_ref(&base_signal),
+        );
+        assert!(err_dup.is_err());
+        assert!(err_dup
+            .unwrap_err()
+            .to_string()
+            .contains("Sinyal duplikat terdeteksi"));
+
+        // 2. Kasus Anti-Martingale Violation (< 75 pips searah untuk EURUSD)
+        let mut close_signal = base_signal.clone();
+        close_signal.id = Uuid::new_v4();
+        close_signal.entry_price = dec!(1.08300); // 30 pips difference (< 75 pips)
+        let err_gap = TfComplianceGuard::validate_concurrent_signals(
+            &close_signal,
+            std::slice::from_ref(&base_signal),
+        );
+        assert!(err_gap.is_err());
+        assert!(err_gap
+            .unwrap_err()
+            .to_string()
+            .contains("Pelanggaran Anti-Martingale TF"));
+
+        // 3. Kasus Valid Gap (>= 75 pips searah, misal 80 pips)
+        let mut valid_signal = base_signal.clone();
+        valid_signal.id = Uuid::new_v4();
+        valid_signal.entry_price = dec!(1.08800); // 80 pips difference (> 75 pips)
+        let ok_gap = TfComplianceGuard::validate_concurrent_signals(
+            &valid_signal,
+            std::slice::from_ref(&base_signal),
+        );
+        assert!(ok_gap.is_ok());
+
+        // 4. Kasus Kuota Maksimal 2 Sinyal per Pair Terlampaui
+        let mut third_signal = base_signal.clone();
+        third_signal.id = Uuid::new_v4();
+        third_signal.entry_price = dec!(1.09700);
+        let active_two = vec![base_signal.clone(), valid_signal];
+        let err_quota = TfComplianceGuard::validate_concurrent_signals(&third_signal, &active_two);
+        assert!(err_quota.is_err());
+        assert!(err_quota
+            .unwrap_err()
+            .to_string()
+            .contains("Kuota sinyal aktif untuk pair EUR/USD sudah penuh"));
     }
 }

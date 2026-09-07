@@ -41,8 +41,6 @@ impl SignalEngineService {
         symbol: &Symbol,
         timeframe: Timeframe,
     ) -> Result<Option<Signal>, DomainError> {
-        info!("Mengevaluasi pasar untuk {} ({:?})", symbol, timeframe);
-
         // 1. Tarik data pasar terkini (via MarketDataPort)
         let current_tick = self.market_data.get_latest_tick(symbol).await?;
         let candles = self
@@ -54,6 +52,15 @@ impl SignalEngineService {
             warn!("Data candle kosong untuk {}", symbol);
             return Ok(None);
         }
+
+        info!(
+            "📊 Mengevaluasi pasar untuk {} ({:?}) | Buffer: {} bar H1 | Live Tick: Bid {} / Ask {}",
+            symbol,
+            timeframe,
+            candles.len(),
+            current_tick.bid,
+            current_tick.ask
+        );
 
         let ctx = MarketContext {
             symbol,
@@ -81,12 +88,24 @@ impl SignalEngineService {
                     continue;
                 }
 
-                // 4. Simpan ke database
+                // 4. Pre-Trade Idempotency Guard & Batas Portofolio (TF Rule #4 & Rule #5, FIX Tag 11 Dedup)
+                let active_signals = self.storage.get_active_signals().await?;
+                if let Err(err) =
+                    TfComplianceGuard::validate_concurrent_signals(&signal, &active_signals)
+                {
+                    warn!(
+                        "⚠️ Sinyal untuk {} ditolak oleh Portfolio/Idempotency Guard: {}",
+                        symbol, err
+                    );
+                    continue;
+                }
+
+                // 5. Simpan ke database
                 if let Err(e) = self.storage.save_signal(&signal).await {
                     error!("Gagal menyimpan sinyal ke database: {:?}", e);
                 }
 
-                // 5. Broadcast ke seluruh publisher (Trader Family, Telegram, dll)
+                // 6. Broadcast ke seluruh publisher (Trader Family, Telegram, dll)
                 for publisher in &self.publishers {
                     match publisher.publish_signal(&signal).await {
                         Ok(receipt) => {
@@ -187,7 +206,39 @@ mod tests {
 
     #[tokio::test]
     async fn test_signal_engine_di_orchestration() {
-        let market_data = Arc::new(BrokerConnector::new("MockBroker"));
+        let market_raw = Arc::new(BrokerConnector::new("MetaTrader5-Bridge"));
+        let now = chrono::Utc::now();
+        market_raw
+            .ingest_socket_message(broker_connector::Mt5SocketMessage::Tick {
+                symbol: "EURUSD".to_string(),
+                source: Some("MrgDemoMt4".to_string()),
+                server: Some("MaxrichGroup-Demo".to_string()),
+                bid: dec!(1.08500),
+                ask: dec!(1.08515),
+                spread_pts: 15,
+                time_gmt: now.timestamp(),
+            })
+            .await
+            .unwrap();
+
+        for i in 0..10 {
+            market_raw
+                .ingest_socket_message(broker_connector::Mt5SocketMessage::Bar {
+                    symbol: "EURUSD".to_string(),
+                    source: Some("MrgDemoMt4".to_string()),
+                    timeframe: "M15".to_string(),
+                    open: dec!(1.08450),
+                    high: dec!(1.08600),
+                    low: dec!(1.08400),
+                    close: dec!(1.08520),
+                    volume: dec!(100),
+                    time_gmt: (now - chrono::Duration::minutes((10 - i) * 15)).timestamp(),
+                })
+                .await
+                .unwrap();
+        }
+
+        let market_data: Arc<dyn MarketDataPort> = market_raw;
         let published_counter = Arc::new(Mutex::new(0));
         let mock_publisher: Arc<dyn SignalPublisherPort> = Arc::new(MockPublisher {
             published_count: published_counter.clone(),
@@ -220,10 +271,26 @@ mod tests {
         // Verifikasi data tersimpan di storage
         let saved = storage.get_signal(signal.id).await.unwrap();
         assert!(saved.is_some());
+
+        // Verifikasi IDEMPOTENSI: Pemanggilan kedua dengan kondisi identik
+        // WAJIB ditolak oleh Idempotency Guard sehingga tidak ada duplikasi broadcast
+        let duplicate_opt = engine
+            .process_symbol(&symbol, Timeframe::M15)
+            .await
+            .unwrap();
+        assert!(
+            duplicate_opt.is_none(),
+            "Sinyal identik berulang wajib ditolak oleh Idempotency Guard"
+        );
+        let count_after = *published_counter.lock().await;
+        assert_eq!(
+            count_after, 1,
+            "Counter publikasi harus tetap 1 (Idempotent)"
+        );
     }
 
     #[tokio::test]
-    async fn test_signal_engine_with_pola_n_strategy() {
+    async fn test_signal_engine_with_pola_n_strategy_fail_fast_when_empty() {
         use domain::models::PolaNStrategy;
         let market_data = Arc::new(BrokerConnector::new("MetaTrader5"));
         let storage = Arc::new(InMemoryStorage::new());
@@ -238,7 +305,11 @@ mod tests {
         );
 
         let symbol = Symbol::new("EUR", "USD");
+        // FAIL-FAST: Saat buffer kosong, engine WAJIB return Err, bukan membuat lilin palsu!
         let result = engine.process_symbol(&symbol, Timeframe::M15).await;
-        assert!(result.is_ok());
+        assert!(
+            result.is_err(),
+            "Harus fail-fast saat market data belum ada"
+        );
     }
 }

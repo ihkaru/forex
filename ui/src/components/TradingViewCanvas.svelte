@@ -79,7 +79,7 @@
     trades = [],
     signal = null,
     syncStatusMessage = null,
-    selectedSource = 'dukascopy',
+    selectedSource = 'mrg_demo',
     preferencesPort = undefined,
     onSelectSymbol,
     onSelectSource,
@@ -409,7 +409,8 @@
       candleSeries = chart.addSeries(LineSeries, {
         color: '#2962ff',
         lineWidth: 2,
-        priceLineVisible: false,
+        priceLineVisible: true,
+        lastValueVisible: true,
       });
     } else if (type === 'AREA') {
       candleSeries = chart.addSeries(AreaSeries, {
@@ -417,13 +418,15 @@
         bottomColor: 'rgba(41, 98, 255, 0.02)',
         lineColor: '#2962ff',
         lineWidth: 2,
-        priceLineVisible: false,
+        priceLineVisible: true,
+        lastValueVisible: true,
       });
     } else if (type === 'BARS') {
       candleSeries = chart.addSeries(BarSeries, {
         upColor: '#089981',
         downColor: '#f23645',
-        priceLineVisible: false,
+        priceLineVisible: true,
+        lastValueVisible: true,
       });
     } else if (type === 'BASELINE') {
       candleSeries = chart.addSeries(BaselineSeries, {
@@ -434,7 +437,8 @@
         bottomFillColor2: 'rgba(242, 54, 69, 0.24)',
         topLineColor: '#089981',
         bottomLineColor: '#f23645',
-        priceLineVisible: false,
+        priceLineVisible: true,
+        lastValueVisible: true,
       });
     } else {
       // CANDLES, VOLUME_CANDLES, HEIKIN_ASHI
@@ -444,6 +448,8 @@
         borderVisible: false,
         wickUpColor: '#089981',
         wickDownColor: '#f23645',
+        priceLineVisible: true,
+        lastValueVisible: true,
       });
     }
 
@@ -459,7 +465,7 @@
         value: c.close,
       } as any);
     } else if (activeChartType === 'VOLUME_CANDLES') {
-      const activeCandles = displayedCandles;
+      const activeCandles = replayState.isActive && displayedCandles.length > 0 ? displayedCandles : candles;
       const lastIdx = activeCandles.length - 1;
       const start = Math.max(0, lastIdx - 19);
       let sum = 0;
@@ -481,7 +487,7 @@
         wickColor: color,
       } as any);
     } else if (activeChartType === 'HEIKIN_ASHI') {
-      const activeCandles = displayedCandles;
+      const activeCandles = replayState.isActive && displayedCandles.length > 0 ? displayedCandles : candles;
       const lastIdx = activeCandles.length - 1;
       const prev = lastIdx > 0 ? activeCandles[lastIdx - 1] : c;
       const prevClose = (prev.open + prev.high + prev.low + prev.close) / 4;
@@ -521,6 +527,21 @@
         candleSeries.setData([]);
       }
       layerManager.clearAll();
+      return;
+    }
+
+    // Fast-path: In-place single forming bar update (120 FPS high-performance live tick animation)
+    const isSingleBarUpdate =
+      lastRenderedSymbol === activeSymbol &&
+      lastRenderedSource === selectedSource &&
+      lastRenderedChartType === activeChartType &&
+      activeCandles.length === lastCandlesLength &&
+      activeCandles.length > 0 &&
+      !replayState.isActive;
+
+    if (isSingleBarUpdate) {
+      const lastC = activeCandles[activeCandles.length - 1];
+      appendSingleCandle(lastC);
       return;
     }
 

@@ -3,7 +3,7 @@ use chrono::{DateTime, TimeZone, Utc};
 use rust_decimal::Decimal;
 use rust_decimal_macros::dec;
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
+use std::collections::{HashMap, VecDeque};
 use std::sync::Arc;
 use tokio::sync::RwLock;
 use tracing::warn;
@@ -11,6 +11,9 @@ use tracing::warn;
 use domain::errors::DomainError;
 use domain::models::{Candle, Symbol, Tick, Timeframe};
 use domain::ports::MarketDataPort;
+
+/// Kapasitas maksimal bounded circular buffer untuk lilin pasar (menjaga footprint memori konstan O(1))
+pub const MAX_CANDLE_CAPACITY: usize = 500;
 
 /// Pesan mentah yang dikirimkan oleh MQL4/MQL5 EA Socket Bridge
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -82,7 +85,7 @@ impl DataIntegrityValidator {
 }
 
 pub type CandleBufferMap =
-    Arc<RwLock<HashMap<(Symbol, Timeframe, domain::models::MarketDataSource), Vec<Candle>>>>;
+    Arc<RwLock<HashMap<(Symbol, Timeframe, domain::models::MarketDataSource), VecDeque<Candle>>>>;
 
 pub struct BrokerConnector {
     pub broker_name: String,
@@ -110,6 +113,18 @@ impl BrokerConnector {
                 time_gmt,
                 ..
             } => {
+                if symbol.to_lowercase().contains("mock")
+                    || source
+                        .as_deref()
+                        .unwrap_or("")
+                        .to_lowercase()
+                        .contains("mock")
+                {
+                    return Err(DomainError::ValidationError(
+                        "FAIL-FAST: Ditolak! Terdeteksi payload atau identifier 'mock' pada socket tick".to_string(),
+                    ));
+                }
+
                 let symbol_obj =
                     Symbol::from_symbol_str(&symbol).ok_or(DomainError::InvalidSymbol(symbol))?;
 
@@ -133,6 +148,18 @@ impl BrokerConnector {
                 };
 
                 let mut lock = self.latest_ticks.write().await;
+                // Monotonic Timestamp Guard: Menolak paket out-of-order yang lebih usang
+                if let Some(existing) = lock.get(&symbol_obj) {
+                    if utc_time < existing.timestamp {
+                        tracing::debug!(
+                            "⏳ Out-of-order tick diabaikan untuk {} (pkt: {}, current: {})",
+                            symbol_obj,
+                            utc_time,
+                            existing.timestamp
+                        );
+                        return Ok(());
+                    }
+                }
                 lock.insert(symbol_obj, tick);
             }
             Mt5SocketMessage::Bar {
@@ -146,6 +173,18 @@ impl BrokerConnector {
                 volume,
                 time_gmt,
             } => {
+                if symbol.to_lowercase().contains("mock")
+                    || source
+                        .as_deref()
+                        .unwrap_or("")
+                        .to_lowercase()
+                        .contains("mock")
+                {
+                    return Err(DomainError::ValidationError(
+                        "FAIL-FAST: Ditolak! Terdeteksi payload atau identifier 'mock' pada socket bar".to_string(),
+                    ));
+                }
+
                 let symbol_obj =
                     Symbol::from_symbol_str(&symbol).ok_or(DomainError::InvalidSymbol(symbol))?;
                 let utc_time = DataIntegrityValidator::normalize_to_utc(time_gmt);
@@ -177,12 +216,29 @@ impl BrokerConnector {
                 };
 
                 let mut lock = self.candle_buffer.write().await;
-                let list = lock.entry((symbol_obj, tf, src)).or_default();
-                if let Some(pos) = list.iter().position(|c| c.timestamp == utc_time) {
-                    list[pos] = candle;
+                let deque = lock.entry((symbol_obj, tf, src)).or_default();
+
+                // Idempotent Upsert: Jika bar di timestamp yang sama sudah ada (current forming bar),
+                // perbarui bar in-place. Jika bar baru, sisipkan secara terurut dan jaga bounded capacity.
+                if let Some(pos) = deque.iter().position(|c| c.timestamp == utc_time) {
+                    deque[pos] = candle;
+                } else if let Some(last) = deque.back() {
+                    if utc_time > last.timestamp {
+                        deque.push_back(candle);
+                    } else {
+                        let insert_pos = deque
+                            .iter()
+                            .position(|c| c.timestamp > utc_time)
+                            .unwrap_or(deque.len());
+                        deque.insert(insert_pos, candle);
+                    }
                 } else {
-                    list.push(candle);
-                    list.sort_by_key(|c| c.timestamp);
+                    deque.push_back(candle);
+                }
+
+                // Enforce bounded circular buffer limit O(1)
+                while deque.len() > MAX_CANDLE_CAPACITY {
+                    deque.pop_front();
                 }
             }
         }
@@ -252,85 +308,6 @@ impl BrokerConnector {
             }
         });
     }
-
-    /// Memindai dan memuat file histori lilin lokal yang diekspor EA MT4 ke MQL4/Files
-    pub async fn load_mt4_disk_files(&self) {
-        let paths = [
-            "/home/ihza/.wine/drive_c/users/ihza/AppData/Roaming/MetaQuotes/Terminal/2191F4A3D14D7B4B1EBB84F924777883/MQL4/Files",
-            "/home/ihza/.wine/drive_c/Program Files (x86)/MetaTrader 4 EXNESS/MQL4/Files",
-        ];
-
-        for p in paths {
-            let p_buf = std::path::Path::new(p);
-            if !p_buf.exists() {
-                continue;
-            }
-            if let Ok(entries) = std::fs::read_dir(p_buf) {
-                for entry in entries.flatten() {
-                    let path = entry.path();
-                    if path.extension().and_then(|e| e.to_str()) == Some("json") {
-                        if let Ok(content) = std::fs::read_to_string(&path) {
-                            if let Ok(bars) =
-                                serde_json::from_str::<Vec<serde_json::Value>>(&content)
-                            {
-                                for bar in bars {
-                                    let time =
-                                        bar.get("time").and_then(|v| v.as_i64()).unwrap_or(0);
-                                    let parse_num =
-                                        |val: Option<&serde_json::Value>| -> Option<Decimal> {
-                                            val.and_then(|v| {
-                                                if let Some(s) = v.as_str() {
-                                                    s.parse().ok()
-                                                } else if let Some(f) = v.as_f64() {
-                                                    Decimal::from_f64_retain(f)
-                                                } else {
-                                                    None
-                                                }
-                                            })
-                                        };
-
-                                    let open = match parse_num(bar.get("open")) {
-                                        Some(v) => v,
-                                        None => continue,
-                                    };
-                                    let high = match parse_num(bar.get("high")) {
-                                        Some(v) => v,
-                                        None => continue,
-                                    };
-                                    let low = match parse_num(bar.get("low")) {
-                                        Some(v) => v,
-                                        None => continue,
-                                    };
-                                    let close = match parse_num(bar.get("close")) {
-                                        Some(v) => v,
-                                        None => continue,
-                                    };
-                                    let vol = parse_num(bar.get("volume")).unwrap_or(Decimal::ONE);
-                                    let src_str = bar
-                                        .get("source")
-                                        .and_then(|v| v.as_str())
-                                        .unwrap_or("MrgDemoMt4");
-
-                                    let msg = Mt5SocketMessage::Bar {
-                                        symbol: "XAUUSD".to_string(),
-                                        source: Some(src_str.to_string()),
-                                        timeframe: "H1".to_string(),
-                                        open,
-                                        high,
-                                        low,
-                                        close,
-                                        volume: vol,
-                                        time_gmt: time,
-                                    };
-                                    let _ = self.ingest_socket_message(msg).await;
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
 }
 
 #[async_trait]
@@ -345,14 +322,11 @@ impl MarketDataPort for BrokerConnector {
             return Ok(tick.clone());
         }
 
-        // Fallback default snapshot jika socket buffer belum terisi
-        Ok(Tick {
-            symbol: symbol.clone(),
-            timestamp: Utc::now(),
-            source: domain::models::MarketDataSource::MrgDemoMt4,
-            bid: dec!(1.08500),
-            ask: dec!(1.08515),
-        })
+        // FAIL-FAST: Dilarang fallback! Hanya terima tick streaming langsung dari socket MT4.
+        Err(DomainError::DataUnavailable(format!(
+            "FAIL-FAST: Buffer tick kosong untuk simbol {} dari broker socket. Belum ada stream harga live dari MT5 EA.",
+            symbol
+        )))
     }
 
     async fn get_recent_candles(
@@ -369,33 +343,18 @@ impl MarketDataPort for BrokerConnector {
         ] {
             if let Some(candles) = lock.get(&(symbol.clone(), timeframe, src)) {
                 if !candles.is_empty() {
-                    let start = if candles.len() > limit {
-                        candles.len() - limit
-                    } else {
-                        0
-                    };
-                    return Ok(candles[start..].to_vec());
+                    let skip = candles.len().saturating_sub(limit);
+                    let result: Vec<Candle> = candles.iter().skip(skip).cloned().collect();
+                    return Ok(result);
                 }
             }
         }
 
-        // Fallback default snapshot jika socket buffer belum terisi (untuk test/offline)
-        let now = Utc::now();
-        let mut candles = Vec::with_capacity(limit);
-        for i in 0..limit {
-            candles.push(Candle {
-                symbol: symbol.clone(),
-                timeframe,
-                timestamp: now - chrono::Duration::minutes(i as i64 * 15),
-                source: domain::models::MarketDataSource::MrgDemoMt4,
-                open: dec!(1.08450),
-                high: dec!(1.08600),
-                low: dec!(1.08400),
-                close: dec!(1.08520),
-                volume: dec!(1250),
-            });
-        }
-        Ok(candles)
+        // FAIL-FAST: Dilarang fallback! Hanya terima candle streaming langsung dari socket MT4.
+        Err(DomainError::DataUnavailable(format!(
+            "FAIL-FAST: Buffer candle kosong untuk simbol {} timeframe {:?}. Belum ada data bar yang dikirim oleh MT4 EA via TCP socket.",
+            symbol, timeframe
+        )))
     }
 
     async fn get_historical_candles(
@@ -412,15 +371,6 @@ impl MarketDataPort for BrokerConnector {
         &self,
         query: &domain::models::CandleQuery,
     ) -> Result<Vec<Candle>, DomainError> {
-        let is_empty = {
-            let lock = self.candle_buffer.read().await;
-            lock.is_empty()
-        };
-
-        if is_empty {
-            self.load_mt4_disk_files().await;
-        }
-
         let lock = self.candle_buffer.read().await;
         let target_candles = if let Some(candles) =
             lock.get(&(query.symbol.clone(), query.timeframe, query.source))
@@ -505,39 +455,24 @@ impl MarketDataPort for CtraderOpenApiConnector {
     }
 
     async fn get_latest_tick(&self, symbol: &Symbol) -> Result<Tick, DomainError> {
-        // Fallback snapshot stream
-
-        Ok(Tick {
-            symbol: symbol.clone(),
-            timestamp: Utc::now(),
-            source: domain::models::MarketDataSource::CtraderOpenApi,
-            bid: dec!(1.08500),
-            ask: dec!(1.08512), // Tighter institutional cTrader spread
-        })
+        // FAIL-FAST: Dilarang fallback ke snapshot mock!
+        Err(DomainError::DataUnavailable(format!(
+            "FAIL-FAST: cTrader Open API stream belum terkoneksi untuk simbol {}. Menolak fake tick.",
+            symbol
+        )))
     }
 
     async fn get_recent_candles(
         &self,
         symbol: &Symbol,
         timeframe: Timeframe,
-        limit: usize,
+        _limit: usize,
     ) -> Result<Vec<Candle>, DomainError> {
-        let now = Utc::now();
-        let mut candles = Vec::with_capacity(limit);
-        for i in 0..limit {
-            candles.push(Candle {
-                symbol: symbol.clone(),
-                timeframe,
-                timestamp: now - chrono::Duration::minutes(i as i64 * 15),
-                source: domain::models::MarketDataSource::CtraderOpenApi,
-                open: dec!(1.08450),
-                high: dec!(1.08600),
-                low: dec!(1.08400),
-                close: dec!(1.08520),
-                volume: dec!(1500),
-            });
-        }
-        Ok(candles)
+        // FAIL-FAST: Dilarang membuat lilin sintetis palsu!
+        Err(DomainError::DataUnavailable(format!(
+            "FAIL-FAST: cTrader Open API belum menerima streaming candle untuk simbol {} timeframe {:?}. Menolak synthetic candles.",
+            symbol, timeframe
+        )))
     }
 
     async fn get_historical_candles(
@@ -592,5 +527,146 @@ mod tests {
         let tick = connector.get_latest_tick(&symbol).await.unwrap();
         assert_eq!(tick.bid, dec!(1.08500));
         assert_eq!(tick.ask, dec!(1.08515));
+    }
+
+    #[tokio::test]
+    async fn test_monotonic_tick_rejection() {
+        let connector = BrokerConnector::new("MetaTrader5-Socket");
+        let symbol = Symbol::new("EUR", "USD");
+
+        // Tick awal pada t = 1000
+        connector
+            .ingest_socket_message(Mt5SocketMessage::Tick {
+                symbol: "EURUSD".to_string(),
+                source: Some("MrgDemoMt4".to_string()),
+                server: None,
+                bid: dec!(1.08500),
+                ask: dec!(1.08515),
+                spread_pts: 15,
+                time_gmt: 1000,
+            })
+            .await
+            .unwrap();
+
+        // Tick baru pada t = 1010
+        connector
+            .ingest_socket_message(Mt5SocketMessage::Tick {
+                symbol: "EURUSD".to_string(),
+                source: Some("MrgDemoMt4".to_string()),
+                server: None,
+                bid: dec!(1.08550),
+                ask: dec!(1.08565),
+                spread_pts: 15,
+                time_gmt: 1010,
+            })
+            .await
+            .unwrap();
+
+        let tick = connector.get_latest_tick(&symbol).await.unwrap();
+        assert_eq!(tick.bid, dec!(1.08550));
+
+        // Out-of-order tick pada t = 1005 (lebih usang dari 1010, akibat TCP jitter)
+        connector
+            .ingest_socket_message(Mt5SocketMessage::Tick {
+                symbol: "EURUSD".to_string(),
+                source: Some("MrgDemoMt4".to_string()),
+                server: None,
+                bid: dec!(1.08400),
+                ask: dec!(1.08415),
+                spread_pts: 15,
+                time_gmt: 1005,
+            })
+            .await
+            .unwrap();
+
+        // State harus tetap dipertahankan pada data terkini (t = 1010)
+        let tick_after = connector.get_latest_tick(&symbol).await.unwrap();
+        assert_eq!(tick_after.bid, dec!(1.08550));
+    }
+
+    #[tokio::test]
+    async fn test_candle_buffer_upsert_and_bounded_capacity() {
+        let connector = BrokerConnector::new("MetaTrader5-Socket");
+        let symbol = Symbol::new("EUR", "USD");
+
+        // 1. Ingest bar pertama t = 3600
+        connector
+            .ingest_socket_message(Mt5SocketMessage::Bar {
+                symbol: "EURUSD".to_string(),
+                source: Some("MrgDemoMt4".to_string()),
+                timeframe: "H1".to_string(),
+                open: dec!(1.08000),
+                high: dec!(1.08200),
+                low: dec!(1.07900),
+                close: dec!(1.08100),
+                volume: dec!(100),
+                time_gmt: 3600,
+            })
+            .await
+            .unwrap();
+
+        let candles = connector
+            .get_recent_candles(&symbol, Timeframe::H1, 10)
+            .await
+            .unwrap();
+        assert_eq!(candles.len(), 1);
+        assert_eq!(candles[0].close, dec!(1.08100));
+
+        // 2. Ingest update bar berjalan di timestamp yang sama t = 3600 (forming bar tick update)
+        connector
+            .ingest_socket_message(Mt5SocketMessage::Bar {
+                symbol: "EURUSD".to_string(),
+                source: Some("MrgDemoMt4".to_string()),
+                timeframe: "H1".to_string(),
+                open: dec!(1.08000),
+                high: dec!(1.08300), // new high
+                low: dec!(1.07900),
+                close: dec!(1.08250), // new close
+                volume: dec!(150),
+                time_gmt: 3600,
+            })
+            .await
+            .unwrap();
+
+        let candles_updated = connector
+            .get_recent_candles(&symbol, Timeframe::H1, 10)
+            .await
+            .unwrap();
+        assert_eq!(
+            candles_updated.len(),
+            1,
+            "Idempotent upsert harus mencegah duplikasi bar di timestamp yang sama"
+        );
+        assert_eq!(candles_updated[0].high, dec!(1.08300));
+        assert_eq!(candles_updated[0].close, dec!(1.08250));
+
+        // 3. Uji bounded capacity: Kirim 550 bar berurutan
+        for i in 1..=550 {
+            connector
+                .ingest_socket_message(Mt5SocketMessage::Bar {
+                    symbol: "EURUSD".to_string(),
+                    source: Some("MrgDemoMt4".to_string()),
+                    timeframe: "H1".to_string(),
+                    open: dec!(1.08000),
+                    high: dec!(1.08300),
+                    low: dec!(1.07900),
+                    close: dec!(1.08250),
+                    volume: dec!(100),
+                    time_gmt: 3600 + (i * 3600),
+                })
+                .await
+                .unwrap();
+        }
+
+        let all_stored = connector
+            .get_recent_candles(&symbol, Timeframe::H1, 1000)
+            .await
+            .unwrap();
+        assert_eq!(
+            all_stored.len(),
+            MAX_CANDLE_CAPACITY,
+            "Circular buffer harus dibatasi tepat di MAX_CANDLE_CAPACITY ({})",
+            MAX_CANDLE_CAPACITY
+        );
     }
 }

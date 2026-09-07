@@ -4,7 +4,7 @@ use axum::extract::{Path as AxumPath, State};
 use axum::http::StatusCode;
 use axum::Json;
 use domain::models::{CandleQuery, MarketDataSource, RiskProfile, Signal, Symbol, Tick, Timeframe};
-use domain::ports::{MarketContext, StrategyPort};
+use domain::ports::{MarketContext, MarketDataPort, StrategyPort};
 
 use rust_decimal::Decimal;
 use rust_decimal_macros::dec;
@@ -294,39 +294,53 @@ async fn handle_market_socket(
         return;
     };
 
-    // Kirim candle terakhir secara instan saat koneksi WebSocket tersambung (scoped read lock)
-    let initial_msg = {
-        if let Ok(map) = state.market_adapter.candles_map.read() {
-            map.get(&sym.to_compact_string()).and_then(|candles| {
-                candles.last().and_then(|last| {
-                    let dto = CandleDto {
-                        time: last.timestamp.timestamp(),
-                        source: last.source,
-                        open: last.open,
-                        high: last.high,
-                        low: last.low,
-                        close: last.close,
-                        volume: last.volume,
-                    };
-                    serde_json::to_string(&dto).ok()
-                })
-            })
-        } else {
-            None
-        }
-    };
+    let mut last_sent_time: i64 = 0;
+    let mut last_sent_close = rust_decimal::Decimal::ZERO;
+    let mut last_sent_high = rust_decimal::Decimal::ZERO;
+    let mut last_sent_low = rust_decimal::Decimal::ZERO;
+    let mut last_sent_volume = rust_decimal::Decimal::ZERO;
 
-    if let Some(json_str) = initial_msg {
-        if socket.send(Message::Text(json_str)).await.is_err() {
-            return;
-        }
-    }
+    // Polling interval 150ms untuk broadcast live tick & forming bar dari MT4
+    let mut poll_interval = tokio::time::interval(tokio::time::Duration::from_millis(150));
+    let mut ping_interval = tokio::time::interval(tokio::time::Duration::from_secs(10));
 
-    // Heartbeat & keep-alive loop
-    let mut interval = tokio::time::interval(tokio::time::Duration::from_secs(5));
     loop {
         tokio::select! {
-            _ = interval.tick() => {
+            _ = poll_interval.tick() => {
+                // 1. Cek forming candle langsung dari broker_connector (MT4 real-time stream)
+                if let Ok(candles) = state.broker_connector.get_recent_candles(&sym, Timeframe::H1, 1).await {
+                    if let Some(current_bar) = candles.last() {
+                        let bar_time = current_bar.timestamp.timestamp();
+                        if bar_time != last_sent_time
+                            || current_bar.close != last_sent_close
+                            || current_bar.high != last_sent_high
+                            || current_bar.low != last_sent_low
+                            || current_bar.volume != last_sent_volume
+                        {
+                            let dto = CandleDto {
+                                time: bar_time,
+                                source: current_bar.source,
+                                open: current_bar.open,
+                                high: current_bar.high,
+                                low: current_bar.low,
+                                close: current_bar.close,
+                                volume: current_bar.volume,
+                            };
+                            if let Ok(json_str) = serde_json::to_string(&dto) {
+                                if socket.send(Message::Text(json_str)).await.is_err() {
+                                    break;
+                                }
+                                last_sent_time = bar_time;
+                                last_sent_close = current_bar.close;
+                                last_sent_high = current_bar.high;
+                                last_sent_low = current_bar.low;
+                                last_sent_volume = current_bar.volume;
+                            }
+                        }
+                    }
+                }
+            }
+            _ = ping_interval.tick() => {
                 if socket.send(Message::Ping(vec![1, 2, 3])).await.is_err() {
                     break;
                 }

@@ -11,6 +11,7 @@ default_timeframe = "H1"
 # 🎯 Daftar Pasangan Mata Uang Aktif yang Dimonitor
 # Diurutkan berdasarkan prioritas Valued Pips (Tier 1 & Tier 2)
 active_symbols = [
+    "XAUUSD", # Tier 4: Gold / Commodity
     "NZDUSD", # Tier 1: Multiplier 2.0x (Min Pending 10p, Gap 50p)
     "AUDUSD", # Tier 1: Multiplier 2.0x (Min Pending 10p, Gap 50p)
     "EURGBP", # Tier 1: Multiplier 2.0x (Min Pending 10p, Gap 50p)
@@ -21,10 +22,12 @@ active_symbols = [
 
 # 📡 Pengaturan Publikasi ke Channel Aplikasi Traders Family
 [traders_family]
-api_base_url = "https://api.tradersfamily.id"
-channel_id = "tf_priority_quant_channel"
-auth_token = "mock_analyst_session_token_2026" # Atau set env: TF_AUTH_TOKEN
-user_agent = "TradersFamily-Android-App/3.0"
+api_base_url = "https://app3.tradersfamily.app"
+channel_id = "341232" # Channel: Tanpa Psikologi
+email = "ihza2karunia@gmail.com"
+password = "Fikrizaki2!"
+auth_token = "" # Dikosongkan agar otomatis di-generate via auto-login
+user_agent = "Dart/3.4 (dart:io)"
 
 # 🤖 Pengaturan Notifikasi Cadangan via Telegram
 [telegram]

@@ -46,6 +46,8 @@ async fn main() -> anyhow::Result<()> {
         auth_token: config.traders_family.auth_token.clone(),
         channel_id: config.traders_family.channel_id.clone(),
         user_agent: config.traders_family.user_agent.clone(),
+        email: config.traders_family.email.clone(),
+        password: config.traders_family.password.clone(),
     };
     let tf_publisher: Arc<dyn SignalPublisherPort> =
         Arc::new(TraderFamilyPublisher::new(tf_config)?);
@@ -58,7 +60,7 @@ async fn main() -> anyhow::Result<()> {
             bot_token: config.telegram.bot_token.clone(),
             chat_id: config.telegram.chat_id.clone(),
         };
-        let tg_notifier: Arc<dyn SignalPublisherPort> = Arc::new(TelegramNotifier::new(tg_config));
+        let tg_notifier: Arc<dyn SignalPublisherPort> = Arc::new(TelegramNotifier::new(tg_config)?);
         publishers.push(tg_notifier);
         info!("📢 Notifier Telegram multi-channel diaktifkan.");
     }

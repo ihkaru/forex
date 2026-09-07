@@ -42,11 +42,7 @@ impl StoragePort for InMemoryStorage {
 
     async fn get_active_signals(&self) -> Result<Vec<Signal>, DomainError> {
         let map = self.signals.read().await;
-        Ok(map
-            .values()
-            .filter(|s| s.status == SignalStatus::Active)
-            .cloned()
-            .collect())
+        Ok(map.values().filter(|s| s.is_open()).cloned().collect())
     }
 
     async fn save_candles(&self, new_candles: &[Candle]) -> Result<(), DomainError> {
@@ -211,7 +207,7 @@ impl StoragePort for SqlxStorage {
             SELECT id, symbol, action, timeframe, entry_price, stop_loss,
                    take_profit_1, take_profit_2, take_profit_3, risk_reward_ratio,
                    confidence_score, strategy_name, rationale, status, created_at, expires_at
-            FROM signals WHERE status = 'Active' ORDER BY created_at DESC
+            FROM signals WHERE status IN ('Active', 'Pending') ORDER BY created_at DESC
         "#;
 
         let rows = sqlx::query(query)

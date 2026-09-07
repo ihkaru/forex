@@ -181,10 +181,11 @@
           if (liveCandle.time === lastCandle.time) {
             const updated: Candle = {
               ...lastCandle,
+              open: liveCandle.open ?? lastCandle.open,
               high: Math.max(lastCandle.high, liveCandle.high),
               low: Math.min(lastCandle.low, liveCandle.low),
               close: liveCandle.close,
-              volume: (lastCandle.volume ?? 0) + (liveCandle.volume ?? 0),
+              volume: liveCandle.volume ?? lastCandle.volume,
             };
             candles = [...candles.slice(0, -1), updated];
           } else if (liveCandle.time > lastCandle.time) {
@@ -197,7 +198,7 @@
     }
   }
 
-  let selectedMarketSource = $state<'dukascopy' | 'mrg_demo' | 'mrg_real'>('dukascopy');
+  let selectedMarketSource = $state<'dukascopy' | 'mrg_demo' | 'mrg_real'>('mrg_demo');
 
   async function loadMarketData(
     symbol: string,

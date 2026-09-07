@@ -422,38 +422,24 @@ impl domain::ports::MarketDataPort for DukascopyDownloader {
     }
 
     async fn get_latest_tick(&self, symbol: &Symbol) -> Result<Tick, DomainError> {
-        // Dukascopy historical feed snapshot
-        Ok(Tick {
-            symbol: symbol.clone(),
-            timestamp: Utc::now(),
-            source: domain::models::MarketDataSource::DukascopyEcn,
-            bid: dec!(1.08500),
-            ask: dec!(1.08508), // Raw interbank 0.8 pip spread
-        })
+        // FAIL-FAST: DukascopyDownloader adalah file-based parquet batch downloader, bukan live stream.
+        Err(DomainError::NotImplemented(format!(
+            "FAIL-FAST: DukascopyDownloader adalah provider data historis .bi5, tidak melayani live tick feed untuk simbol {}. Gunakan MT5 BrokerConnector untuk tick live.",
+            symbol
+        )))
     }
 
     async fn get_recent_candles(
         &self,
         symbol: &Symbol,
         timeframe: Timeframe,
-        limit: usize,
+        _limit: usize,
     ) -> Result<Vec<Candle>, DomainError> {
-        let now = Utc::now();
-        let mut candles = Vec::with_capacity(limit);
-        for i in 0..limit {
-            candles.push(Candle {
-                symbol: symbol.clone(),
-                timeframe,
-                timestamp: now - chrono::Duration::minutes(i as i64 * 15),
-                source: domain::models::MarketDataSource::DukascopyEcn,
-                open: dec!(1.08450),
-                high: dec!(1.08600),
-                low: dec!(1.08400),
-                close: dec!(1.08520),
-                volume: dec!(2400),
-            });
-        }
-        Ok(candles)
+        // FAIL-FAST: Dilarang membuat lilin sintetis palsu!
+        Err(DomainError::NotImplemented(format!(
+            "FAIL-FAST: DukascopyDownloader melayani data melalui Parquet reader, bukan in-memory buffer untuk {} {:?}. Dilarang membuat lilin sintetis mock.",
+            symbol, timeframe
+        )))
     }
 
     async fn get_historical_candles(
@@ -463,7 +449,10 @@ impl domain::ports::MarketDataPort for DukascopyDownloader {
         _from: DateTime<Utc>,
         _to: DateTime<Utc>,
     ) -> Result<Vec<Candle>, DomainError> {
-        self.get_recent_candles(symbol, timeframe, 500).await
+        Err(DomainError::NotImplemented(format!(
+            "FAIL-FAST: Query histori Dukascopy harus melalui DuckDB/Parquet storage port, bukan memanggil dummy buffer untuk {} {:?}",
+            symbol, timeframe
+        )))
     }
 }
 

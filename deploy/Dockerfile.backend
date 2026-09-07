@@ -1,0 +1,60 @@
+# ==============================================================================
+# STAGE 1: Cargo Chef Planner
+# Prepares the recipe.json containing exact workspace dependency specifications
+# ==============================================================================
+FROM lukemathwalker/cargo-chef:latest-rust-1.78-bookworm AS chef
+WORKDIR /app
+
+FROM chef AS planner
+COPY Cargo.toml Cargo.lock ./
+COPY crates/ crates/
+COPY apps/ apps/
+RUN cargo chef prepare --recipe-path recipe.json
+
+# ==============================================================================
+# STAGE 2: Cargo Chef Cook (Dependency Caching Layer)
+# Builds third-party dependencies in isolation. Re-used automatically by Docker
+# cache on subsequent pushes unless Cargo.toml/Cargo.lock changes!
+# ==============================================================================
+FROM chef AS builder
+COPY --from=planner /app/recipe.json recipe.json
+RUN cargo chef cook --release --recipe-path recipe.json --bin api-server --bin signal-daemon
+
+# Copy complete application source code and compile production binaries
+COPY Cargo.toml Cargo.lock ./
+COPY crates/ crates/
+COPY apps/ apps/
+RUN cargo build --release --bin api-server --bin signal-daemon
+
+# ==============================================================================
+# STAGE 3: Minimal Production Runtime
+# Super lightweight debian-slim image (~60MB footprint, <40MB RAM usage)
+# ==============================================================================
+FROM debian:bookworm-slim AS runtime
+WORKDIR /app
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    ca-certificates \
+    tzdata \
+    curl \
+    libssl3 \
+    && rm -rf /var/lib/apt/lists/*
+
+COPY --from=builder /app/target/release/api-server /usr/local/bin/api-server
+COPY --from=builder /app/target/release/signal-daemon /usr/local/bin/signal-daemon
+
+# Create persistent storage directories for DuckDB & Parquet data
+RUN mkdir -p /app/data /app/reports
+
+ENV RUST_LOG=info
+ENV MT4_SOCKET_HOST=0.0.0.0
+ENV MT4_SOCKET_PORT=5555
+ENV PORT=5000
+
+# 5000: REST & WebSocket API, 5555: MetaTrader 4 TCP Bridge Socket
+EXPOSE 5000 5555
+
+HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
+    CMD curl -f http://localhost:5000/api/health || exit 1
+
+CMD ["api-server"]

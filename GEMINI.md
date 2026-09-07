@@ -56,6 +56,7 @@ revenue sharing subscriber Priority Channel.
 | Integritas data, anti-f64, candle rules | [`docs/DATA_INTEGRITY.md`](docs/DATA_INTEGRITY.md) | Saat bekerja dengan market data |
 | 7 Protokol anti-pitfall backtest | [`docs/ANTI_BIAS_BACKTEST.md`](docs/ANTI_BIAS_BACKTEST.md) | Saat modifikasi BacktestService |
 | Panduan analis TF lengkap | [`docs/TRADERS_FAMILY_ANALYST_PLAYBOOK.md`](docs/TRADERS_FAMILY_ANALYST_PLAYBOOK.md) | Referensi strategi & scoring |
+| Pipeline Hulu-Hilir & TF Reverse Engineering | [`docs/E2E_DATA_PIPELINE_AND_TF_AUTOMATION.md`](docs/E2E_DATA_PIPELINE_AND_TF_AUTOMATION.md) | Saat integrasi MT5, Mitmproxy & auto-login TF |
 
 ---
 

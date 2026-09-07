@@ -37,16 +37,21 @@ export class AppCompositionRoot {
   public readonly replayKpiPort: IReplayKpiPort;
   public readonly chartAdapter: TradingViewChartAdapter;
 
-  constructor(apiBaseUrl: string = 'http://127.0.0.1:5000/api') {
-    // 1. Instantiate Driven Adapters (I/O) & Services
-    this.marketDataPort = new RestMarketDataAdapter(apiBaseUrl);
-    this.backtestPort = new RestBacktestAdapter(apiBaseUrl);
+  constructor(apiBaseUrl?: string) {
+    const defaultUrl = typeof window !== 'undefined'
+      ? `${window.location.protocol}//${window.location.host}/api`
+      : 'http://127.0.0.1:5000/api';
+    const resolvedUrl = apiBaseUrl || defaultUrl;
 
-    this.edaPort = new RestEdaAdapter(apiBaseUrl);
-    this.strategyPort = new RestStrategyAdapter(apiBaseUrl);
-    this.monteCarloPort = new RestMonteCarloAdapter(apiBaseUrl);
-    this.testerPort = new RestTesterAdapter(apiBaseUrl);
-    this.deltaSyncPort = new RestDeltaSyncAdapter(apiBaseUrl);
+    // 1. Instantiate Driven Adapters (I/O) & Services
+    this.marketDataPort = new RestMarketDataAdapter(resolvedUrl);
+    this.backtestPort = new RestBacktestAdapter(resolvedUrl);
+
+    this.edaPort = new RestEdaAdapter(resolvedUrl);
+    this.strategyPort = new RestStrategyAdapter(resolvedUrl);
+    this.monteCarloPort = new RestMonteCarloAdapter(resolvedUrl);
+    this.testerPort = new RestTesterAdapter(resolvedUrl);
+    this.deltaSyncPort = new RestDeltaSyncAdapter(resolvedUrl);
     this.preferencesPort = new LocalStoragePreferencesAdapter();
     this.replayKpiPort = new ReplayKpiCalculatorService();
 

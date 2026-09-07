@@ -1,4 +1,4 @@
-import type { Candle } from '../../domain/models';
+import type { Candle, MarketDataSource } from '../../domain/models';
 import type { IMarketDataPort } from '../../ports';
 import { RestMarketDataAdapter } from './RestMarketDataAdapter';
 

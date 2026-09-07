@@ -48,6 +48,11 @@ pub struct Signal {
 }
 
 impl Signal {
+    /// Menentukan apakah sinyal masih berjalan di pasar (Pending Limit/Stop atau Active Floating)
+    pub fn is_open(&self) -> bool {
+        matches!(self.status, SignalStatus::Pending | SignalStatus::Active)
+    }
+
     pub fn formatted_summary(&self) -> String {
         let action_str = match self.action {
             SignalAction::Buy => "🟢 BUY",
