@@ -198,7 +198,7 @@
     }
   }
 
-  let selectedMarketSource = $state<'dukascopy' | 'mrg_demo' | 'mrg_real'>('dukascopy');
+  let selectedMarketSource = $state<'dukascopy' | 'mrg_demo' | 'mrg_real'>('mrg_demo');
 
   async function loadMarketData(
     symbol: string,

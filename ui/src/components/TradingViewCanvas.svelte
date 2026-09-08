@@ -79,7 +79,7 @@
     trades = [],
     signal = null,
     syncStatusMessage = null,
-    selectedSource = 'dukascopy',
+    selectedSource = 'mrg_demo',
     preferencesPort = undefined,
     onSelectSymbol,
     onSelectSource,

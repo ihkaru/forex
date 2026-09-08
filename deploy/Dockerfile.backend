@@ -43,10 +43,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 COPY --from=builder /app/target/release/api-server /usr/local/bin/api-server
 COPY --from=builder /app/target/release/signal-daemon /usr/local/bin/signal-daemon
 
-# Create persistent storage directories and embed historical market data archives
-RUN mkdir -p /app/data /app/reports /usr/local/share/forex/data/historical
-COPY data/historical/ /usr/local/share/forex/data/historical/
-COPY data/historical/ /app/data/historical/
+# Create persistent storage directories for DuckDB & Parquet data
+RUN mkdir -p /app/data /app/reports
 
 ENV RUST_LOG=info
 ENV MT4_SOCKET_HOST=0.0.0.0
