@@ -76,15 +76,21 @@ impl RealHistoricalMarketAdapter {
         let sym_str = symbol.to_compact_string();
         let path1 = format!("data/historical/{}_H1.json", sym_str);
         let path2 = format!("../../data/historical/{}_H1.json", sym_str);
+        let path3 = format!("/usr/local/share/forex/data/historical/{}_H1.json", sym_str);
+        let path4 = format!("/app/data/historical/{}_H1.json", sym_str);
 
         let file_path = if std::path::Path::new(&path1).exists() {
             path1
         } else if std::path::Path::new(&path2).exists() {
             path2
+        } else if std::path::Path::new(&path3).exists() {
+            path3
+        } else if std::path::Path::new(&path4).exists() {
+            path4
         } else if let Ok(manifest) = std::env::var("CARGO_MANIFEST_DIR") {
-            let p3 = format!("{}/../../data/historical/{}_H1.json", manifest, sym_str);
-            if std::path::Path::new(&p3).exists() {
-                p3
+            let p_man = format!("{}/../../data/historical/{}_H1.json", manifest, sym_str);
+            if std::path::Path::new(&p_man).exists() {
+                p_man
             } else {
                 anyhow::bail!(
                     "File histori nyata {}_H1.json tidak ditemukan di disk",
