@@ -13,7 +13,7 @@ services:
     restart: unless-stopped
     ports:
       # Port 5555 di-bind khusus ke 127.0.0.1 host Ubuntu Desktop untuk MT4
-      - "127.0.0.1:5555:5555"
+      - "5555:5555"
     environment:
       - RUST_LOG=info
       - MT4_SOCKET_HOST=0.0.0.0
