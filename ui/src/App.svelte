@@ -247,221 +247,29 @@
     }
   }
 
-  function computeLastEma(candleList: Candle[], period: number): number {
-    if (candleList.length === 0) return 0;
-    if (candleList.length < period) return candleList[candleList.length - 1].close;
-    // Windowed to the last 200 bars for O(1) instantaneous calculation on replay
-    const list = candleList.length > 200 ? candleList.slice(candleList.length - 200) : candleList;
-    const k = 2 / (period + 1);
-    let ema = list[0].close;
-    for (let i = 1; i < list.length; i++) {
-      ema = list[i].close * k + ema * (1 - k);
-    }
-    return ema;
-  }
+  import { evaluateExecutionState as evaluateMarketExecutionState } from './services/executionEvaluator';
 
-  function computeLastRsi(candleList: Candle[], period: number = 14): number {
-    if (candleList.length < period + 1) return 50;
-    // Windowed to the last 150 bars for O(1) instantaneous calculation on replay
-    const list = candleList.length > 150 ? candleList.slice(candleList.length - 150) : candleList;
-    let gains = 0;
-    let losses = 0;
-    for (let i = 1; i <= period; i++) {
-      const diff = list[i].close - list[i - 1].close;
-      if (diff >= 0) gains += diff;
-      else losses -= diff;
-    }
-    let avgGain = gains / period;
-    let avgLoss = losses / period;
-
-    for (let i = period + 1; i < list.length; i++) {
-      const diff = list[i].close - list[i - 1].close;
-      if (diff >= 0) {
-        avgGain = (avgGain * (period - 1) + diff) / period;
-        avgLoss = (avgLoss * (period - 1)) / period;
-      } else {
-        avgGain = (avgGain * (period - 1)) / period;
-        avgLoss = (avgLoss * (period - 1) - diff) / period;
-      }
-    }
-    if (avgLoss === 0) return 100;
-    const rs = avgGain / avgLoss;
-    return 100 - (100 / (1 + rs));
-  }
-
-
-  function evaluateExecutionState(symbol: string, candleList: Candle[], isReplay: boolean) {
-    if (!candleList || candleList.length < 15) return;
-    const last = candleList[candleList.length - 1];
-    const currentBarTime = last.time;
-
-    // 1. Dynamic Point-In-Time Metrics Calculation (Interface-First / Anti-Lookahead)
-    if (trades && trades.length > 0) {
-      const kpiResult = composition.replayKpiPort.computePointInTimeKpis(
-        trades,
-        currentBarTime,
-        symbol,
-        candleList.length
-      );
-      currentMonthLabel = kpiResult.currentMonthLabel;
-      currentMonthVp = kpiResult.currentMonthVp;
-      currentMonthTrades = kpiResult.currentMonthTrades;
-      valuedPips = kpiResult.allTimeValuedPips;
-      scorecardScore = kpiResult.scorecardScore;
-      scorecardTier = kpiResult.scorecardTier;
-      scorecardPillars = kpiResult.pillars;
-      wferPct = kpiResult.wferPct;
-      totalBars = kpiResult.verifiedBarsCount;
-      complianceState = kpiResult.compliance;
-    }
-
-    // 2. Compute Tactical Indicators
-    const fastEma = computeLastEma(candleList, 12);
-    const slowEma = computeLastEma(candleList, 36);
-    const macroEma = computeLastEma(candleList, 100);
-    const rsi = computeLastRsi(candleList, 14);
-
-    const isBull = fastEma > slowEma && slowEma > macroEma;
-    const isBear = fastEma < slowEma && slowEma < macroEma;
-    const trend: 'BULLISH' | 'BEARISH' | 'NEUTRAL' = isBull ? 'BULLISH' : isBear ? 'BEARISH' : 'NEUTRAL';
-
-    const d = new Date(currentBarTime * 1000);
-    const utcHour = d.getUTCHours();
-    const isLondonNy = utcHour >= 7 && utcHour <= 18;
-    const sessionName = isLondonNy ? 'London / NY Active' : 'Asian / Off-Hours';
-
-    scanContext = {
-      trend,
-      fastEma,
-      slowEma,
-      rsi,
-      sessionName,
-      isSessionActive: isLondonNy,
-      waitingReason: isBull 
-        ? 'Menunggu Retracement Pola N ke 61.8% Golden Pocket' 
-        : isBear 
-          ? 'Menunggu Pullback Bearish ke 61.8% Resistance' 
-          : 'Menunggu Formasi Trend Alignment'
-    };
-
-
-    // 2. Check if a simulated trade is pending, running, or settled on this bar
-    if (trades && trades.length > 0) {
-      const symNorm = normalizeSymbol(symbol);
-      const pipMult = getPipMultiplier(symbol);
-      const vpMult = getValuedPipsMultiplier(symbol);
-
-      // A. Pending Trade waiting for fill? (Posted at or before current bar, but not filled yet)
-      const pendingTrade = trades.find(t => {
-        const pTime = t.posted_time ?? t.open_time;
-        return normalizeSymbol(t.symbol) === symNorm &&
-          pTime <= currentBarTime && 
-          currentBarTime < t.open_time;
-      });
-
-      if (pendingTrade) {
-        const openPrice = pendingTrade.open_price;
-        const curPrice = last.close;
-        const distPips = Math.abs(curPrice - openPrice) * pipMult;
-
-        pendingOrder = {
-          tradeId: pendingTrade.id,
-          action: pendingTrade.action.replace(/[_/]/g, ' '),
-          entryPrice: openPrice,
-          currentPrice: curPrice,
-          stopLoss: pendingTrade.stop_loss,
-          takeProfit: pendingTrade.take_profit,
-          distancePips: distPips,
-          postedTime: pendingTrade.posted_time,
-          slaMinutes: 5,
-        };
-        runningPosition = null;
-        settledTrade = null;
-        activeSignal = null;
-        hudStatus = 'PENDING';
-        return;
-      }
-
-      // B. Running In-Flight Trade?
-      const inFlightTrade = trades.find(t => 
-        normalizeSymbol(t.symbol) === symNorm &&
-        t.open_time <= currentBarTime && 
-        (t.close_time == null || currentBarTime < t.close_time)
-      );
-
-      if (inFlightTrade) {
-        const isTradeBuy = inFlightTrade.action.toUpperCase().includes('BUY');
-        const openPrice = inFlightTrade.open_price;
-        const curPrice = last.close;
-        const floatingPips = isTradeBuy 
-          ? (curPrice - openPrice) * pipMult 
-          : (openPrice - curPrice) * pipMult;
-        const floatingValuedPips = floatingPips * vpMult;
-
-        const tpDist = Math.abs(inFlightTrade.take_profit - openPrice);
-        const curDist = isTradeBuy ? (curPrice - openPrice) : (openPrice - curPrice);
-        const progressPct = tpDist > 0 ? Math.round((curDist / tpDist) * 100) : 50;
-
-        let openIdx = -1;
-        for (let i = candleList.length - 1; i >= 0; i--) {
-          if (candleList[i].time === inFlightTrade.open_time) {
-            openIdx = i;
-            break;
-          }
-        }
-        const heldBars = openIdx >= 0 ? Math.max(1, candleList.length - 1 - openIdx + 1) : 1;
-
-        runningPosition = {
-          tradeId: inFlightTrade.id,
-          action: inFlightTrade.action.replace(/[_/]/g, ' '),
-          openPrice,
-          currentPrice: curPrice,
-          stopLoss: inFlightTrade.stop_loss,
-          takeProfit: inFlightTrade.take_profit,
-          floatingPips,
-          floatingValuedPips,
-          progressToTpPct: progressPct,
-          heldBarsCount: heldBars,
-          isProfit: floatingPips >= 0
-        };
-        pendingOrder = null;
-        settledTrade = null;
-        activeSignal = null;
-        hudStatus = 'RUNNING';
-        return;
-      }
-
-      // C. Settled on this exact bar?
-      const settledOnThisBar = trades.find(t => 
-        normalizeSymbol(t.symbol) === symNorm &&
-        t.close_time === currentBarTime
-      );
-
-      if (settledOnThisBar) {
-        settledTrade = {
-          tradeId: settledOnThisBar.id,
-          action: settledOnThisBar.action.replace(/[_/]/g, ' '),
-          openPrice: settledOnThisBar.open_price,
-          closePrice: settledOnThisBar.close_price,
-          pnlPips: settledOnThisBar.pnl_pips,
-          valuedPips: settledOnThisBar.valued_pips,
-          isWin: settledOnThisBar.is_win,
-          exitReason: settledOnThisBar.exit_reason || (settledOnThisBar.is_win ? 'Take Profit Hit' : 'Stop Loss Hit')
-        };
-        pendingOrder = null;
-        runningPosition = null;
-        activeSignal = null;
-        hudStatus = 'SETTLED';
-        return;
-      }
-    }
-
-    // 3. If no active position or pending or settled trade, status is SCANNING
-    pendingOrder = null;
-    runningPosition = null;
-    settledTrade = null;
+  function evaluateExecutionState(symbol: string, candleList: Candle[], _isReplay: boolean) {
+    const res = evaluateMarketExecutionState(symbol, candleList, trades, composition.replayKpiPort);
+    if (!res) return;
+    hudStatus = res.hudStatus;
+    pendingOrder = res.pendingOrder;
+    runningPosition = res.runningPosition;
+    settledTrade = res.settledTrade;
+    scanContext = res.scanContext;
     activeSignal = null;
-    hudStatus = 'SCANNING';
+    if (res.kpi) {
+      currentMonthLabel = res.kpi.currentMonthLabel;
+      currentMonthVp = res.kpi.currentMonthVp;
+      currentMonthTrades = res.kpi.currentMonthTrades;
+      valuedPips = res.kpi.valuedPips;
+      scorecardScore = res.kpi.scorecardScore;
+      scorecardTier = res.kpi.scorecardTier;
+      scorecardPillars = res.kpi.scorecardPillars;
+      wferPct = res.kpi.wferPct;
+      totalBars = res.kpi.totalBars;
+      complianceState = res.kpi.complianceState;
+    }
   }
 
 
