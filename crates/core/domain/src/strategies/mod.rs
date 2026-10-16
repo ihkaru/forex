@@ -1,3 +1,4 @@
+pub mod builtins;
 pub mod ensemble;
 pub mod registry;
 pub mod smc_liquidity;
