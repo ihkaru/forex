@@ -5,6 +5,8 @@ pub mod pola_n;
 pub mod risk;
 pub mod signal;
 pub mod symbol;
+pub mod tf_compliance;
+pub mod tf_qualification;
 pub mod tf_spec;
 
 pub use candle::{Candle, CandleQuery, MarketDataSource, Tick, Timeframe};
@@ -20,4 +22,6 @@ pub use pola_n::{
 pub use risk::RiskProfile;
 pub use signal::{Signal, SignalAction, SignalStatus};
 pub use symbol::Symbol;
-pub use tf_spec::{PairTier, TfComplianceGuard, TfPairSpec};
+pub use tf_compliance::TfComplianceGuard;
+pub use tf_qualification::{MonthlyQualificationGuard, MonthlyQualificationStatus};
+pub use tf_spec::{PairTier, TfPairSpec};
