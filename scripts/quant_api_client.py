@@ -212,14 +212,13 @@ def cmd_dump_all(args):
 
     print(f"\n🎉 SELESAI! Seluruh data JSON berhasil diekspor ke folder: {out_dir}/")
 
-def main():
+def build_cli_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         description="Hexagon Quant Terminal CLI & API Tool (2026)",
         formatter_class=argparse.RawTextHelpFormatter
     )
     parser.add_argument("--api-base", default=DEFAULT_API_BASE, help="REST API Base URL (default: http://127.0.0.1:5000/api)")
-    subparsers = parser.add_subparsers(dest="command", help="Perintah yang tersedia")
-
+def _register_subparsers(subparsers) -> None:
     # health
     p_health = subparsers.add_parser("health", help="Cek status server API")
     p_health.add_argument("--json", action="store_true", help="Output raw JSON")
@@ -264,6 +263,20 @@ def main():
     p_dump = subparsers.add_parser("dump-all", help="Ekspor seluruh data kuantitatif ke folder JSON")
     p_dump.add_argument("--out-dir", default="reports/backtest", help="Direktori output (default: reports/backtest)")
 
+
+def build_cli_parser() -> argparse.ArgumentParser:
+    parser = argparse.ArgumentParser(
+        description="Hexagon Quant Terminal CLI & API Tool (2026)",
+        formatter_class=argparse.RawTextHelpFormatter
+    )
+    parser.add_argument("--api-base", default=DEFAULT_API_BASE, help="REST API Base URL (default: http://127.0.0.1:5000/api)")
+    subparsers = parser.add_subparsers(dest="command", help="Perintah yang tersedia")
+    _register_subparsers(subparsers)
+    return parser
+
+
+def main():
+    parser = build_cli_parser()
     args = parser.parse_args()
     if not args.command:
         parser.print_help()
