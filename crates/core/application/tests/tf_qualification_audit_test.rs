@@ -25,6 +25,8 @@ impl MarketDataPort for MockMarketFeed {
             source: MarketDataSource::SyntheticTest,
             bid: dec!(2000.0),
             ask: dec!(2000.3),
+            spread_pts: None,
+            volume: None,
         })
     }
 
@@ -83,6 +85,8 @@ fn generate_deterministic_synthetic_candles() -> Vec<Candle> {
             low,
             close,
             volume: dec!(1500.0),
+            spread: None,
+            real_volume: None,
         });
     }
 

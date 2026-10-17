@@ -48,4 +48,16 @@ pub trait MarketDataPort: Send + Sync {
         from: DateTime<Utc>,
         to: DateTime<Utc>,
     ) -> Result<Vec<Candle>, DomainError>;
+
+    /// Ambil tick historis dalam rentang waktu tertentu untuk presisi tinggi (Dual-Resolution Backtest)
+    /// Default implementation mengembalikan Vec kosong jika adapter belum mendukung penyimpanan tick
+    async fn get_historical_ticks(
+        &self,
+        _symbol: &Symbol,
+        _from: DateTime<Utc>,
+        _to: DateTime<Utc>,
+    ) -> Result<Vec<Tick>, DomainError> {
+        Ok(vec![])
+    }
 }
+

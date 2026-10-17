@@ -1,4 +1,5 @@
 pub mod audit;
+pub mod broker_spec;
 pub mod ingestion;
 pub mod market_data;
 pub mod qualification;
@@ -7,8 +8,10 @@ pub mod signal_publisher;
 pub mod storage;
 pub mod strategy;
 pub mod sync;
+pub mod tick_storage;
 
 pub use audit::*;
+pub use broker_spec::BrokerSpecPort;
 pub use ingestion::*;
 pub use market_data::MarketDataPort;
 pub use qualification::*;
@@ -17,3 +20,5 @@ pub use signal_publisher::{PublishReceipt, SignalPublisherPort};
 pub use storage::StoragePort;
 pub use strategy::{MarketContext, StrategyPort};
 pub use sync::{DeltaSyncPort, DeltaSyncReport};
+pub use tick_storage::TickStoragePort;
+

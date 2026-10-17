@@ -1,3 +1,4 @@
+pub mod broker_spec;
 pub mod candle;
 pub mod config;
 pub mod order;
@@ -9,7 +10,9 @@ pub mod tf_compliance;
 pub mod tf_qualification;
 pub mod tf_spec;
 
+pub use broker_spec::BrokerSymbolSpec;
 pub use candle::{Candle, CandleQuery, MarketDataSource, Tick, Timeframe};
+
 
 pub use config::{
     AppConfig, BacktestConfig, BrokerSettings, PolaNConfig, RiskConfig, TelegramSettings,

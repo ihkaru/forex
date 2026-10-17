@@ -216,6 +216,7 @@ mod tests {
                 bid: dec!(1.08500),
                 ask: dec!(1.08515),
                 spread_pts: 15,
+                volume: None,
                 time_gmt: now.timestamp(),
             })
             .await
@@ -232,6 +233,8 @@ mod tests {
                     low: dec!(1.08400),
                     close: dec!(1.08520),
                     volume: dec!(100),
+                    spread_pts: None,
+                    real_volume: None,
                     time_gmt: (now - chrono::Duration::minutes((10 - i) * 15)).timestamp(),
                 })
                 .await

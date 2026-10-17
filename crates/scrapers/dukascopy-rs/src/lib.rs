@@ -169,6 +169,8 @@ impl DukascopyDownloader {
                 low: current_low,
                 close: current_close,
                 volume: if vol > Decimal::ZERO { vol } else { dec!(1.0) },
+                spread: None,
+                real_volume: None,
             });
         }
 
@@ -279,6 +281,8 @@ impl DukascopyDownloader {
                 source: domain::models::MarketDataSource::DukascopyEcn,
                 bid,
                 ask,
+                spread_pts: None,
+                volume: None,
             });
         }
 
@@ -345,6 +349,8 @@ impl DukascopyDownloader {
                         low,
                         close,
                         volume: vol,
+                        spread: None,
+                        real_volume: None,
                     });
                     current_bucket = Some((bucket_timestamp, price, price, price, price, dec!(1)));
                 }
@@ -365,6 +371,8 @@ impl DukascopyDownloader {
                 low,
                 close,
                 volume: vol,
+                spread: None,
+                real_volume: None,
             });
         }
 
@@ -483,6 +491,8 @@ mod tests {
                 source: domain::models::MarketDataSource::DukascopyEcn,
                 bid: dec!(1.08500),
                 ask: dec!(1.08515),
+                spread_pts: None,
+                volume: None,
             },
             Tick {
                 symbol: symbol.clone(),
@@ -490,6 +500,8 @@ mod tests {
                 source: domain::models::MarketDataSource::DukascopyEcn,
                 bid: dec!(1.08550), // High
                 ask: dec!(1.08565),
+                spread_pts: None,
+                volume: None,
             },
             Tick {
                 symbol: symbol.clone(),
@@ -497,6 +509,8 @@ mod tests {
                 source: domain::models::MarketDataSource::DukascopyEcn,
                 bid: dec!(1.08480), // Low
                 ask: dec!(1.08495),
+                spread_pts: None,
+                volume: None,
             },
             Tick {
                 symbol: symbol.clone(),
@@ -504,6 +518,8 @@ mod tests {
                 source: domain::models::MarketDataSource::DukascopyEcn,
                 bid: dec!(1.08520), // Close
                 ask: dec!(1.08535),
+                spread_pts: None,
+                volume: None,
             },
         ];
 

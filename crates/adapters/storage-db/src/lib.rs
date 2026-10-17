@@ -7,8 +7,8 @@ use tracing::info;
 use uuid::Uuid;
 
 use domain::errors::DomainError;
-use domain::models::{Candle, Order, Signal, SignalAction, SignalStatus, Symbol, Timeframe};
-use domain::ports::StoragePort;
+use domain::models::{BrokerSymbolSpec, Candle, Order, Signal, SignalAction, SignalStatus, Symbol, Tick, Timeframe};
+use domain::ports::{BrokerSpecPort, StoragePort, TickStoragePort};
 
 // ==============================================================================
 // 1. IN-MEMORY STORAGE (Fast Prototyping & Unit Testing Double)
@@ -18,7 +18,9 @@ use domain::ports::StoragePort;
 pub struct InMemoryStorage {
     signals: Arc<RwLock<HashMap<Uuid, Signal>>>,
     candles: Arc<RwLock<Vec<Candle>>>,
+    ticks: Arc<RwLock<Vec<Tick>>>,
     orders: Arc<RwLock<HashMap<Uuid, Order>>>,
+    specs: Arc<RwLock<HashMap<Symbol, BrokerSymbolSpec>>>,
 }
 
 impl InMemoryStorage {
@@ -86,6 +88,64 @@ impl StoragePort for InMemoryStorage {
         let mut map = self.orders.write().await;
         map.insert(order.id, order.clone());
         Ok(())
+    }
+}
+
+#[async_trait]
+impl TickStoragePort for InMemoryStorage {
+    async fn save_ticks(&self, new_ticks: &[Tick]) -> Result<(), DomainError> {
+        let mut list = self.ticks.write().await;
+        list.extend_from_slice(new_ticks);
+        Ok(())
+    }
+
+    async fn get_ticks(
+        &self,
+        symbol: &Symbol,
+        source: domain::models::MarketDataSource,
+        from: chrono::DateTime<chrono::Utc>,
+        to: chrono::DateTime<chrono::Utc>,
+    ) -> Result<Vec<Tick>, DomainError> {
+        let list = self.ticks.read().await;
+        let filtered: Vec<Tick> = list
+            .iter()
+            .filter(|t| &t.symbol == symbol && t.source == source && t.timestamp >= from && t.timestamp <= to)
+            .cloned()
+            .collect();
+        Ok(filtered)
+    }
+
+    async fn get_tick_high_watermark(
+        &self,
+        symbol: &Symbol,
+        source: domain::models::MarketDataSource,
+    ) -> Result<Option<chrono::DateTime<chrono::Utc>>, DomainError> {
+        let list = self.ticks.read().await;
+        let max_ts = list
+            .iter()
+            .filter(|t| &t.symbol == symbol && t.source == source)
+            .map(|t| t.timestamp)
+            .max();
+        Ok(max_ts)
+    }
+}
+
+#[async_trait]
+impl BrokerSpecPort for InMemoryStorage {
+    async fn save_broker_spec(&self, spec: &BrokerSymbolSpec) -> Result<(), DomainError> {
+        let mut map = self.specs.write().await;
+        map.insert(spec.symbol.clone(), spec.clone());
+        Ok(())
+    }
+
+    async fn get_broker_spec(&self, symbol: &Symbol) -> Result<Option<BrokerSymbolSpec>, DomainError> {
+        let map = self.specs.read().await;
+        Ok(map.get(symbol).cloned())
+    }
+
+    async fn list_broker_specs(&self) -> Result<Vec<BrokerSymbolSpec>, DomainError> {
+        let map = self.specs.read().await;
+        Ok(map.values().cloned().collect())
     }
 }
 
@@ -250,11 +310,13 @@ impl StoragePort for SqlxStorage {
 
     async fn save_candles(&self, candles: &[Candle]) -> Result<(), DomainError> {
         let query = r#"
-            INSERT INTO candles (symbol, timeframe, timestamp, source, open, high, low, close, volume)
-            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+            INSERT INTO candles (symbol, timeframe, timestamp, source, open, high, low, close, volume, spread, real_volume)
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
             ON CONFLICT (symbol, timeframe, timestamp, source) DO UPDATE SET
                 close = EXCLUDED.close,
-                volume = EXCLUDED.volume
+                volume = EXCLUDED.volume,
+                spread = COALESCE(EXCLUDED.spread, candles.spread),
+                real_volume = COALESCE(EXCLUDED.real_volume, candles.real_volume)
         "#;
 
         for c in candles {
@@ -272,6 +334,8 @@ impl StoragePort for SqlxStorage {
                 .bind(c.low)
                 .bind(c.close)
                 .bind(c.volume)
+                .bind(c.spread)
+                .bind(c.real_volume)
                 .execute(&self.pool)
                 .await
                 .map_err(|e| DomainError::AdapterError(format!("SQL save_candles error: {}", e)))?;
@@ -290,7 +354,7 @@ impl StoragePort for SqlxStorage {
         let limit_i64 = limit as i64;
 
         let query = r#"
-            SELECT symbol, timeframe, timestamp, source, open, high, low, close, volume
+            SELECT symbol, timeframe, timestamp, source, open, high, low, close, volume, spread, real_volume
             FROM candles
             WHERE symbol = $1 AND timeframe = $2
             ORDER BY timestamp DESC
@@ -312,6 +376,8 @@ impl StoragePort for SqlxStorage {
                 .unwrap_or_else(|_| "DukascopyEcn".to_string());
             let source = match src_str.as_str() {
                 "Mt5BrokerLive" => domain::models::MarketDataSource::Mt5BrokerLive,
+                "MrgRealMt4" => domain::models::MarketDataSource::MrgRealMt4,
+                "MrgDemoMt4" => domain::models::MarketDataSource::MrgDemoMt4,
                 "CtraderOpenApi" => domain::models::MarketDataSource::CtraderOpenApi,
                 "SyntheticTest" => domain::models::MarketDataSource::SyntheticTest,
                 _ => domain::models::MarketDataSource::DukascopyEcn,
@@ -327,6 +393,8 @@ impl StoragePort for SqlxStorage {
                 low: r.get("low"),
                 close: r.get("close"),
                 volume: r.get("volume"),
+                spread: r.try_get("spread").ok(),
+                real_volume: r.try_get("real_volume").ok(),
             });
         }
         Ok(candles)
@@ -399,6 +467,249 @@ impl StoragePort for SqlxStorage {
         Ok(())
     }
 }
+
+#[async_trait]
+impl TickStoragePort for SqlxStorage {
+    async fn save_ticks(&self, ticks: &[Tick]) -> Result<(), DomainError> {
+        let query = r#"
+            INSERT INTO ticks (symbol, timestamp, source, bid, ask, spread_pts, volume)
+            VALUES ($1, $2, $3, $4, $5, $6, $7)
+            ON CONFLICT (symbol, source, timestamp) DO NOTHING
+        "#;
+
+        for t in ticks {
+            let symbol_str = t.symbol.to_compact_string();
+            let source_str = format!("{:?}", t.source);
+            let spread_pts_i32 = t.spread_pts.map(|p| p as i32);
+
+            sqlx::query(query)
+                .bind(symbol_str)
+                .bind(t.timestamp)
+                .bind(source_str)
+                .bind(t.bid)
+                .bind(t.ask)
+                .bind(spread_pts_i32)
+                .bind(t.volume)
+                .execute(&self.pool)
+                .await
+                .map_err(|e| DomainError::AdapterError(format!("SQL save_ticks error: {}", e)))?;
+        }
+        Ok(())
+    }
+
+    async fn get_ticks(
+        &self,
+        symbol: &Symbol,
+        source: domain::models::MarketDataSource,
+        from: chrono::DateTime<chrono::Utc>,
+        to: chrono::DateTime<chrono::Utc>,
+    ) -> Result<Vec<Tick>, DomainError> {
+        let symbol_str = symbol.to_compact_string();
+        let source_str = format!("{:?}", source);
+
+        let query = r#"
+            SELECT symbol, timestamp, source, bid, ask, spread_pts, volume
+            FROM ticks
+            WHERE symbol = $1 AND source = $2 AND timestamp >= $3 AND timestamp <= $4
+            ORDER BY timestamp ASC
+        "#;
+
+        let rows = sqlx::query(query)
+            .bind(symbol_str)
+            .bind(source_str)
+            .bind(from)
+            .bind(to)
+            .fetch_all(&self.pool)
+            .await
+            .map_err(|e| DomainError::AdapterError(format!("SQL get_ticks error: {}", e)))?;
+
+        let mut ticks = Vec::new();
+        for r in rows {
+            let spread_pts: Option<i32> = r.try_get("spread_pts").ok();
+            ticks.push(Tick {
+                symbol: symbol.clone(),
+                timestamp: r.get("timestamp"),
+                source,
+                bid: r.get("bid"),
+                ask: r.get("ask"),
+                spread_pts: spread_pts.map(|p| p as u32),
+                volume: r.try_get("volume").ok(),
+            });
+        }
+        Ok(ticks)
+    }
+
+    async fn get_tick_high_watermark(
+        &self,
+        symbol: &Symbol,
+        source: domain::models::MarketDataSource,
+    ) -> Result<Option<chrono::DateTime<chrono::Utc>>, DomainError> {
+        let symbol_str = symbol.to_compact_string();
+        let source_str = format!("{:?}", source);
+
+        let query = r#"
+            SELECT MAX(timestamp) as max_ts
+            FROM ticks
+            WHERE symbol = $1 AND source = $2
+        "#;
+
+        let row = sqlx::query(query)
+            .bind(symbol_str)
+            .bind(source_str)
+            .fetch_optional(&self.pool)
+            .await
+            .map_err(|e| DomainError::AdapterError(format!("SQL get_tick_high_watermark error: {}", e)))?;
+
+        match row {
+            Some(r) => Ok(r.try_get("max_ts").ok()),
+            None => Ok(None),
+        }
+    }
+}
+
+#[async_trait]
+impl BrokerSpecPort for SqlxStorage {
+    async fn save_broker_spec(&self, spec: &BrokerSymbolSpec) -> Result<(), DomainError> {
+        let query = r#"
+            INSERT INTO broker_symbol_specs (
+                symbol, raw_ticker, digits, point, tick_value, tick_size,
+                contract_size, swap_long, swap_short, swap_rollover_3days,
+                stop_level_pts, freeze_level_pts, min_lot, lot_step, max_lot, margin_required, updated_at
+            ) VALUES (
+                $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, NOW()
+            ) ON CONFLICT (symbol) DO UPDATE SET
+                raw_ticker = EXCLUDED.raw_ticker,
+                digits = EXCLUDED.digits,
+                point = EXCLUDED.point,
+                tick_value = EXCLUDED.tick_value,
+                tick_size = EXCLUDED.tick_size,
+                contract_size = EXCLUDED.contract_size,
+                swap_long = EXCLUDED.swap_long,
+                swap_short = EXCLUDED.swap_short,
+                swap_rollover_3days = EXCLUDED.swap_rollover_3days,
+                stop_level_pts = EXCLUDED.stop_level_pts,
+                freeze_level_pts = EXCLUDED.freeze_level_pts,
+                min_lot = EXCLUDED.min_lot,
+                lot_step = EXCLUDED.lot_step,
+                max_lot = EXCLUDED.max_lot,
+                margin_required = EXCLUDED.margin_required,
+                updated_at = NOW()
+        "#;
+
+        sqlx::query(query)
+            .bind(spec.symbol.to_compact_string())
+            .bind(&spec.raw_ticker)
+            .bind(spec.digits as i32)
+            .bind(spec.point)
+            .bind(spec.tick_value)
+            .bind(spec.tick_size)
+            .bind(spec.contract_size)
+            .bind(spec.swap_long)
+            .bind(spec.swap_short)
+            .bind(spec.swap_rollover_3days as i32)
+            .bind(spec.stop_level_pts as i32)
+            .bind(spec.freeze_level_pts as i32)
+            .bind(spec.min_lot)
+            .bind(spec.lot_step)
+            .bind(spec.max_lot)
+            .bind(spec.margin_required)
+            .execute(&self.pool)
+            .await
+            .map_err(|e| DomainError::AdapterError(format!("SQL save_broker_spec error: {}", e)))?;
+
+        Ok(())
+    }
+
+    async fn get_broker_spec(&self, symbol: &Symbol) -> Result<Option<BrokerSymbolSpec>, DomainError> {
+        let query = r#"
+            SELECT symbol, raw_ticker, digits, point, tick_value, tick_size,
+                   contract_size, swap_long, swap_short, swap_rollover_3days,
+                   stop_level_pts, freeze_level_pts, min_lot, lot_step, max_lot, margin_required
+            FROM broker_symbol_specs
+            WHERE symbol = $1
+        "#;
+
+        let row = sqlx::query(query)
+            .bind(symbol.to_compact_string())
+            .fetch_optional(&self.pool)
+            .await
+            .map_err(|e| DomainError::AdapterError(format!("SQL get_broker_spec error: {}", e)))?;
+
+        match row {
+            Some(r) => {
+                let digits_i32: i32 = r.get("digits");
+                let swap_3d_i32: i32 = r.get("swap_rollover_3days");
+                let stop_lvl_i32: i32 = r.get("stop_level_pts");
+                let freeze_lvl_i32: i32 = r.get("freeze_level_pts");
+                Ok(Some(BrokerSymbolSpec {
+                    symbol: symbol.clone(),
+                    raw_ticker: r.get("raw_ticker"),
+                    digits: digits_i32 as u32,
+                    point: r.get("point"),
+                    tick_value: r.get("tick_value"),
+                    tick_size: r.get("tick_size"),
+                    contract_size: r.get("contract_size"),
+                    swap_long: r.get("swap_long"),
+                    swap_short: r.get("swap_short"),
+                    swap_rollover_3days: swap_3d_i32 as u32,
+                    stop_level_pts: stop_lvl_i32 as u32,
+                    freeze_level_pts: freeze_lvl_i32 as u32,
+                    min_lot: r.get("min_lot"),
+                    lot_step: r.get("lot_step"),
+                    max_lot: r.get("max_lot"),
+                    margin_required: r.get("margin_required"),
+                }))
+            }
+            None => Ok(None),
+        }
+    }
+
+    async fn list_broker_specs(&self) -> Result<Vec<BrokerSymbolSpec>, DomainError> {
+        let query = r#"
+            SELECT symbol, raw_ticker, digits, point, tick_value, tick_size,
+                   contract_size, swap_long, swap_short, swap_rollover_3days,
+                   stop_level_pts, freeze_level_pts, min_lot, lot_step, max_lot, margin_required
+            FROM broker_symbol_specs
+            ORDER BY symbol ASC
+        "#;
+
+        let rows = sqlx::query(query)
+            .fetch_all(&self.pool)
+            .await
+            .map_err(|e| DomainError::AdapterError(format!("SQL list_broker_specs error: {}", e)))?;
+
+        let mut specs = Vec::new();
+        for r in rows {
+            let symbol_str: String = r.get("symbol");
+            if let Some(sym) = Symbol::from_symbol_str(&symbol_str) {
+                let digits_i32: i32 = r.get("digits");
+                let swap_3d_i32: i32 = r.get("swap_rollover_3days");
+                let stop_lvl_i32: i32 = r.get("stop_level_pts");
+                let freeze_lvl_i32: i32 = r.get("freeze_level_pts");
+                specs.push(BrokerSymbolSpec {
+                    symbol: sym,
+                    raw_ticker: r.get("raw_ticker"),
+                    digits: digits_i32 as u32,
+                    point: r.get("point"),
+                    tick_value: r.get("tick_value"),
+                    tick_size: r.get("tick_size"),
+                    contract_size: r.get("contract_size"),
+                    swap_long: r.get("swap_long"),
+                    swap_short: r.get("swap_short"),
+                    swap_rollover_3days: swap_3d_i32 as u32,
+                    stop_level_pts: stop_lvl_i32 as u32,
+                    freeze_level_pts: freeze_lvl_i32 as u32,
+                    min_lot: r.get("min_lot"),
+                    lot_step: r.get("lot_step"),
+                    max_lot: r.get("max_lot"),
+                    margin_required: r.get("margin_required"),
+                });
+            }
+        }
+        Ok(specs)
+    }
+}
+
 
 // ==============================================================================
 // 3. DUCKDB ANALYTICAL ENGINE (In-Process OLAP & Parquet Backtesting Engine)

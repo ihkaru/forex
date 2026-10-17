@@ -19,6 +19,8 @@ mod tests {
             low: dec!(1.0) * Decimal::from_f64_retain(l).unwrap(),
             close: dec!(1.0) * Decimal::from_f64_retain(c).unwrap(),
             volume: dec!(100),
+            spread: None,
+            real_volume: None,
         }
     }
 
@@ -158,6 +160,8 @@ mod tests {
             ask: dec!(1.1052),
             source: crate::models::MarketDataSource::SyntheticTest,
             timestamp: Utc::now(),
+            spread_pts: None,
+            volume: None,
         };
 
         let ctx = MarketContext {

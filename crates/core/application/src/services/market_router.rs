@@ -103,6 +103,8 @@ mod tests {
                 source: self.src,
                 bid: dec!(1.0),
                 ask: dec!(1.0001),
+                spread_pts: None,
+                volume: None,
             })
         }
 
@@ -123,6 +125,8 @@ mod tests {
                     low: dec!(0.9),
                     close: dec!(1.05),
                     volume: dec!(100.0),
+                    spread: None,
+                    real_volume: None,
                 };
                 limit
             ])

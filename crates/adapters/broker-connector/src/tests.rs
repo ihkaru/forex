@@ -34,6 +34,7 @@ async fn test_ingest_socket_tick_message() {
         bid: dec!(1.08500),
         ask: dec!(1.08515),
         spread_pts: 15,
+        volume: None,
         time_gmt: 1720000000,
     };
 
@@ -59,6 +60,7 @@ async fn test_monotonic_tick_rejection() {
             bid: dec!(1.08500),
             ask: dec!(1.08515),
             spread_pts: 15,
+            volume: None,
             time_gmt: 1000,
         })
         .await
@@ -73,6 +75,7 @@ async fn test_monotonic_tick_rejection() {
             bid: dec!(1.08550),
             ask: dec!(1.08565),
             spread_pts: 15,
+            volume: None,
             time_gmt: 1010,
         })
         .await
@@ -90,6 +93,7 @@ async fn test_monotonic_tick_rejection() {
             bid: dec!(1.08400),
             ask: dec!(1.08415),
             spread_pts: 15,
+            volume: None,
             time_gmt: 1005,
         })
         .await
@@ -116,6 +120,8 @@ async fn test_candle_buffer_upsert_and_bounded_capacity() {
             low: dec!(1.07900),
             close: dec!(1.08100),
             volume: dec!(100),
+            spread_pts: None,
+            real_volume: None,
             time_gmt: 3600,
         })
         .await
@@ -139,6 +145,8 @@ async fn test_candle_buffer_upsert_and_bounded_capacity() {
             low: dec!(1.07900),
             close: dec!(1.08250), // new close
             volume: dec!(150),
+            spread_pts: None,
+            real_volume: None,
             time_gmt: 3600,
         })
         .await
@@ -168,6 +176,8 @@ async fn test_candle_buffer_upsert_and_bounded_capacity() {
             low: dec!(1.07900),
             close: dec!(1.08250),
             volume: dec!(100),
+            spread_pts: None,
+            real_volume: None,
             time_gmt: 3600 + (i * 3600),
         })
         .await
@@ -198,6 +208,8 @@ async fn test_raw_symbol_preservation() {
         low: dec!(2748.00),
         close: dec!(2752.50),
         volume: dec!(500),
+        spread_pts: Some(25),
+        real_volume: None,
         time_gmt: 1720000000,
     };
 
@@ -224,6 +236,8 @@ async fn test_clear_all_data() {
         low: dec!(1.07900),
         close: dec!(1.08250),
         volume: dec!(100),
+        spread_pts: None,
+        real_volume: None,
         time_gmt: 1720000000,
     };
 

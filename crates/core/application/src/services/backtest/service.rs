@@ -103,127 +103,203 @@ impl BacktestService {
                 let slice = &historical_candles[(i - window_size)..i];
                 let current_candle = &historical_candles[i];
 
-                // Update status pending & running orders dengan candle saat ini
+                // Dual-Resolution Hybrid Execution:
+                // Cek apakah data tick historis resolusi tinggi tersedia untuk rentang bar ini
+                let next_bar_ts = if i + 1 < historical_candles.len() {
+                    historical_candles[i + 1].timestamp
+                } else {
+                    current_candle.timestamp + chrono::Duration::hours(1)
+                };
+                let bar_ticks = self
+                    .market_data
+                    .get_historical_ticks(symbol, current_candle.timestamp, next_bar_ts)
+                    .await
+                    .unwrap_or_default();
+
+                let effective_spread = current_candle.spread.unwrap_or(spread_offset);
+
+                // Update status pending & running orders dengan resolusi tick / fallback candle
                 let mut remaining_orders = Vec::new();
                 for mut sim in active_sim_orders {
                     let mut closed = false;
                     let tp = sim.order.take_profit;
 
-                    match sim.status {
-                        SimulatedOrderStatus::Pending => {
-                            // Cek apakah order kedaluwarsa sebelum terisi (12 jam — forensik menunjukkan
-                            // setup yang tidak terisi dalam 12 jam sudah kehilangan momentum)
-                            if current_candle.timestamp >= sim.expires_at {
-                                continue;
+                    if !bar_ticks.is_empty() {
+                        // === MODE 1: TICK-WALK RESOLUTION (Zero Bar-Ambiguity) ===
+                        for tick in &bar_ticks {
+                            match sim.status {
+                                SimulatedOrderStatus::Pending => {
+                                    if tick.timestamp >= sim.expires_at {
+                                        break;
+                                    }
+                                    let is_filled = match sim.order.action {
+                                        SignalAction::BuyLimit => tick.ask <= sim.order.open_price,
+                                        SignalAction::SellLimit => tick.bid >= sim.order.open_price,
+                                        SignalAction::BuyStop => tick.ask >= sim.order.open_price,
+                                        SignalAction::SellStop => tick.bid <= sim.order.open_price,
+                                        _ => false,
+                                    };
+                                    if is_filled {
+                                        sim.status = SimulatedOrderStatus::Filled {
+                                            fill_time: tick.timestamp,
+                                        };
+                                        sim.order.open_time = tick.timestamp;
+                                    }
+                                }
+                                SimulatedOrderStatus::Filled { fill_time } => {
+                                    let duration = tick.timestamp - fill_time;
+                                    if duration >= max_filled_duration {
+                                        sim.order.close_time = Some(tick.timestamp);
+                                        sim.order.realized_pnl = Some(Decimal::ZERO);
+                                        completed_trades.push(sim.order.clone());
+                                        closed = true;
+                                        break;
+                                    }
+                                    let sl = sim.order.stop_loss;
+                                    match sim.order.action {
+                                        SignalAction::BuyLimit | SignalAction::BuyStop => {
+                                            if tick.bid <= sl {
+                                                let loss_pips = if sim.sl_moved_to_breakeven {
+                                                    Decimal::ZERO
+                                                } else {
+                                                    -spec.price_diff_to_pips(sim.order.open_price - sl)
+                                                };
+                                                sim.order.close_time = Some(tick.timestamp);
+                                                sim.order.realized_pnl = Some(loss_pips);
+                                                running_pips += loss_pips;
+                                                completed_trades.push(sim.order.clone());
+                                                closed = true;
+                                                break;
+                                            } else if tick.bid >= tp {
+                                                let pips = spec.price_diff_to_pips(tp - sim.order.open_price);
+                                                sim.order.close_time = Some(tick.timestamp);
+                                                sim.order.realized_pnl = Some(pips);
+                                                running_pips += pips;
+                                                completed_trades.push(sim.order.clone());
+                                                closed = true;
+                                                break;
+                                            }
+                                        }
+                                        SignalAction::SellLimit | SignalAction::SellStop => {
+                                            if tick.ask >= sl {
+                                                let loss_pips = if sim.sl_moved_to_breakeven {
+                                                    Decimal::ZERO
+                                                } else {
+                                                    -spec.price_diff_to_pips(sl - sim.order.open_price)
+                                                };
+                                                sim.order.close_time = Some(tick.timestamp);
+                                                sim.order.realized_pnl = Some(loss_pips);
+                                                running_pips += loss_pips;
+                                                completed_trades.push(sim.order.clone());
+                                                closed = true;
+                                                break;
+                                            } else if tick.ask <= tp {
+                                                let pips = spec.price_diff_to_pips(sim.order.open_price - tp);
+                                                sim.order.close_time = Some(tick.timestamp);
+                                                sim.order.realized_pnl = Some(pips);
+                                                running_pips += pips;
+                                                completed_trades.push(sim.order.clone());
+                                                closed = true;
+                                                break;
+                                            }
+                                        }
+                                        _ => {}
+                                    }
+                                }
                             }
-
-                            // Cek apakah harga pasar menjemput Pending Order
-                            let is_filled = match sim.order.action {
-                                SignalAction::BuyLimit => {
-                                    current_candle.low + spread_offset <= sim.order.open_price
+                        }
+                    } else {
+                        // === MODE 2: CANDLE-LEVEL FALLBACK RESOLUTION ===
+                        match sim.status {
+                            SimulatedOrderStatus::Pending => {
+                                if current_candle.timestamp >= sim.expires_at {
+                                    continue;
                                 }
-                                SignalAction::SellLimit => {
-                                    current_candle.high >= sim.order.open_price
-                                }
-                                SignalAction::BuyStop => {
-                                    current_candle.high + spread_offset >= sim.order.open_price
-                                }
-                                SignalAction::SellStop => {
-                                    current_candle.low <= sim.order.open_price
-                                }
-                                _ => false,
-                            };
-
-                            if is_filled {
-                                sim.status = SimulatedOrderStatus::Filled {
-                                    fill_time: current_candle.timestamp,
+                                let is_filled = match sim.order.action {
+                                    SignalAction::BuyLimit => {
+                                        current_candle.low + effective_spread <= sim.order.open_price
+                                    }
+                                    SignalAction::SellLimit => {
+                                        current_candle.high >= sim.order.open_price
+                                    }
+                                    SignalAction::BuyStop => {
+                                        current_candle.high + effective_spread >= sim.order.open_price
+                                    }
+                                    SignalAction::SellStop => {
+                                        current_candle.low <= sim.order.open_price
+                                    }
+                                    _ => false,
                                 };
-                                sim.order.open_time = current_candle.timestamp;
-                            }
-                            remaining_orders.push(sim);
-                        }
-                        SimulatedOrderStatus::Filled { fill_time } => {
-                            // Max trade duration check: exit breakeven setelah 48 jam terisi
-                            // Ini mengeliminasi stagnation churn (58–71% trade rugi)
-                            let duration_since_fill = current_candle.timestamp - fill_time;
-                            if duration_since_fill >= max_filled_duration {
-                                // Exit dengan PnL 0 (breakeven/time-stop)
-                                sim.order.close_time = Some(current_candle.timestamp);
-                                sim.order.realized_pnl = Some(Decimal::ZERO);
-                                completed_trades.push(sim.order);
-                                continue;
-                            }
-
-                            // Baca SL yang berlaku pada awal bar ini
-                            let sl = sim.order.stop_loss;
-
-                            match sim.order.action {
-                                SignalAction::BuyLimit | SignalAction::BuyStop => {
-                                    let sl_hit = current_candle.low <= sl;
-                                    let tp_hit = current_candle.high >= tp;
-
-                                    if sl_hit {
-                                        let loss_pips = if sim.sl_moved_to_breakeven {
-                                            // SL sudah di BE — exit nol pips
-                                            Decimal::ZERO
-                                        } else {
-                                            -spec.price_diff_to_pips(sim.order.open_price - sl)
-                                        };
-                                        sim.order.close_time = Some(current_candle.timestamp);
-                                        sim.order.realized_pnl = Some(loss_pips);
-                                        running_pips += loss_pips;
-                                        closed = true;
-                                    } else if tp_hit {
-                                        let pips =
-                                            spec.price_diff_to_pips(tp - sim.order.open_price);
-                                        sim.order.close_time = Some(current_candle.timestamp);
-                                        sim.order.realized_pnl = Some(pips);
-                                        running_pips += pips;
-                                        closed = true;
-                                    }
+                                if is_filled {
+                                    sim.status = SimulatedOrderStatus::Filled {
+                                        fill_time: current_candle.timestamp,
+                                    };
+                                    sim.order.open_time = current_candle.timestamp;
                                 }
-                                SignalAction::SellLimit | SignalAction::SellStop => {
-                                    let sl_hit = current_candle.high + spread_offset >= sl;
-                                    let tp_hit = current_candle.low + spread_offset <= tp;
-
-                                    if sl_hit {
-                                        let loss_pips = if sim.sl_moved_to_breakeven {
-                                            // SL sudah di BE — exit nol pips
-                                            Decimal::ZERO
-                                        } else {
-                                            -spec.price_diff_to_pips(sl - sim.order.open_price)
-                                        };
-                                        sim.order.close_time = Some(current_candle.timestamp);
-                                        sim.order.realized_pnl = Some(loss_pips);
-                                        running_pips += loss_pips;
-                                        closed = true;
-                                    } else if tp_hit {
-                                        let pips =
-                                            spec.price_diff_to_pips(sim.order.open_price - tp);
-                                        sim.order.close_time = Some(current_candle.timestamp);
-                                        sim.order.realized_pnl = Some(pips);
-                                        running_pips += pips;
-                                        closed = true;
-                                    }
-                                }
-                                _ => {}
                             }
-
-                            if closed {
-                                completed_trades.push(sim.order);
-                            } else {
-                                remaining_orders.push(sim);
+                            SimulatedOrderStatus::Filled { fill_time } => {
+                                let duration_since_fill = current_candle.timestamp - fill_time;
+                                if duration_since_fill >= max_filled_duration {
+                                    sim.order.close_time = Some(current_candle.timestamp);
+                                    sim.order.realized_pnl = Some(Decimal::ZERO);
+                                    completed_trades.push(sim.order);
+                                    continue;
+                                }
+                                let sl = sim.order.stop_loss;
+                                match sim.order.action {
+                                    SignalAction::BuyLimit | SignalAction::BuyStop => {
+                                        let sl_hit = current_candle.low <= sl;
+                                        let tp_hit = current_candle.high >= tp;
+                                        if sl_hit {
+                                            let loss_pips = if sim.sl_moved_to_breakeven {
+                                                Decimal::ZERO
+                                            } else {
+                                                -spec.price_diff_to_pips(sim.order.open_price - sl)
+                                            };
+                                            sim.order.close_time = Some(current_candle.timestamp);
+                                            sim.order.realized_pnl = Some(loss_pips);
+                                            running_pips += loss_pips;
+                                            closed = true;
+                                        } else if tp_hit {
+                                            let pips = spec.price_diff_to_pips(tp - sim.order.open_price);
+                                            sim.order.close_time = Some(current_candle.timestamp);
+                                            sim.order.realized_pnl = Some(pips);
+                                            running_pips += pips;
+                                            closed = true;
+                                        }
+                                    }
+                                    SignalAction::SellLimit | SignalAction::SellStop => {
+                                        let sl_hit = current_candle.high + effective_spread >= sl;
+                                        let tp_hit = current_candle.low + effective_spread <= tp;
+                                        if sl_hit {
+                                            let loss_pips = if sim.sl_moved_to_breakeven {
+                                                Decimal::ZERO
+                                            } else {
+                                                -spec.price_diff_to_pips(sl - sim.order.open_price)
+                                            };
+                                            sim.order.close_time = Some(current_candle.timestamp);
+                                            sim.order.realized_pnl = Some(loss_pips);
+                                            running_pips += loss_pips;
+                                            closed = true;
+                                        } else if tp_hit {
+                                            let pips = spec.price_diff_to_pips(sim.order.open_price - tp);
+                                            sim.order.close_time = Some(current_candle.timestamp);
+                                            sim.order.realized_pnl = Some(pips);
+                                            running_pips += pips;
+                                            closed = true;
+                                        }
+                                    }
+                                    _ => {}
+                                }
+                                if closed {
+                                    completed_trades.push(sim.order);
+                                }
                             }
                         }
                     }
 
-                    // Update Drawdown pelacakan puncak
-                    if running_pips > peak_pips {
-                        peak_pips = running_pips;
-                    }
-                    let current_dd = peak_pips - running_pips;
-                    if current_dd > max_drawdown_pips {
-                        max_drawdown_pips = current_dd;
+                    if !closed {
+                        remaining_orders.push(sim);
                     }
                 }
                 active_sim_orders = remaining_orders;
@@ -238,6 +314,8 @@ impl BacktestService {
                         ask: last_slice_candle.close + spread_offset,
                         timestamp: last_slice_candle.timestamp,
                         source: last_slice_candle.source,
+                        spread_pts: None,
+                        volume: None,
                     };
 
                     let context = MarketContext {

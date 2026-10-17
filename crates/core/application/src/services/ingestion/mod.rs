@@ -113,6 +113,8 @@ impl MarketIngestionService {
                         low: l,
                         close: c,
                         volume: v,
+                        spread: None,
+                        real_volume: None,
                     });
                 }
             }

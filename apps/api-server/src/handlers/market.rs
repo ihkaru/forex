@@ -197,6 +197,8 @@ pub async fn signals_scan_handler(
                 bid: last.close,
                 ask: last.close + dec!(0.00012),
                 timestamp: last.timestamp,
+                spread_pts: None,
+                volume: None,
             };
             let ctx = MarketContext {
                 symbol: sym,

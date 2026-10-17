@@ -13,11 +13,15 @@ use crate::validator::DataIntegrityValidator;
 pub type CandleBufferMap =
     Arc<RwLock<HashMap<(Symbol, Timeframe, MarketDataSource), VecDeque<Candle>>>>;
 
+pub const MAX_TICK_CAPACITY: usize = 10_000;
+
 pub struct BrokerConnector {
     pub broker_name: String,
     latest_ticks: Arc<RwLock<HashMap<Symbol, Tick>>>,
+    tick_buffer: Arc<RwLock<HashMap<(Symbol, MarketDataSource), VecDeque<Tick>>>>,
     candle_buffer: CandleBufferMap,
     raw_symbol_map: Arc<RwLock<HashMap<Symbol, String>>>,
+    broker_specs: Arc<RwLock<HashMap<Symbol, domain::models::BrokerSymbolSpec>>>,
 }
 
 impl BrokerConnector {
@@ -25,14 +29,26 @@ impl BrokerConnector {
         Self {
             broker_name: broker_name.into(),
             latest_ticks: Arc::new(RwLock::new(HashMap::new())),
+            tick_buffer: Arc::new(RwLock::new(HashMap::new())),
             candle_buffer: Arc::new(RwLock::new(HashMap::new())),
             raw_symbol_map: Arc::new(RwLock::new(HashMap::new())),
+            broker_specs: Arc::new(RwLock::new(HashMap::new())),
         }
     }
 
     pub async fn get_raw_symbol(&self, symbol: &Symbol) -> Option<String> {
         let lock = self.raw_symbol_map.read().await;
         lock.get(symbol).cloned()
+    }
+
+    pub async fn get_broker_spec(&self, symbol: &Symbol) -> Option<domain::models::BrokerSymbolSpec> {
+        let lock = self.broker_specs.read().await;
+        lock.get(symbol).cloned()
+    }
+
+    pub async fn list_broker_specs(&self) -> Vec<domain::models::BrokerSymbolSpec> {
+        let lock = self.broker_specs.read().await;
+        lock.values().cloned().collect()
     }
 
     pub async fn clear_all_data(&self) -> usize {
@@ -43,10 +59,16 @@ impl BrokerConnector {
         let mut ticks_lock = self.latest_ticks.write().await;
         ticks_lock.clear();
 
+        let mut tick_buf_lock = self.tick_buffer.write().await;
+        tick_buf_lock.clear();
+
         let mut raw_lock = self.raw_symbol_map.write().await;
         raw_lock.clear();
 
-        tracing::info!("🧹 BrokerConnector: Seluruh {} candle dan buffer tick berhasil di-reset", count);
+        let mut specs_lock = self.broker_specs.write().await;
+        specs_lock.clear();
+
+        tracing::info!("🧹 BrokerConnector: Seluruh {} candle, buffer tick, dan spec berhasil di-reset", count);
         count
     }
 
@@ -58,6 +80,8 @@ impl BrokerConnector {
                 source,
                 bid,
                 ask,
+                spread_pts,
+                volume,
                 time_gmt,
                 ..
             } => {
@@ -93,6 +117,8 @@ impl BrokerConnector {
                     source: src,
                     bid,
                     ask,
+                    spread_pts: Some(spread_pts),
+                    volume,
                 };
 
                 let mut lock = self.latest_ticks.write().await;
@@ -108,7 +134,18 @@ impl BrokerConnector {
                         return Ok(());
                     }
                 }
-                lock.insert(symbol_obj.clone(), tick);
+                lock.insert(symbol_obj.clone(), tick.clone());
+                drop(lock);
+
+                // Buffer tick streaming ke dalam ring buffer terbatas untuk backtest presisi tinggi
+                let mut tb_lock = self.tick_buffer.write().await;
+                let t_deque = tb_lock.entry((symbol_obj.clone(), src)).or_default();
+                t_deque.push_back(tick);
+                while t_deque.len() > MAX_TICK_CAPACITY {
+                    t_deque.pop_front();
+                }
+                drop(tb_lock);
+
                 self.raw_symbol_map.write().await.insert(symbol_obj, symbol);
             }
             Mt5SocketMessage::Bar {
@@ -120,6 +157,8 @@ impl BrokerConnector {
                 low,
                 close,
                 volume,
+                spread_pts,
+                real_volume,
                 time_gmt,
             } => {
                 if symbol.to_lowercase().contains("mock")
@@ -153,6 +192,15 @@ impl BrokerConnector {
                     .and_then(|s| MarketDataSource::from_source_str(s).ok())
                     .unwrap_or(MarketDataSource::MrgRealMt4);
 
+                let spread_dec = spread_pts.map(|pts| {
+                    let point_mult = if symbol_obj.quote == "JPY" || symbol_obj.base.contains("XAU") {
+                        rust_decimal_macros::dec!(0.01)
+                    } else {
+                        rust_decimal_macros::dec!(0.00001)
+                    };
+                    rust_decimal::Decimal::from(pts) * point_mult
+                });
+
                 let candle = Candle {
                     symbol: symbol_obj.clone(),
                     timeframe: tf,
@@ -163,6 +211,8 @@ impl BrokerConnector {
                     low,
                     close,
                     volume,
+                    spread: spread_dec,
+                    real_volume,
                 };
 
                 let mut lock = self.candle_buffer.write().await;
@@ -190,6 +240,48 @@ impl BrokerConnector {
                 while deque.len() > MAX_CANDLE_CAPACITY {
                     deque.pop_front();
                 }
+            }
+            Mt5SocketMessage::Spec {
+                symbol,
+                source: _,
+                digits,
+                point,
+                tick_value,
+                tick_size,
+                contract_size,
+                swap_long,
+                swap_short,
+                swap_rollover_3days,
+                stop_level_pts,
+                freeze_level_pts,
+                min_lot,
+                lot_step,
+                max_lot,
+                margin_required,
+            } => {
+                let symbol_obj =
+                    Symbol::from_symbol_str(&symbol).ok_or(DomainError::InvalidSymbol(symbol.clone()))?;
+                let spec = domain::models::BrokerSymbolSpec {
+                    symbol: symbol_obj.clone(),
+                    raw_ticker: symbol.clone(),
+                    digits,
+                    point,
+                    tick_value,
+                    tick_size,
+                    contract_size,
+                    swap_long,
+                    swap_short,
+                    swap_rollover_3days,
+                    stop_level_pts,
+                    freeze_level_pts,
+                    min_lot,
+                    lot_step,
+                    max_lot,
+                    margin_required,
+                };
+                self.broker_specs.write().await.insert(symbol_obj.clone(), spec);
+                self.raw_symbol_map.write().await.insert(symbol_obj, symbol);
+                tracing::info!("📋 Broker Symbol Spec tersimpan dari bridge");
             }
         }
         Ok(())
@@ -368,4 +460,60 @@ impl MarketDataPort for BrokerConnector {
 
         Ok(filtered)
     }
+
+    async fn get_historical_ticks(
+        &self,
+        symbol: &Symbol,
+        from: DateTime<Utc>,
+        to: DateTime<Utc>,
+    ) -> Result<Vec<Tick>, DomainError> {
+        let lock = self.tick_buffer.read().await;
+        for src in [
+            MarketDataSource::MrgRealMt4,
+            MarketDataSource::MrgDemoMt4,
+            MarketDataSource::MrgMetaTrader4,
+        ] {
+            if let Some(ticks) = lock.get(&(symbol.clone(), src)) {
+                if !ticks.is_empty() {
+                    let filtered: Vec<Tick> = ticks
+                        .iter()
+                        .filter(|t| t.timestamp >= from && t.timestamp <= to)
+                        .cloned()
+                        .collect();
+                    return Ok(filtered);
+                }
+            }
+        }
+        Ok(vec![])
+    }
 }
+
+#[async_trait]
+impl domain::ports::BrokerSpecPort for BrokerConnector {
+    async fn save_broker_spec(
+        &self,
+        spec: &domain::models::BrokerSymbolSpec,
+    ) -> Result<(), DomainError> {
+        self.broker_specs
+            .write()
+            .await
+            .insert(spec.symbol.clone(), spec.clone());
+        Ok(())
+    }
+
+    async fn get_broker_spec(
+        &self,
+        symbol: &Symbol,
+    ) -> Result<Option<domain::models::BrokerSymbolSpec>, DomainError> {
+        let lock = self.broker_specs.read().await;
+        Ok(lock.get(symbol).cloned())
+    }
+
+    async fn list_broker_specs(
+        &self,
+    ) -> Result<Vec<domain::models::BrokerSymbolSpec>, DomainError> {
+        let lock = self.broker_specs.read().await;
+        Ok(lock.values().cloned().collect())
+    }
+}
+

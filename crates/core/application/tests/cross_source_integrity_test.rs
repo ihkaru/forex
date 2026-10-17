@@ -50,6 +50,7 @@ async fn test_hexagonal_polymorphism_and_cross_source_data_integrity() {
         bid: dec!(1.08500),
         ask: dec!(1.08515),
         spread_pts: 15,
+        volume: None,
         time_gmt: now.timestamp(),
     };
     mt5_raw
@@ -68,6 +69,8 @@ async fn test_hexagonal_polymorphism_and_cross_source_data_integrity() {
             low: dec!(1.08400) + dec!(0.00005) * Decimal::from(i),
             close: dec!(1.08510) + dec!(0.00005) * Decimal::from(i),
             volume: dec!(500) + dec!(10) * Decimal::from(i),
+            spread_pts: None,
+            real_volume: None,
             time_gmt: bar_time.timestamp(),
         };
         mt5_raw

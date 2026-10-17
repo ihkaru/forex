@@ -39,6 +39,8 @@ impl MarketDataPort for HistoricalMarketFeed {
             source: MarketDataSource::SyntheticTest,
             bid: last_close,
             ask: last_close + (spec.pip_size * self.spread_pips),
+            spread_pts: None,
+            volume: None,
         })
     }
 
@@ -140,6 +142,8 @@ pub fn load_real_market_candles(symbol: &Symbol) -> anyhow::Result<Vec<Candle>> 
             low,
             close,
             volume,
+            spread: None,
+            real_volume: None,
         });
     }
 

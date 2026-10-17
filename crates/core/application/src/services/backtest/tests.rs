@@ -28,6 +28,8 @@ mod tests {
                 source: domain::models::MarketDataSource::SyntheticTest,
                 bid: dec!(1.0850),
                 ask: dec!(1.0852),
+                spread_pts: None,
+                volume: None,
             })
         }
 
@@ -69,6 +71,8 @@ mod tests {
                 low: dec!(0.5980) + Decimal::new(i as i64 * 5, 4),
                 close: dec!(0.6020) + Decimal::new(i as i64 * 5, 4),
                 volume: dec!(100.0),
+                spread: None,
+                real_volume: None,
             });
         }
 

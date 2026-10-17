@@ -95,6 +95,8 @@ impl MarketDataPort for MockProvider {
             source: MarketDataSource::DukascopyEcn,
             bid: dec!(1.0850),
             ask: dec!(1.0851),
+            spread_pts: None,
+            volume: None,
         })
     }
     async fn get_recent_candles(
@@ -147,6 +149,8 @@ async fn test_delta_sync_fetches_only_new_bars_since_high_watermark() {
             low: dec!(1.0840),
             close: dec!(1.0855),
             volume: dec!(1000.0),
+            spread: None,
+            real_volume: None,
         });
     }
     storage
@@ -174,6 +178,8 @@ async fn test_delta_sync_fetches_only_new_bars_since_high_watermark() {
             low: dec!(1.0840),
             close: dec!(1.0855),
             volume: dec!(1000.0),
+            spread: None,
+            real_volume: None,
         });
     }
 

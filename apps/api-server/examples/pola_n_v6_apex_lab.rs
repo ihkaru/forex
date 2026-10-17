@@ -39,6 +39,8 @@ impl MarketDataPort for InMemoryMarketAdapter {
             source: domain::models::MarketDataSource::DukascopyEcn,
             bid: last.close,
             ask: last.close + dec!(0.0001),
+            spread_pts: None,
+            volume: None,
         })
     }
 

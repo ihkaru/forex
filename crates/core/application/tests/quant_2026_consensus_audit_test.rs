@@ -32,6 +32,8 @@ impl MarketDataPort for ConsensusMockFeed {
             source: domain::models::MarketDataSource::SyntheticTest,
             bid: last_close,
             ask: last_close + (spec.pip_size * self.spread_pips),
+            spread_pts: None,
+            volume: None,
         })
     }
 
@@ -101,6 +103,8 @@ fn create_market_wave(symbol: &Symbol, count: usize) -> Vec<Candle> {
             low,
             close,
             volume: dec!(1500.0),
+            spread: None,
+            real_volume: None,
         });
 
         current_price = close;
@@ -130,6 +134,8 @@ fn test_eda_health_scorecard_detects_corrupt_candles_and_gaps() {
             low: dec!(0.5980),
             close: dec!(0.6020),
             volume: dec!(1000.0),
+            spread: None,
+            real_volume: None,
         });
     }
 

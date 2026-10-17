@@ -143,6 +143,36 @@ void SendCurrentTickForSymbol(string sym)
 }
 
 //+------------------------------------------------------------------+
+//| Helper Pengiriman Spesifikasi Kontrak Simbol Broker              |
+//+------------------------------------------------------------------+
+void SendBrokerSpecForSymbol(string sym)
+{
+   if(!is_connected || socket_handle < 0) return;
+   string src = GetSourceString();
+
+   int digits = (int)MarketInfo(sym, MODE_DIGITS);
+   double point = MarketInfo(sym, MODE_POINT);
+   double tick_val = MarketInfo(sym, MODE_TICKVALUE);
+   double tick_sz = MarketInfo(sym, MODE_TICKSIZE);
+   double lot_sz = MarketInfo(sym, MODE_LOTSIZE);
+   double swap_l = MarketInfo(sym, MODE_SWAPLONG);
+   double swap_s = MarketInfo(sym, MODE_SWAPSHORT);
+   int swap_3d = 3; // Wednesday standard 3-day rollover
+   int stop_lvl = (int)MarketInfo(sym, MODE_STOPLEVEL);
+   int freeze_lvl = (int)MarketInfo(sym, MODE_FREEZELEVEL);
+   double min_lot = MarketInfo(sym, MODE_MINLOT);
+   double lot_step = MarketInfo(sym, MODE_LOTSTEP);
+   double max_lot = MarketInfo(sym, MODE_MAXLOT);
+   double margin_req = MarketInfo(sym, MODE_MARGINREQUIRED);
+
+   string json = StringFormat(
+      "{\"type\":\"SPEC\",\"symbol\":\"%s\",\"source\":\"%s\",\"digits\":%d,\"point\":%.6f,\"tick_value\":%.4f,\"tick_size\":%.6f,\"contract_size\":%.2f,\"swap_long\":%.4f,\"swap_short\":%.4f,\"swap_rollover_3days\":%d,\"stop_level_pts\":%d,\"freeze_level_pts\":%d,\"min_lot\":%.2f,\"lot_step\":%.2f,\"max_lot\":%.2f,\"margin_required\":%.2f}\n",
+      sym, src, digits, point, tick_val, tick_sz, lot_sz, swap_l, swap_s, swap_3d, stop_lvl, freeze_lvl, min_lot, lot_step, max_lot, margin_req
+   );
+   SendSocketData(json);
+}
+
+//+------------------------------------------------------------------+
 //| Helper Pengiriman Bar Berjalan Simbol Tertentu                  |
 //+------------------------------------------------------------------+
 void SendCurrentBarForSymbol(string sym)
@@ -158,12 +188,14 @@ void SendCurrentBarForSymbol(string sym)
    double bar_low    = iLow(sym, PERIOD_H1, 0);
    double bar_close  = iClose(sym, PERIOD_H1, 0);
    long   bar_vol    = iVolume(sym, PERIOD_H1, 0);
+   int    spread_pts = (int)MarketInfo(sym, MODE_SPREAD);
 
    string json = StringFormat(
-      "{\"type\":\"BAR\",\"symbol\":\"%s\",\"source\":\"%s\",\"timeframe\":\"H1\",\"open\":%.5f,\"high\":%.5f,\"low\":%.5f,\"close\":%.5f,\"volume\":%.2f,\"time_gmt\":%lld}\n",
+      "{\"type\":\"BAR\",\"symbol\":\"%s\",\"source\":\"%s\",\"timeframe\":\"H1\",\"open\":%.5f,\"high\":%.5f,\"low\":%.5f,\"close\":%.5f,\"volume\":%.2f,\"spread_pts\":%d,\"real_volume\":%.2f,\"time_gmt\":%lld}\n",
       sym,
       src,
       bar_open, bar_high, bar_low, bar_close, (double)bar_vol,
+      spread_pts, (double)bar_vol,
       (long)bar_time
    );
 
@@ -180,6 +212,9 @@ void SendHistoricalBarsForSymbol(string sym)
    int bars_to_send = MathMin(InpHistoryLimit, total_h1_bars);
    string src = GetSourceString();
 
+   // Kirim spesifikasi kontrak broker terlebih dahulu
+   SendBrokerSpecForSymbol(sym);
+
    Print("📦 Mengirim ", bars_to_send, " bar histori H1 ", sym, " (Source: ", src, " [", AccountServer(), "]) ke Rust Quant Engine...");
 
    for(int i = bars_to_send - 1; i >= 0; i--)
@@ -190,12 +225,14 @@ void SendHistoricalBarsForSymbol(string sym)
       double bar_low    = iLow(sym, PERIOD_H1, i);
       double bar_close  = iClose(sym, PERIOD_H1, i);
       long   bar_vol    = iVolume(sym, PERIOD_H1, i);
+      int    spread_pts = (int)MarketInfo(sym, MODE_SPREAD);
 
       string json = StringFormat(
-         "{\"type\":\"BAR\",\"symbol\":\"%s\",\"source\":\"%s\",\"timeframe\":\"H1\",\"open\":%.5f,\"high\":%.5f,\"low\":%.5f,\"close\":%.5f,\"volume\":%.2f,\"time_gmt\":%lld}\n",
+         "{\"type\":\"BAR\",\"symbol\":\"%s\",\"source\":\"%s\",\"timeframe\":\"H1\",\"open\":%.5f,\"high\":%.5f,\"low\":%.5f,\"close\":%.5f,\"volume\":%.2f,\"spread_pts\":%d,\"real_volume\":%.2f,\"time_gmt\":%lld}\n",
          sym,
          src,
          bar_open, bar_high, bar_low, bar_close, (double)bar_vol,
+         spread_pts, (double)bar_vol,
          (long)bar_time
       );
       SendSocketData(json);

@@ -34,6 +34,8 @@ impl MarketDataPort for AuditMarketFeed {
             source: domain::models::MarketDataSource::SyntheticTest,
             bid: last_close,
             ask: last_close + (spec.pip_size * self.spread_pips),
+            spread_pts: None,
+            volume: None,
         })
     }
 
@@ -79,6 +81,8 @@ async fn test_audit_lookahead_bias_isolation() {
             low: price - dec!(0.0010),
             close: price + dec!(0.0002),
             volume: dec!(1000.0),
+            spread: None,
+            real_volume: None,
         });
     }
 
@@ -96,6 +100,8 @@ async fn test_audit_lookahead_bias_isolation() {
             low: price - dec!(0.0010),
             close: price + dec!(0.0080),
             volume: dec!(50000.0),
+            spread: None,
+            real_volume: None,
         });
     }
 
@@ -113,6 +119,8 @@ async fn test_audit_lookahead_bias_isolation() {
             low: price - dec!(0.0100),
             close: price - dec!(0.0080),
             volume: dec!(50000.0),
+            spread: None,
+            real_volume: None,
         });
     }
 
@@ -184,6 +192,8 @@ async fn test_audit_pending_order_lifecycle_fill_and_expiration() {
             low: dec!(1.08350), // Low tidak pernah menyentuh level Limit 1.08200!
             close: price + dec!(0.00020),
             volume: dec!(1000.0),
+            spread: None,
+            real_volume: None,
         });
     }
 
@@ -271,6 +281,8 @@ async fn test_audit_intrabar_ambiguity_conservative_worst_case() {
             low: price - dec!(0.00050),
             close: price,
             volume: dec!(1000.0),
+            spread: None,
+            real_volume: None,
         });
     }
 
@@ -285,6 +297,8 @@ async fn test_audit_intrabar_ambiguity_conservative_worst_case() {
         low: dec!(1.08450),
         close: dec!(1.08500),
         volume: dec!(1000.0),
+        spread: None,
+        real_volume: None,
     });
 
     // Bar 51 (index 51): Pullback menjemput entry limit (Low turun ke 1.08100 -> Limit 1.08200 FILLED!)
@@ -298,6 +312,8 @@ async fn test_audit_intrabar_ambiguity_conservative_worst_case() {
         low: dec!(1.08100), // Entry Filled!
         close: dec!(1.08200),
         volume: dec!(2000.0),
+        spread: None,
+        real_volume: None,
     });
 
     // Bar 52 (index 52): Super Volatile Candle
@@ -316,6 +332,8 @@ async fn test_audit_intrabar_ambiguity_conservative_worst_case() {
         low: dec!(1.07800),  // SL baru (1.08200 = entry) tersentuh → exit breakeven
         close: dec!(1.08500),
         volume: dec!(10000.0),
+        spread: None,
+        real_volume: None,
     });
 
     // Bar 53-60: Buffer penutup
@@ -331,6 +349,8 @@ async fn test_audit_intrabar_ambiguity_conservative_worst_case() {
             low: price - dec!(0.00050),
             close: price,
             volume: dec!(1000.0),
+            spread: None,
+            real_volume: None,
         });
     }
 

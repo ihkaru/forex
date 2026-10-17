@@ -130,6 +130,10 @@ pub struct Candle {
     pub low: Decimal,
     pub close: Decimal,
     pub volume: Decimal,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub spread: Option<Decimal>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub real_volume: Option<Decimal>,
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
@@ -140,9 +144,50 @@ pub struct Tick {
     pub source: MarketDataSource,
     pub bid: Decimal,
     pub ask: Decimal,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub spread_pts: Option<u32>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub volume: Option<Decimal>,
 }
 
 impl Candle {
+    #[allow(clippy::too_many_arguments)]
+    pub fn new(
+        symbol: Symbol,
+        timeframe: Timeframe,
+        timestamp: DateTime<Utc>,
+        source: MarketDataSource,
+        open: Decimal,
+        high: Decimal,
+        low: Decimal,
+        close: Decimal,
+        volume: Decimal,
+    ) -> Self {
+        Self {
+            symbol,
+            timeframe,
+            timestamp,
+            source,
+            open,
+            high,
+            low,
+            close,
+            volume,
+            spread: None,
+            real_volume: None,
+        }
+    }
+
+    pub fn with_spread(mut self, spread: Decimal) -> Self {
+        self.spread = Some(spread);
+        self
+    }
+
+    pub fn with_real_volume(mut self, real_volume: Decimal) -> Self {
+        self.real_volume = Some(real_volume);
+        self
+    }
+
     #[inline]
     pub fn epoch_seconds(&self) -> i64 {
         self.timestamp.timestamp()
@@ -176,11 +221,41 @@ impl Candle {
             low,
             close,
             volume,
+            spread: None,
+            real_volume: None,
         })
     }
 }
 
 impl Tick {
+    pub fn new(
+        symbol: Symbol,
+        timestamp: DateTime<Utc>,
+        source: MarketDataSource,
+        bid: Decimal,
+        ask: Decimal,
+    ) -> Self {
+        Self {
+            symbol,
+            timestamp,
+            source,
+            bid,
+            ask,
+            spread_pts: None,
+            volume: None,
+        }
+    }
+
+    pub fn with_spread_pts(mut self, spread_pts: u32) -> Self {
+        self.spread_pts = Some(spread_pts);
+        self
+    }
+
+    pub fn with_volume(mut self, volume: Decimal) -> Self {
+        self.volume = Some(volume);
+        self
+    }
+
     #[inline]
     pub fn epoch_seconds(&self) -> i64 {
         self.timestamp.timestamp()

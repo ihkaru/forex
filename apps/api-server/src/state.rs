@@ -135,6 +135,8 @@ impl RealHistoricalMarketAdapter {
                 low,
                 close,
                 volume,
+                spread: None,
+                real_volume: None,
             });
         }
 
@@ -162,6 +164,8 @@ impl MarketDataPort for RealHistoricalMarketAdapter {
                     bid: last.close,
                     ask: last.close + dec!(0.00012),
                     timestamp: last.timestamp,
+                    spread_pts: None,
+                    volume: None,
                 });
             }
         }
