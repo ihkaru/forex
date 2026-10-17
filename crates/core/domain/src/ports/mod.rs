@@ -1,5 +1,5 @@
 pub mod audit;
-pub mod broker_spec;
+pub mod broker_spec_port;
 pub mod ingestion;
 pub mod market_data;
 pub mod qualification;
@@ -11,7 +11,7 @@ pub mod sync;
 pub mod tick_storage;
 
 pub use audit::*;
-pub use broker_spec::BrokerSpecPort;
+pub use broker_spec_port::BrokerSpecPort;
 pub use ingestion::*;
 pub use market_data::MarketDataPort;
 pub use qualification::*;
