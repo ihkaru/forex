@@ -25,6 +25,7 @@ revenue sharing subscriber Priority Channel.
 [ ] 6. UTC TIMESTAMPS   : Semua timestamp → chrono::DateTime<Utc>
 [ ] 7. ZERO BUILD WARNS : cargo clippy -D warnings, 0 error, 0 warning sebelum selesai
 [ ] 8. SRP MODULARITY   : 1 Struct/Modul/Komponen = 1 Tanggung Jawab. Dilarang 'God Files' / monolitik.
+[ ] 9. PROD ISOLATION   : DILARANG menjalankan `cargo test --workspace` atau build berat di server ThinkStation (Production). Seluruh testing & validasi WAJIB dilakukan di PC Lokal (Development) agar tidak mengganggu aplikasi production lain.
 ```
 
 > Aturan #2, #3, #7 kini **dieksekusi oleh compiler** via `[workspace.lints]` di `Cargo.toml`
