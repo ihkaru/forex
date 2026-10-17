@@ -97,7 +97,7 @@ pub async fn market_candles_handler(
     };
 
     // 3. Konstruksi CandleQuery Terstandarisasi
-    let mut candle_query = CandleQuery::new(sym, tf, source);
+    let mut candle_query = CandleQuery::new(sym.clone(), tf, source);
     if let (Some(from_sec), Some(to_sec)) = (query.from, query.to) {
         let from_dt = chrono::Utc
             .timestamp_opt(from_sec, 0)
