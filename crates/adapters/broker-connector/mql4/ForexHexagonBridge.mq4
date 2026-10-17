@@ -190,13 +190,16 @@ void SendCurrentBarForSymbol(string sym)
    long   bar_vol    = iVolume(sym, PERIOD_H1, 0);
    int    spread_pts = (int)MarketInfo(sym, MODE_SPREAD);
 
+   long server_offset = (long)(TimeCurrent() - TimeGMT());
+   long bar_gmt       = (long)bar_time - server_offset;
+
    string json = StringFormat(
       "{\"type\":\"BAR\",\"symbol\":\"%s\",\"source\":\"%s\",\"timeframe\":\"H1\",\"open\":%.5f,\"high\":%.5f,\"low\":%.5f,\"close\":%.5f,\"volume\":%.2f,\"spread_pts\":%d,\"real_volume\":%.2f,\"time_gmt\":%lld}\n",
       sym,
       src,
       bar_open, bar_high, bar_low, bar_close, (double)bar_vol,
       spread_pts, (double)bar_vol,
-      (long)bar_time
+      bar_gmt
    );
 
    SendSocketData(json);
@@ -211,6 +214,7 @@ void SendHistoricalBarsForSymbol(string sym)
    if(total_h1_bars <= 0) return;
    int bars_to_send = MathMin(InpHistoryLimit, total_h1_bars);
    string src = GetSourceString();
+   long server_offset = (long)(TimeCurrent() - TimeGMT());
 
    // Kirim spesifikasi kontrak broker terlebih dahulu
    SendBrokerSpecForSymbol(sym);
@@ -226,6 +230,7 @@ void SendHistoricalBarsForSymbol(string sym)
       double bar_close  = iClose(sym, PERIOD_H1, i);
       long   bar_vol    = iVolume(sym, PERIOD_H1, i);
       int    spread_pts = (int)MarketInfo(sym, MODE_SPREAD);
+      long   bar_gmt    = (long)bar_time - server_offset;
 
       string json = StringFormat(
          "{\"type\":\"BAR\",\"symbol\":\"%s\",\"source\":\"%s\",\"timeframe\":\"H1\",\"open\":%.5f,\"high\":%.5f,\"low\":%.5f,\"close\":%.5f,\"volume\":%.2f,\"spread_pts\":%d,\"real_volume\":%.2f,\"time_gmt\":%lld}\n",
@@ -233,7 +238,7 @@ void SendHistoricalBarsForSymbol(string sym)
          src,
          bar_open, bar_high, bar_low, bar_close, (double)bar_vol,
          spread_pts, (double)bar_vol,
-         (long)bar_time
+         bar_gmt
       );
       SendSocketData(json);
    }

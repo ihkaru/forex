@@ -42,6 +42,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 COPY --from=builder /app/target/release/api-server /usr/local/bin/api-server
 COPY --from=builder /app/target/release/signal-daemon /usr/local/bin/signal-daemon
+COPY data/ /usr/local/share/forex/data/
 
 # Create persistent storage directories for DuckDB & Parquet data
 RUN mkdir -p /app/data /app/reports
