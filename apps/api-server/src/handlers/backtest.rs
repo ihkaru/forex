@@ -13,6 +13,9 @@ use std::sync::Arc;
 #[derive(Debug, Deserialize, Default)]
 pub struct BacktestQuery {
     pub strategy: Option<String>,
+    pub source: Option<String>,
+    pub from: Option<i64>,
+    pub to: Option<i64>,
 }
 
 #[derive(Serialize)]
@@ -49,6 +52,45 @@ fn resolve_strategy(query_strat: Option<&str>) -> Arc<dyn StrategyPort> {
     registry.resolve_or_default(query_strat)
 }
 
+fn resolve_market_data_and_range(
+    state: &AppState,
+    query: &BacktestQuery,
+) -> (Arc<dyn domain::ports::MarketDataPort>, chrono::DateTime<Utc>, chrono::DateTime<Utc>) {
+    let parsed_source = query
+        .source
+        .as_deref()
+        .and_then(|s| domain::models::MarketDataSource::from_source_str(s).ok());
+
+    match parsed_source {
+        Some(domain::models::MarketDataSource::MrgRealMt4)
+        | Some(domain::models::MarketDataSource::MrgDemoMt4)
+        | Some(domain::models::MarketDataSource::MrgMetaTrader4) => {
+            // Broker MT4 stream - rentang waktu lilin broker terkini (default 45 hari ke belakang)
+            let to_dt = query
+                .to
+                .and_then(|ts| Utc.timestamp_opt(ts, 0).single())
+                .unwrap_or_else(Utc::now);
+            let from_dt = query
+                .from
+                .and_then(|ts| Utc.timestamp_opt(ts, 0).single())
+                .unwrap_or_else(|| to_dt - chrono::Duration::days(45));
+            (state.broker_connector.clone(), from_dt, to_dt)
+        }
+        _ => {
+            // Default: Historical ECN long-term data (2015-2026)
+            let from_dt = query
+                .from
+                .and_then(|ts| Utc.timestamp_opt(ts, 0).single())
+                .unwrap_or_else(|| Utc.with_ymd_and_hms(2015, 1, 1, 0, 0, 0).unwrap());
+            let to_dt = query
+                .to
+                .and_then(|ts| Utc.timestamp_opt(ts, 0).single())
+                .unwrap_or_else(|| Utc.with_ymd_and_hms(2026, 8, 1, 0, 0, 0).unwrap());
+            (state.market_adapter.clone(), from_dt, to_dt)
+        }
+    }
+}
+
 pub async fn backtest_handler(
     Query(query): Query<BacktestQuery>,
     State(state): State<Arc<AppState>>,
@@ -61,15 +103,13 @@ pub async fn backtest_handler(
     let mut total_trades = 0;
     let mut total_wins = 0;
 
+    let (market_data, from_dt, to_dt) = resolve_market_data_and_range(&state, &query);
     let strategy = resolve_strategy(query.strategy.as_deref());
     let service = BacktestService::new(
-        state.market_adapter.clone(),
+        market_data,
         strategy,
         RiskProfile::default(),
     );
-
-    let from_dt = Utc.with_ymd_and_hms(2015, 1, 1, 0, 0, 0).unwrap();
-    let to_dt = Utc.with_ymd_and_hms(2026, 8, 1, 0, 0, 0).unwrap();
 
     for p in &pairs {
         if let Some(sym) = Symbol::from_symbol_str(p) {
@@ -115,15 +155,13 @@ pub async fn backtest_trades_handler(
 ) -> Result<Json<Vec<SimulatedTradeDto>>, StatusCode> {
     let sym_str = symbol.to_uppercase();
     if let Some(sym) = Symbol::from_symbol_str(&sym_str) {
+        let (market_data, from_dt, to_dt) = resolve_market_data_and_range(&state, &query);
         let strategy = resolve_strategy(query.strategy.as_deref());
         let service = BacktestService::new(
-            state.market_adapter.clone(),
+            market_data,
             strategy,
             RiskProfile::default(),
         );
-
-        let from_dt = Utc.with_ymd_and_hms(2023, 1, 1, 0, 0, 0).unwrap();
-        let to_dt = Utc.with_ymd_and_hms(2026, 8, 1, 0, 0, 0).unwrap();
         let spec = TfPairSpec::from_symbol(&sym);
 
         if let Ok(detailed) = service
@@ -178,15 +216,13 @@ pub async fn backtest_detailed_handler(
 ) -> Result<Json<DetailedBacktestApiResponse>, StatusCode> {
     let sym_str = symbol.to_uppercase();
     if let Some(sym) = Symbol::from_symbol_str(&sym_str) {
+        let (market_data, from_dt, to_dt) = resolve_market_data_and_range(&state, &query);
         let strategy = resolve_strategy(query.strategy.as_deref());
         let service = BacktestService::new(
-            state.market_adapter.clone(),
+            market_data,
             strategy,
             RiskProfile::default(),
         );
-
-        let from_dt = Utc.with_ymd_and_hms(2015, 1, 1, 0, 0, 0).unwrap();
-        let to_dt = Utc.with_ymd_and_hms(2026, 8, 1, 0, 0, 0).unwrap();
         let spec = TfPairSpec::from_symbol(&sym);
 
         if let Ok(detailed) = service

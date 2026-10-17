@@ -36,12 +36,14 @@ export class AppCompositionRoot {
   public readonly preferencesPort: IUserPreferencesPort;
   public readonly replayKpiPort: IReplayKpiPort;
   public readonly chartAdapter: TradingViewChartAdapter;
+  public readonly baseUrl: string;
 
   constructor(apiBaseUrl?: string) {
     const defaultUrl = typeof window !== 'undefined'
       ? `${window.location.protocol}//${window.location.host}/api`
       : 'http://127.0.0.1:5000/api';
     const resolvedUrl = apiBaseUrl || defaultUrl;
+    this.baseUrl = resolvedUrl;
 
     // 1. Instantiate Driven Adapters (I/O) & Services
     this.marketDataPort = new RestMarketDataAdapter(resolvedUrl);

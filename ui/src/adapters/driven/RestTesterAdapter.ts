@@ -3,10 +3,13 @@ import type { DetailedBacktestReport, ITesterPort } from '../../ports/ITesterPor
 export class RestTesterAdapter implements ITesterPort {
   constructor(private readonly baseUrl: string = 'http://127.0.0.1:5000/api') {}
 
-  async getDetailedBacktestReport(symbol: string, strategyId?: string): Promise<DetailedBacktestReport> {
+  async getDetailedBacktestReport(symbol: string, strategyId?: string, source?: string): Promise<DetailedBacktestReport> {
     const cleanSym = symbol.replace(/[^A-Za-z]/g, '').toUpperCase();
-    const query = strategyId ? `?strategy=${strategyId}` : '';
-    const url = `${this.baseUrl}/backtest/detailed/${cleanSym}${query}`;
+    const params = new URLSearchParams();
+    if (strategyId) params.append('strategy', strategyId);
+    if (source) params.append('source', source);
+    const queryString = params.toString() ? `?${params.toString()}` : '';
+    const url = `${this.baseUrl}/backtest/detailed/${cleanSym}${queryString}`;
     
     const resp = await fetch(url);
     if (!resp.ok) {

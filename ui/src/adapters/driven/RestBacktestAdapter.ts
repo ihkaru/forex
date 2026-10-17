@@ -4,14 +4,19 @@ import type { IBacktestPort } from '../../ports';
 export class RestBacktestAdapter implements IBacktestPort {
   constructor(private readonly baseUrl: string = 'http://127.0.0.1:5000/api') {}
 
-  async runBacktest(): Promise<{
+  async runBacktest(strategyId?: string, source?: string): Promise<{
     reports: BacktestReport[];
     totalValuedPips: number;
     portfolioWinRatePct: number;
     wferPct: number;
     isTfQualified: boolean;
   }> {
-    const res = await fetch(`${this.baseUrl}/backtest`);
+    const params = new URLSearchParams();
+    if (strategyId) params.append('strategy', strategyId);
+    if (source) params.append('source', source);
+    const queryString = params.toString() ? `?${params.toString()}` : '';
+
+    const res = await fetch(`${this.baseUrl}/backtest${queryString}`);
     if (!res.ok) {
       throw new Error(`[RestBacktestAdapter] HTTP error ${res.status}: ${res.statusText}`);
     }
@@ -36,10 +41,14 @@ export class RestBacktestAdapter implements IBacktestPort {
     };
   }
 
-  async getTrades(symbol: string, strategyId?: string): Promise<any[]> {
+  async getTrades(symbol: string, strategyId?: string, source?: string): Promise<any[]> {
     try {
-      const query = strategyId ? `?strategy=${strategyId}` : '';
-      const res = await fetch(`${this.baseUrl}/backtest/trades/${symbol}${query}`);
+      const params = new URLSearchParams();
+      if (strategyId) params.append('strategy', strategyId);
+      if (source) params.append('source', source);
+      const queryString = params.toString() ? `?${params.toString()}` : '';
+
+      const res = await fetch(`${this.baseUrl}/backtest/trades/${symbol}${queryString}`);
       if (res.ok) {
         return await res.json();
       }

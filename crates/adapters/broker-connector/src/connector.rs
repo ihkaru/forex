@@ -403,10 +403,36 @@ impl MarketDataPort for BrokerConnector {
         &self,
         symbol: &Symbol,
         timeframe: Timeframe,
-        _from: DateTime<Utc>,
-        _to: DateTime<Utc>,
+        from: DateTime<Utc>,
+        to: DateTime<Utc>,
     ) -> Result<Vec<Candle>, DomainError> {
-        self.get_recent_candles(symbol, timeframe, 500).await
+        let lock = self.candle_buffer.read().await;
+        for src in [
+            MarketDataSource::MrgRealMt4,
+            MarketDataSource::MrgDemoMt4,
+            MarketDataSource::MrgMetaTrader4,
+        ] {
+            if let Some(candles) = lock.get(&(symbol.clone(), timeframe, src)) {
+                if !candles.is_empty() {
+                    let filtered: Vec<Candle> = candles
+                        .iter()
+                        .filter(|c| c.timestamp >= from && c.timestamp <= to)
+                        .cloned()
+                        .collect();
+                    if !filtered.is_empty() {
+                        return Ok(filtered);
+                    }
+                    // Jika rentang dari/ke lebih luas atau di luar timestamp buffer tetapi candle tersedia,
+                    // kembalikan seluruh lilin buffer terkini agar simulasi backtest tetap berjalan deterministik.
+                    return Ok(candles.iter().cloned().collect());
+                }
+            }
+        }
+
+        Err(DomainError::DataUnavailable(format!(
+            "FAIL-FAST: Buffer candle kosong untuk simbol {} timeframe {:?}. Belum ada data bar yang dikirim oleh MT4 EA via TCP socket.",
+            symbol, timeframe
+        )))
     }
 
     async fn query_candles(

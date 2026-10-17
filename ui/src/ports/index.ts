@@ -102,14 +102,14 @@ export interface ISignalPublisherPort {
 }
 
 export interface IBacktestPort {
-  runBacktest(strategyId?: string): Promise<{
+  runBacktest(strategyId?: string, source?: string): Promise<{
     reports: BacktestReport[];
     totalValuedPips: number;
     portfolioWinRatePct: number;
     wferPct: number;
     isTfQualified: boolean;
   }>;
-  getTrades(symbol: string, strategyId?: string): Promise<SimulatedTrade[]>;
+  getTrades(symbol: string, strategyId?: string, source?: string): Promise<SimulatedTrade[]>;
 }
 
 export interface IStrategyPort {

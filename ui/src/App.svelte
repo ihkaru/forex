@@ -124,7 +124,7 @@
 
   async function loadConfig() {
     try {
-      const res = await fetch('http://127.0.0.1:5000/api/config');
+      const res = await fetch(`${composition.baseUrl}/config`);
       if (res.ok) {
         const data = await res.json();
         if (data.active_pairs) {
@@ -212,8 +212,8 @@
     try {
       const [candleData, tradeData, detailedData] = await Promise.all([
         composition.marketDataPort.getCandles(symbol, 'H1', 15000, src),
-        composition.backtestPort.getTrades(symbol, stratId),
-        composition.testerPort.getDetailedBacktestReport(symbol, stratId).catch(() => null),
+        composition.backtestPort.getTrades(symbol, stratId, src),
+        composition.testerPort.getDetailedBacktestReport(symbol, stratId, src).catch(() => null),
       ]);
       if (candleData) {
         candles = candleData;
@@ -223,12 +223,10 @@
         }
       }
 
-      if (src === 'dukascopy') {
-        if (tradeData) {
-          trades = tradeData;
-          if (candles.length > 0) {
-            evaluateExecutionState(symbol, candles, false);
-          }
+      if (tradeData) {
+        trades = tradeData;
+        if (candles.length > 0) {
+          evaluateExecutionState(symbol, candles, false);
         }
       } else {
         trades = [];
@@ -276,9 +274,9 @@
   async function loadBacktestAndScorecard() {
     try {
       const [fullAudit, sc, bt] = await Promise.all([
-        fetch('http://127.0.0.1:5000/api/audit/full').then(r => r.json()).catch(() => null),
-        fetch('http://127.0.0.1:5000/api/scorecard').then(r => r.json()).catch(() => null),
-        composition.backtestPort.runBacktest().catch(() => null),
+        fetch(`${composition.baseUrl}/audit/full`).then(r => r.json()).catch(() => null),
+        fetch(`${composition.baseUrl}/scorecard`).then(r => r.json()).catch(() => null),
+        composition.backtestPort.runBacktest(selectedStrategyId, selectedMarketSource).catch(() => null),
       ]);
 
       if (fullAudit) {
