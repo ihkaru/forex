@@ -232,6 +232,8 @@ pub struct AppState {
     pub broker_connector: Arc<broker_connector::BrokerConnector>,
     pub router: Arc<application::services::MarketDataRouterService>,
     pub strategy: Arc<PolaNStrategy>,
-    pub storage: Arc<storage_db::InMemoryStorage>,
+    pub storage: Arc<dyn domain::ports::StoragePort>,
+    pub tick_storage: Arc<dyn domain::ports::TickStoragePort>,
+    pub broker_spec_storage: Arc<dyn domain::ports::BrokerSpecPort>,
     pub ingestion_service: Arc<application::services::MarketIngestionService>,
 }

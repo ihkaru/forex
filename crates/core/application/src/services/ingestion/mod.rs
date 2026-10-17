@@ -55,6 +55,18 @@ impl MarketIngestionService {
         }
     }
 
+    /// Sync/Seed historical candles from disk archive to persistent storage port (Idempotent)
+    pub async fn seed_storage_from_disk(&self, symbol: &Symbol) -> Result<usize, DomainError> {
+        let candles = self.load_disk_candles(symbol);
+        if candles.is_empty() {
+            return Ok(0);
+        }
+        let count = candles.len();
+        self.storage.save_candles(&candles).await?;
+        info!("📦 Berhasil seeding {} candle {} ke persistent storage", count, symbol);
+        Ok(count)
+    }
+
     fn find_historical_data_dir() -> PathBuf {
         let p1 = Path::new("data/historical");
         if p1.exists() {

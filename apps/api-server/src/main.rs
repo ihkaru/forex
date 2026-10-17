@@ -15,8 +15,32 @@ async fn main() -> anyhow::Result<()> {
 
     info!("🌐 Memulai Hexagon Quantitative REST API Server...");
 
+    // Inisialisasi Persistent Storage Engine Agnostik
+    let db_url = std::env::var("DATABASE_URL").unwrap_or_else(|_| "sqlite://data/forex.db".to_string());
+    let (storage, tick_storage, broker_spec_storage): (
+        Arc<dyn domain::ports::StoragePort>,
+        Arc<dyn domain::ports::TickStoragePort>,
+        Arc<dyn domain::ports::BrokerSpecPort>,
+    ) = if db_url.starts_with("postgres://") || db_url.starts_with("postgresql://") {
+        info!("📦 Menggunakan PostgreSQL/TimescaleDB Storage");
+        let pg = Arc::new(storage_db::SqlxStorage::connect(&db_url).await?);
+        (pg.clone(), pg.clone(), pg)
+    } else {
+        let path = if let Some(stripped) = db_url.strip_prefix("sqlite://") {
+            stripped
+        } else {
+            &db_url
+        };
+        info!("📦 Menggunakan Embedded SQLite Storage di: {}", path);
+        let sq = Arc::new(storage_db::SqliteStorage::connect(path).await?);
+        (sq.clone(), sq.clone(), sq)
+    };
+
     let market_adapter = Arc::new(RealHistoricalMarketAdapter::new());
-    let broker_connector = Arc::new(broker_connector::BrokerConnector::new("MRG_MT4_Bridge"));
+    let broker_connector = Arc::new(
+        broker_connector::BrokerConnector::new("MRG_MT4_Bridge")
+            .with_storage(storage.clone(), tick_storage.clone(), broker_spec_storage.clone())
+    );
     // Aktifkan TCP Socket Bridge di port 5555 untuk menerima live stream dari MetaTrader 4
     let mt4_host = std::env::var("MT4_SOCKET_HOST").unwrap_or_else(|_| "0.0.0.0".to_string());
     let mt4_port = std::env::var("MT4_SOCKET_PORT")
@@ -44,11 +68,21 @@ async fn main() -> anyhow::Result<()> {
     let router = Arc::new(router);
 
     let strategy = Arc::new(PolaNStrategy::default());
-    let storage = Arc::new(storage_db::InMemoryStorage::new());
 
     let ingestion_service = Arc::new(application::services::MarketIngestionService::new(
         storage.clone(),
     ));
+
+    // Seeding idempoten data pasar historis dari disk ke storage saat pertama kali boot
+    let default_pairs = [
+        "EURGBP", "USDCHF", "GBPUSD", "EURUSD", "NZDUSD", "AUDUSD", "XAUUSD", "USDCAD",
+        "USDJPY", "EURJPY", "GBPJPY",
+    ];
+    for p in &default_pairs {
+        if let Some(sym) = domain::models::Symbol::from_symbol_str(p) {
+            let _ = ingestion_service.seed_storage_from_disk(&sym).await;
+        }
+    }
 
     let state = Arc::new(AppState {
         market_adapter,
@@ -56,6 +90,8 @@ async fn main() -> anyhow::Result<()> {
         router,
         strategy,
         storage,
+        tick_storage,
+        broker_spec_storage,
         ingestion_service,
     });
 

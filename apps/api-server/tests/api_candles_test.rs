@@ -27,7 +27,9 @@ fn build_test_state() -> Arc<AppState> {
         broker_connector,
         router,
         strategy,
-        storage,
+        storage: storage.clone(),
+        tick_storage: storage.clone(),
+        broker_spec_storage: storage,
         ingestion_service,
     })
 }

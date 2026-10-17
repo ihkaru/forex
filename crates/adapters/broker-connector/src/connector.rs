@@ -2,7 +2,7 @@ use async_trait::async_trait;
 use chrono::{DateTime, Utc};
 use domain::errors::DomainError;
 use domain::models::{Candle, CandleQuery, MarketDataSource, Symbol, Tick, Timeframe};
-use domain::ports::MarketDataPort;
+use domain::ports::{BrokerSpecPort, MarketDataPort, StoragePort, TickStoragePort};
 use std::collections::{HashMap, VecDeque};
 use std::sync::Arc;
 use tokio::sync::RwLock;
@@ -22,6 +22,9 @@ pub struct BrokerConnector {
     candle_buffer: CandleBufferMap,
     raw_symbol_map: Arc<RwLock<HashMap<Symbol, String>>>,
     broker_specs: Arc<RwLock<HashMap<Symbol, domain::models::BrokerSymbolSpec>>>,
+    storage: Option<Arc<dyn StoragePort>>,
+    tick_storage: Option<Arc<dyn TickStoragePort>>,
+    broker_spec_storage: Option<Arc<dyn BrokerSpecPort>>,
 }
 
 impl BrokerConnector {
@@ -33,7 +36,22 @@ impl BrokerConnector {
             candle_buffer: Arc::new(RwLock::new(HashMap::new())),
             raw_symbol_map: Arc::new(RwLock::new(HashMap::new())),
             broker_specs: Arc::new(RwLock::new(HashMap::new())),
+            storage: None,
+            tick_storage: None,
+            broker_spec_storage: None,
         }
+    }
+
+    pub fn with_storage(
+        mut self,
+        storage: Arc<dyn StoragePort>,
+        tick_storage: Arc<dyn TickStoragePort>,
+        broker_spec_storage: Arc<dyn BrokerSpecPort>,
+    ) -> Self {
+        self.storage = Some(storage);
+        self.tick_storage = Some(tick_storage);
+        self.broker_spec_storage = Some(broker_spec_storage);
+        self
     }
 
     pub async fn get_raw_symbol(&self, symbol: &Symbol) -> Option<String> {
@@ -140,11 +158,17 @@ impl BrokerConnector {
                 // Buffer tick streaming ke dalam ring buffer terbatas untuk backtest presisi tinggi
                 let mut tb_lock = self.tick_buffer.write().await;
                 let t_deque = tb_lock.entry((symbol_obj.clone(), src)).or_default();
-                t_deque.push_back(tick);
+                t_deque.push_back(tick.clone());
                 while t_deque.len() > MAX_TICK_CAPACITY {
                     t_deque.pop_front();
                 }
                 drop(tb_lock);
+
+                if let Some(ref ts) = self.tick_storage {
+                    if let Err(e) = ts.save_ticks(&[tick.clone()]).await {
+                        tracing::warn!("⚠️ Gagal persist live tick ke storage: {}", e);
+                    }
+                }
 
                 self.raw_symbol_map.write().await.insert(symbol_obj, symbol);
             }
@@ -221,24 +245,30 @@ impl BrokerConnector {
                 // Idempotent Upsert: Jika bar di timestamp yang sama sudah ada (current forming bar),
                 // perbarui bar in-place. Jika bar baru, sisipkan secara terurut dan jaga bounded capacity.
                 if let Some(pos) = deque.iter().position(|c| c.timestamp == utc_time) {
-                    deque[pos] = candle;
+                    deque[pos] = candle.clone();
                 } else if let Some(last) = deque.back() {
                     if utc_time > last.timestamp {
-                        deque.push_back(candle);
+                        deque.push_back(candle.clone());
                     } else {
                         let insert_pos = deque
                             .iter()
                             .position(|c| c.timestamp > utc_time)
                             .unwrap_or(deque.len());
-                        deque.insert(insert_pos, candle);
+                        deque.insert(insert_pos, candle.clone());
                     }
                 } else {
-                    deque.push_back(candle);
+                    deque.push_back(candle.clone());
                 }
 
                 // Enforce bounded circular buffer limit O(1)
                 while deque.len() > MAX_CANDLE_CAPACITY {
                     deque.pop_front();
+                }
+
+                if let Some(ref s) = self.storage {
+                    if let Err(e) = s.save_candles(&[candle.clone()]).await {
+                        tracing::warn!("⚠️ Gagal persist live candle ke storage: {}", e);
+                    }
                 }
             }
             Mt5SocketMessage::Spec {
@@ -279,8 +309,15 @@ impl BrokerConnector {
                     max_lot,
                     margin_required,
                 };
-                self.broker_specs.write().await.insert(symbol_obj.clone(), spec);
+                self.broker_specs.write().await.insert(symbol_obj.clone(), spec.clone());
                 self.raw_symbol_map.write().await.insert(symbol_obj, symbol);
+
+                if let Some(ref bss) = self.broker_spec_storage {
+                    if let Err(e) = bss.save_broker_spec(&spec).await {
+                        tracing::warn!("⚠️ Gagal persist broker spec ke storage: {}", e);
+                    }
+                }
+
                 tracing::info!("📋 Broker Symbol Spec tersimpan dari bridge");
             }
         }

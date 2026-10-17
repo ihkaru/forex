@@ -252,3 +252,119 @@ async fn test_clear_all_data() {
     let query_after = connector.get_recent_candles(&symbol, Timeframe::H1, 10).await;
     assert!(query_after.is_err(), "Setelah clear_all_data, buffer harus kosong");
 }
+
+#[tokio::test]
+async fn test_broker_connector_persistent_storage_wiring() {
+    use async_trait::async_trait;
+    use domain::errors::DomainError;
+    use domain::models::{BrokerSymbolSpec, Candle, MarketDataSource, Order, Signal, Tick};
+    use domain::ports::{BrokerSpecPort, StoragePort, TickStoragePort};
+    use std::sync::atomic::{AtomicUsize, Ordering};
+    use std::sync::Arc;
+    use uuid::Uuid;
+
+    #[derive(Default)]
+    struct SpyStorage {
+        candle_count: AtomicUsize,
+        tick_count: AtomicUsize,
+        spec_count: AtomicUsize,
+    }
+
+    #[async_trait]
+    impl StoragePort for SpyStorage {
+        async fn save_signal(&self, _signal: &Signal) -> Result<(), DomainError> { Ok(()) }
+        async fn get_signal(&self, _id: Uuid) -> Result<Option<Signal>, DomainError> { Ok(None) }
+        async fn get_active_signals(&self) -> Result<Vec<Signal>, DomainError> { Ok(vec![]) }
+        async fn save_candles(&self, candles: &[Candle]) -> Result<(), DomainError> {
+            self.candle_count.fetch_add(candles.len(), Ordering::SeqCst);
+            Ok(())
+        }
+        async fn get_candles(&self, _symbol: &Symbol, _timeframe: Timeframe, _limit: usize) -> Result<Vec<Candle>, DomainError> {
+            Ok(vec![])
+        }
+        async fn get_high_watermark(&self, _symbol: &Symbol, _timeframe: Timeframe, _source: MarketDataSource) -> Result<Option<chrono::DateTime<chrono::Utc>>, DomainError> {
+            Ok(None)
+        }
+        async fn save_order(&self, _order: &Order) -> Result<(), DomainError> { Ok(()) }
+    }
+
+    #[async_trait]
+    impl TickStoragePort for SpyStorage {
+        async fn save_ticks(&self, ticks: &[Tick]) -> Result<(), DomainError> {
+            self.tick_count.fetch_add(ticks.len(), Ordering::SeqCst);
+            Ok(())
+        }
+        async fn get_ticks(&self, _symbol: &Symbol, _source: MarketDataSource, _from: chrono::DateTime<chrono::Utc>, _to: chrono::DateTime<chrono::Utc>) -> Result<Vec<Tick>, DomainError> {
+            Ok(vec![])
+        }
+        async fn get_tick_high_watermark(&self, _symbol: &Symbol, _source: MarketDataSource) -> Result<Option<chrono::DateTime<chrono::Utc>>, DomainError> {
+            Ok(None)
+        }
+    }
+
+    #[async_trait]
+    impl BrokerSpecPort for SpyStorage {
+        async fn save_broker_spec(&self, _spec: &BrokerSymbolSpec) -> Result<(), DomainError> {
+            self.spec_count.fetch_add(1, Ordering::SeqCst);
+            Ok(())
+        }
+        async fn get_broker_spec(&self, _symbol: &Symbol) -> Result<Option<BrokerSymbolSpec>, DomainError> { Ok(None) }
+        async fn list_broker_specs(&self) -> Result<Vec<BrokerSymbolSpec>, DomainError> { Ok(vec![]) }
+    }
+
+    let spy = Arc::new(SpyStorage::default());
+    let connector = BrokerConnector::new("TestBridge").with_storage(spy.clone(), spy.clone(), spy.clone());
+
+    // 1. Ingest Bar -> harus tersimpan ke spy.candle_count
+    connector.ingest_socket_message(Mt5SocketMessage::Bar {
+        symbol: "EURUSD".to_string(),
+        source: Some("MrgRealMt4".to_string()),
+        timeframe: "H1".to_string(),
+        open: dec!(1.08000),
+        high: dec!(1.08300),
+        low: dec!(1.07900),
+        close: dec!(1.08250),
+        volume: dec!(100),
+        spread_pts: Some(15),
+        real_volume: None,
+        time_gmt: 1720000000,
+    }).await.unwrap();
+
+    assert_eq!(spy.candle_count.load(Ordering::SeqCst), 1);
+
+    // 2. Ingest Tick -> harus tersimpan ke spy.tick_count
+    connector.ingest_socket_message(Mt5SocketMessage::Tick {
+        symbol: "EURUSD".to_string(),
+        source: Some("MrgRealMt4".to_string()),
+        server: None,
+        bid: dec!(1.08250),
+        ask: dec!(1.08265),
+        spread_pts: 15,
+        volume: None,
+        time_gmt: 1720000001,
+    }).await.unwrap();
+
+    assert_eq!(spy.tick_count.load(Ordering::SeqCst), 1);
+
+    // 3. Ingest Spec -> harus tersimpan ke spy.spec_count
+    connector.ingest_socket_message(Mt5SocketMessage::Spec {
+        symbol: "EURUSD".to_string(),
+        source: Some("MrgRealMt4".to_string()),
+        digits: 5,
+        point: dec!(0.00001),
+        tick_value: dec!(1.0),
+        tick_size: dec!(0.00001),
+        contract_size: dec!(100000.0),
+        swap_long: dec!(-0.5),
+        swap_short: dec!(0.1),
+        swap_rollover_3days: 3,
+        stop_level_pts: 10,
+        freeze_level_pts: 0,
+        min_lot: dec!(0.01),
+        lot_step: dec!(0.01),
+        max_lot: dec!(100.0),
+        margin_required: dec!(1000.0),
+    }).await.unwrap();
+
+    assert_eq!(spy.spec_count.load(Ordering::SeqCst), 1);
+}

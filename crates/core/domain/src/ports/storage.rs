@@ -27,5 +27,15 @@ pub trait StoragePort: Send + Sync {
         timeframe: Timeframe,
         source: MarketDataSource,
     ) -> Result<Option<DateTime<Utc>>, DomainError>;
+    async fn get_historical_candles_range(
+        &self,
+        _symbol: &Symbol,
+        _timeframe: Timeframe,
+        _source: MarketDataSource,
+        _from: DateTime<Utc>,
+        _to: DateTime<Utc>,
+    ) -> Result<Vec<Candle>, DomainError> {
+        Ok(vec![])
+    }
     async fn save_order(&self, order: &Order) -> Result<(), DomainError>;
 }

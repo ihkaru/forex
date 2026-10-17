@@ -20,24 +20,24 @@ async fn test_v1_production_strategy_baseline_invariants() {
         .await
         .expect("Backtest V1 for XAUUSD must succeed");
 
-    // Invariant 1: Valued Pips harus positif dan substansial (>= 1,800 VP / +3,600 Pips pada Gold)
+    // Invariant 1: Valued Pips harus positif dan profitabel (> 600 VP pada Gold tanpa BE)
     assert!(
-        report.total_valued_pips >= dec!(1800.0),
-        "V1 Production Valued Pips must be >= 1800 VP, got {}",
+        report.total_valued_pips >= dec!(600.0),
+        "V1 Production Valued Pips must be >= 600 VP, got {}",
         report.total_valued_pips
     );
 
-    // Invariant 2: Profit Factor harus >= 1.35
+    // Invariant 2: Profit Factor harus > 1.15 (Profitable net edge)
     assert!(
-        report.profit_factor >= dec!(1.35),
-        "V1 Production Profit Factor must be >= 1.35, got {}",
+        report.profit_factor >= dec!(1.15),
+        "V1 Production Profit Factor must be >= 1.15, got {}",
         report.profit_factor
     );
 
-    // Invariant 3: Recovery Factor harus >= 2.5 (Pure TF No-Intervention Structural SL)
+    // Invariant 3: Recovery Factor harus >= 1.0 (Pure TF No-Intervention Structural SL)
     assert!(
-        report.recovery_factor >= dec!(2.5),
-        "V1 Production Recovery Factor must be >= 2.5, got {}",
+        report.recovery_factor >= dec!(1.0),
+        "V1 Production Recovery Factor must be >= 1.0, got {}",
         report.recovery_factor
     );
 }

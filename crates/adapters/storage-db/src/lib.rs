@@ -10,6 +10,9 @@ use domain::errors::DomainError;
 use domain::models::{BrokerSymbolSpec, Candle, Order, Signal, SignalAction, SignalStatus, Symbol, Tick, Timeframe};
 use domain::ports::{BrokerSpecPort, StoragePort, TickStoragePort};
 
+pub mod sqlite;
+pub use sqlite::SqliteStorage;
+
 // ==============================================================================
 // 1. IN-MEMORY STORAGE (Fast Prototyping & Unit Testing Double)
 // ==============================================================================
@@ -82,6 +85,29 @@ impl StoragePort for InMemoryStorage {
             .map(|c| c.timestamp)
             .max();
         Ok(max_ts)
+    }
+
+    async fn get_historical_candles_range(
+        &self,
+        symbol: &Symbol,
+        timeframe: Timeframe,
+        source: domain::models::MarketDataSource,
+        from: chrono::DateTime<chrono::Utc>,
+        to: chrono::DateTime<chrono::Utc>,
+    ) -> Result<Vec<Candle>, DomainError> {
+        let list = self.candles.read().await;
+        let filtered: Vec<Candle> = list
+            .iter()
+            .filter(|c| {
+                &c.symbol == symbol
+                    && c.timeframe == timeframe
+                    && c.source == source
+                    && c.timestamp >= from
+                    && c.timestamp <= to
+            })
+            .cloned()
+            .collect();
+        Ok(filtered)
     }
 
     async fn save_order(&self, order: &Order) -> Result<(), DomainError> {
@@ -430,6 +456,73 @@ impl StoragePort for SqlxStorage {
             Some(r) => Ok(r.try_get("max_ts").ok()),
             None => Ok(None),
         }
+    }
+
+    async fn get_historical_candles_range(
+        &self,
+        symbol: &Symbol,
+        timeframe: Timeframe,
+        source: domain::models::MarketDataSource,
+        from: chrono::DateTime<chrono::Utc>,
+        to: chrono::DateTime<chrono::Utc>,
+    ) -> Result<Vec<Candle>, DomainError> {
+        let symbol_str = symbol.to_compact_string();
+        let timeframe_str = format!("{:?}", timeframe);
+        let source_str = format!("{:?}", source);
+
+        let query = r#"
+            SELECT symbol, timeframe, timestamp, source, open, high, low, close, volume, spread, real_volume
+            FROM candles
+            WHERE symbol = $1 AND timeframe = $2 AND source = $3 AND timestamp >= $4 AND timestamp <= $5
+            ORDER BY timestamp ASC
+        "#;
+
+        let rows = sqlx::query(query)
+            .bind(symbol_str)
+            .bind(timeframe_str)
+            .bind(source_str)
+            .bind(from)
+            .bind(to)
+            .fetch_all(&self.pool)
+            .await
+            .map_err(|e| DomainError::AdapterError(format!("SQL get_historical_candles_range error: {}", e)))?;
+
+        let mut candles = Vec::with_capacity(rows.len());
+        for r in rows {
+            let symbol_s: String = r.get("symbol");
+            let sym = Symbol::from_symbol_str(&symbol_s).ok_or_else(|| {
+                DomainError::AdapterError(format!("Symbol corrupt: {}", symbol_s))
+            })?;
+            let tf_s: String = r.get("timeframe");
+            let tf = match tf_s.as_str() {
+                "H1" => Timeframe::H1,
+                "H4" => Timeframe::H4,
+                "M30" => Timeframe::M30,
+                "M15" => Timeframe::M15,
+                "M5" => Timeframe::M5,
+                "M1" => Timeframe::M1,
+                "D1" => Timeframe::D1,
+                _ => Timeframe::H1,
+            };
+            let src_s: String = r.get("source");
+            let src = domain::models::MarketDataSource::from_source_str(&src_s)
+                .unwrap_or(domain::models::MarketDataSource::DukascopyEcn);
+
+            candles.push(Candle {
+                symbol: sym,
+                timeframe: tf,
+                timestamp: r.get("timestamp"),
+                source: src,
+                open: r.get("open"),
+                high: r.get("high"),
+                low: r.get("low"),
+                close: r.get("close"),
+                volume: r.get("volume"),
+                spread: r.try_get("spread").ok(),
+                real_volume: r.try_get("real_volume").ok(),
+            });
+        }
+        Ok(candles)
     }
 
     async fn save_order(&self, order: &Order) -> Result<(), DomainError> {
