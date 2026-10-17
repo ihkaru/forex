@@ -51,6 +51,9 @@ export interface DetailedBacktestReport {
   recovery_factor: number;
   monthly_loss_ratio_percent: number;
   is_tf_qualified: boolean;
+  total_swap_deducted_pips?: number;
+  execution_model?: string;
+  source?: string;
   summary: TradingViewPerformanceSummary;
   trades: Array<{
     id: string;

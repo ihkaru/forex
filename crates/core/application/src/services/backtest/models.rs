@@ -62,6 +62,10 @@ pub struct BacktestReport {
     pub is_tf_qualified: bool,
     #[serde(default)]
     pub summary: Option<TradingViewPerformanceSummary>,
+    #[serde(default)]
+    pub total_swap_deducted_pips: Decimal,
+    #[serde(default)]
+    pub execution_model: String,
 }
 
 #[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]

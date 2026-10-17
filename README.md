@@ -58,12 +58,14 @@ Panel bawah interaktif (*Docked Bottom Strategy Tester*) yang mencerminkan stand
   - **Hot Ring-Buffer Ingestion**: Bar historis H1 dan live tick diserap ke memory engine dengan *idempotent upsert* sub-millisecond.
 - Panduan lengkap konfigurasi & setup EA: [docs/TAILSCALE_WINDOWS_MT4_STREAMING.md](docs/TAILSCALE_WINDOWS_MT4_STREAMING.md).
 
-### 6. 🔬 Audit Data Riil vs Sintetis, Enriched Candle & Dual-Resolution Backtest Engine (Update Oktober 2026)
-- **Zero Synthetic Bias**: Audit forensik terhadap kesenjangan data demo vs real broker (`MaxrichGroup-Real`), preservasi ticker asli broker (`XAUUSD_MRG`), serta eliminasi *intrabar ambiguity*.
-- **Enriched Market Models**: Penambahan spread riil dinamis (`spread`), volume transaksi riil (`real_volume`), dan spesifikasi kontrak broker lengkap (`BrokerSymbolSpec`).
-- **Dual-Resolution Engine**: Simulasi backtesting otomatis memilih resolusi tick kronologis (*tick-walk*) saat data tick tersedia, dan fallback anggun ke candle bar ber-spread dinamis saat tick belum ada.
-- **TimescaleDB Columnar Tick Storage**: Kompresi Gorilla / Delta-of-Delta untuk data tick riil di database setara efisiensi Parquet/Vortex.
-- 📘 **Laporan Lengkap Audit Forensik**: [docs/DATA_AUDIT_REAL_VS_SYNTHETIC.md](docs/DATA_AUDIT_REAL_VS_SYNTHETIC.md).
+### 6. 🔬 Audit Data Riil vs Sintetis, Broker Realism & Dual-Resolution Backtest Engine (Update Oktober 2026)
+- **Zero Synthetic Bias & Provenance Riil**: Pemisahan tegas data demo vs real broker (`MaxrichGroup-Real`), preservasi ticker asli broker (`XAUUSD_MRG`), serta normalisasi server offset MT4 ke true GMT.
+- **Directional 4-Point Intrabar Pathing ("Cerita Siapa Lebih Dulu")**: Eliminasi *intrabar ambiguity* pada evaluasi bar H1 dengan memodelkan lintasan dominan harga (`Open ➔ Low ➔ High ➔ Close` untuk bullish bar, dan `Open ➔ High ➔ Low ➔ Close` untuk bearish bar), mencegah bias optimisme saat harga menyentuh TP dan SL di bar yang sama.
+- **Overnight Swap Rollover (3x Hari Rabu)**: Pemotongan biaya inap riil per hari sesuai spesifikasi broker `BrokerSymbolSpec` dan pelipatgandaan 3x pada malam pergantian hari Rabu ke Kamis.
+- **Broker Stop Level Enforcement**: Penegakan jarak minimum order pending (`broker_spec.stop_level_pts`) terhadap market price untuk mencegah penolakan order di broker (`ERR_INVALID_STOPS`).
+- **Dukascopy 10-Tahun vs MT4 Real**: Klarifikasi peruntukan data—Dukascopy ECN (2015–2026, 68.000+ bar) untuk *Macro Walk-Forward Regime Validation* (pembuktian edge V8 Titan `+12.416,5 VP`), sedangkan MT4 Real (~500 bar) untuk kalibrasi spread retail dan validasi live.
+- **Dynamic UI Binding & Realism Badges**: Dashboard Svelte 5 kini secara dinamis menampilkan performa backtest sesuai strategi dan data source yang dipilih, lengkap dengan badge model eksekusi, badge sumber broker, dan kartu swap rollover riil.
+- 📘 **Laporan Lengkap Audit Forensik & Realisme Broker**: [docs/DATA_AUDIT_REAL_VS_SYNTHETIC.md](docs/DATA_AUDIT_REAL_VS_SYNTHETIC.md).
 
 ---
 

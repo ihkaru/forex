@@ -512,6 +512,11 @@ impl MarketDataPort for BrokerConnector {
         }
         Ok(vec![])
     }
+
+    async fn get_broker_spec(&self, symbol: &Symbol) -> Option<domain::models::BrokerSymbolSpec> {
+        let lock = self.broker_specs.read().await;
+        lock.get(symbol).cloned()
+    }
 }
 
 #[async_trait]

@@ -170,6 +170,10 @@ pub struct BacktestConfig {
     pub simulation_spread_pips: Decimal,
     pub lookback_window_bars: usize,
     pub default_lot_size: Decimal,
+    #[serde(default)]
+    pub enable_swap: bool,
+    #[serde(default)]
+    pub enforce_stop_levels: bool,
 }
 
 impl Default for BacktestConfig {
@@ -178,6 +182,8 @@ impl Default for BacktestConfig {
             simulation_spread_pips: dec!(1.2),
             lookback_window_bars: 50,
             default_lot_size: dec!(1.0),
+            enable_swap: true,
+            enforce_stop_levels: true,
         }
     }
 }

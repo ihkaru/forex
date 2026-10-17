@@ -74,6 +74,16 @@
           <span class="px-2 py-0.5 rounded text-[10px] font-bold {report.is_tf_qualified ? 'bg-[#089981]/20 text-[#089981] border border-[#089981]/40' : 'bg-[#f23645]/20 text-[#f23645] border border-[#f23645]/40'}">
             {report.is_tf_qualified ? 'TF QUALIFIED (300+ VP)' : 'IN PROGRESS'}
           </span>
+          {#if report.source}
+            <span class="px-2 py-0.5 rounded text-[10px] font-mono font-semibold bg-[#2962ff]/20 text-[#2962ff] border border-[#2962ff]/40">
+              {report.source === 'mrg_real' ? 'MT4 REAL' : report.source.toUpperCase()}
+            </span>
+          {/if}
+          {#if report.execution_model}
+            <span class="px-2 py-0.5 rounded text-[10px] font-mono text-[#f39c12] bg-[#f39c12]/15 border border-[#f39c12]/30" title="Broker Realism Execution Model">
+              {report.execution_model}
+            </span>
+          {/if}
         {/if}
       </div>
 
@@ -166,7 +176,7 @@
         </div>
       {:else if activeTab === 'OVERVIEW'}
         <!-- Bento KPI Grid -->
-        <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3 mb-4">
+        <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3 mb-4">
           <!-- Net Profit -->
           <div class="bg-[#1e222d] border border-[#2a2e39] rounded-lg p-3">
             <span class="text-[11px] text-[#787b86] font-medium block">Total Net Profit</span>
@@ -224,6 +234,17 @@
             </span>
             <span class="text-[10px] text-[#787b86] block mt-0.5">
               Net PnL / Max DD (TF Metric)
+            </span>
+          </div>
+
+          <!-- Swap Deducted -->
+          <div class="bg-[#1e222d] border border-[#2a2e39] rounded-lg p-3">
+            <span class="text-[11px] text-[#787b86] font-medium block">Swap Rollover</span>
+            <span class="text-base font-bold font-mono text-[#f39c12]">
+              -{report.total_swap_deducted_pips ? report.total_swap_deducted_pips.toFixed(1) : '0.0'} pips
+            </span>
+            <span class="text-[10px] text-[#787b86] block mt-0.5">
+              Overnight & 3x Wed
             </span>
           </div>
 

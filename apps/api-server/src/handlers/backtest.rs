@@ -26,6 +26,10 @@ pub struct BacktestApiResponse {
     pub portfolio_win_rate_pct: Decimal,
     pub walk_forward_efficiency_ratio_pct: Decimal,
     pub is_tf_qualified: bool,
+    #[serde(default)]
+    pub total_swap_deducted_pips: Decimal,
+    #[serde(default)]
+    pub source: String,
 }
 
 #[derive(Serialize)]
@@ -131,6 +135,9 @@ pub async fn backtest_handler(
         Decimal::ZERO
     };
 
+    let total_swap_deducted: Decimal = reports.iter().map(|r| r.total_swap_deducted_pips).sum();
+    let src_label = query.source.clone().unwrap_or_else(|| "dukascopy".to_string());
+
     Json(BacktestApiResponse {
         reports,
         total_valued_pips: total_vp,
@@ -138,6 +145,8 @@ pub async fn backtest_handler(
         portfolio_win_rate_pct: win_rate,
         walk_forward_efficiency_ratio_pct: Decimal::new(948, 1),
         is_tf_qualified: total_vp >= Decimal::from(300) && total_trades >= 5,
+        total_swap_deducted_pips: total_swap_deducted,
+        source: src_label,
     })
 }
 
@@ -146,6 +155,8 @@ pub struct DetailedBacktestApiResponse {
     pub report: BacktestReport,
     pub trades: Vec<SimulatedTradeDto>,
     pub equity_curve: Vec<application::services::EquityPoint>,
+    #[serde(default)]
+    pub source: String,
 }
 
 pub async fn backtest_trades_handler(
@@ -265,10 +276,13 @@ pub async fn backtest_detailed_handler(
                 })
                 .collect();
 
+            let src_label = query.source.clone().unwrap_or_else(|| "dukascopy".to_string());
+
             return Ok(Json(DetailedBacktestApiResponse {
                 report: detailed.report,
                 trades: trade_dtos,
                 equity_curve: detailed.equity_curve,
+                source: src_label,
             }));
         }
     }

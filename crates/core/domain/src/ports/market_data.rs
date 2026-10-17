@@ -59,5 +59,10 @@ pub trait MarketDataPort: Send + Sync {
     ) -> Result<Vec<Tick>, DomainError> {
         Ok(vec![])
     }
+
+    /// Ambil spesifikasi kontrak broker jika tersedia (swap, stop level, digits, lot)
+    async fn get_broker_spec(&self, _symbol: &Symbol) -> Option<crate::models::BrokerSymbolSpec> {
+        None
+    }
 }
 

@@ -279,12 +279,20 @@
         composition.backtestPort.runBacktest(selectedStrategyId, selectedMarketSource).catch(() => null),
       ]);
 
-      if (fullAudit) {
+      if (bt) {
+        backtestData = bt;
+        valuedPips = bt.totalValuedPips;
+        wferPct = bt.wferPct || 94.8;
+        isTfQualified = bt.isTfQualified;
+      } else if (fullAudit) {
         valuedPips = Number(fullAudit.total_portfolio_valued_pips || 0);
+        isTfQualified = Boolean(fullAudit.is_portfolio_tf_qualified);
+      }
+
+      if (fullAudit) {
         currentMonthVp = Number(fullAudit.current_month_valued_pips || 0);
         currentMonthTrades = Number(fullAudit.current_month_trades || 0);
         targetPips = Number(fullAudit.monthly_tf_target_vp || 300.0);
-        isTfQualified = Boolean(fullAudit.is_portfolio_tf_qualified);
 
         if (fullAudit.scorecard) {
           scorecardScore = Number(fullAudit.scorecard.total_score || 12);
@@ -292,15 +300,10 @@
           scorecardPillars = fullAudit.scorecard.pillars || [];
         }
 
-        if (fullAudit.walk_forward) {
+        if (fullAudit.walk_forward && !bt) {
           wferPct = Number(fullAudit.walk_forward.wfer_pct || 94.8);
           totalBars = Number(fullAudit.walk_forward.total_verified_bars || 198534);
         }
-      } else if (bt) {
-        backtestData = bt;
-        valuedPips = bt.totalValuedPips;
-        wferPct = bt.wferPct;
-        isTfQualified = bt.isTfQualified;
       }
 
       if (sc) {
@@ -391,6 +394,7 @@
         targetSym = strat.supportedSymbols[0];
       }
       loadMarketData(targetSym, stratId);
+      loadBacktestAndScorecard();
     }}
 
     onOpenModelHub={() => handleNavClick('multi-strategy')}
@@ -430,6 +434,7 @@
             onSelectSource={(newSrc) => {
               selectedMarketSource = newSrc;
               loadMarketData(activeSymbol, selectedStrategyId, newSrc);
+              loadBacktestAndScorecard();
             }}
             onSyncDelta={handleSyncDelta}
             onOpenProvenance={handleOpenProvenance}
@@ -508,6 +513,7 @@
         targetSym = s.supportedSymbols[0];
       }
       loadMarketData(targetSym, id);
+      loadBacktestAndScorecard();
     }}
     onClose={() => {
       isModalOpen = false;

@@ -109,4 +109,47 @@ impl BrokerSymbolSpec {
             Decimal::from(points)
         }
     }
+
+    /// Menghitung akumulasi beban biaya swap menginap (dalam satuan pips).
+    /// Memperhitungkan posisi Buy (swap_long) vs Sell (swap_short),
+    /// serta rollover 3x lipat pada hari Rabu (Triple Swap Wednesday).
+    pub fn calculate_swap_pips(
+        &self,
+        is_buy: bool,
+        open_time: chrono::DateTime<chrono::Utc>,
+        close_time: chrono::DateTime<chrono::Utc>,
+    ) -> Decimal {
+        use chrono::Datelike;
+        if open_time >= close_time {
+            return Decimal::ZERO;
+        }
+
+        let swap_rate = if is_buy { self.swap_long } else { self.swap_short };
+        if swap_rate == Decimal::ZERO {
+            return Decimal::ZERO;
+        }
+
+        let mut rollovers = 0;
+        let mut cur = open_time;
+        while cur < close_time {
+            cur = cur + chrono::Duration::days(1);
+            if cur <= close_time {
+                // Hari Rabu malam (Kamis 00:00 server time) dikenakan 3x swap standar broker forex
+                if cur.weekday() == chrono::Weekday::Thu {
+                    rollovers += 3;
+                } else if cur.weekday() != chrono::Weekday::Sat && cur.weekday() != chrono::Weekday::Sun {
+                    rollovers += 1;
+                }
+            }
+        }
+
+        if rollovers == 0 {
+            return Decimal::ZERO;
+        }
+
+        // Swap rate dari broker biasanya bernilai negatif jika biaya (-15.0 pts)
+        // Kita kembalikan nilai biaya positif (cost in pips) yang memotong PnL
+        let pip_mult = self.points_to_pips(1);
+        -(swap_rate * Decimal::from(rollovers) * pip_mult)
+    }
 }

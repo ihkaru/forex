@@ -84,11 +84,19 @@ impl BacktestService {
         info!("Memproses {} candle historis...", historical_candles.len());
 
         let spec = TfPairSpec::from_symbol(symbol);
+        let broker_spec = self
+            .market_data
+            .get_broker_spec(symbol)
+            .await
+            .unwrap_or_else(|| domain::models::BrokerSymbolSpec::new(symbol.clone(), symbol.to_compact_string()));
+
         let mut completed_trades: Vec<Order> = Vec::new();
         let mut active_sim_orders: Vec<SimulatedOrder> = Vec::new();
         let mut peak_pips = Decimal::ZERO;
         let mut max_drawdown_pips = Decimal::ZERO;
         let mut running_pips = Decimal::ZERO;
+        let mut total_swap_pips = Decimal::ZERO;
+        let mut tick_walk_count = 0usize;
 
         let window_size = self.config.lookback_window_bars;
         let spread_offset = spec.pip_size * self.config.simulation_spread_pips;
@@ -126,6 +134,7 @@ impl BacktestService {
                     let tp = sim.order.take_profit;
 
                     if !bar_ticks.is_empty() {
+                        tick_walk_count += 1;
                         // === MODE 1: TICK-WALK RESOLUTION (Zero Bar-Ambiguity) ===
                         for tick in &bar_ticks {
                             match sim.status {
@@ -150,9 +159,18 @@ impl BacktestService {
                                 }
                                 SimulatedOrderStatus::Filled { fill_time } => {
                                     let duration = tick.timestamp - fill_time;
+                                    let is_buy = matches!(sim.order.action, SignalAction::BuyLimit | SignalAction::BuyStop);
                                     if duration >= max_filled_duration {
+                                        let swap_pips = if self.config.enable_swap {
+                                            broker_spec.calculate_swap_pips(is_buy, sim.order.open_time, tick.timestamp)
+                                        } else {
+                                            Decimal::ZERO
+                                        };
+                                        total_swap_pips += swap_pips;
+                                        let net_pips = -swap_pips;
                                         sim.order.close_time = Some(tick.timestamp);
-                                        sim.order.realized_pnl = Some(Decimal::ZERO);
+                                        sim.order.realized_pnl = Some(net_pips);
+                                        running_pips += net_pips;
                                         closed = true;
                                         break;
                                     }
@@ -160,42 +178,74 @@ impl BacktestService {
                                     match sim.order.action {
                                         SignalAction::BuyLimit | SignalAction::BuyStop => {
                                             if tick.bid <= sl {
-                                                let loss_pips = if sim.sl_moved_to_breakeven {
+                                                let raw_loss = if sim.sl_moved_to_breakeven {
                                                     Decimal::ZERO
                                                 } else {
                                                     -spec.price_diff_to_pips(sim.order.open_price - sl)
                                                 };
+                                                let swap_pips = if self.config.enable_swap {
+                                                    broker_spec.calculate_swap_pips(is_buy, sim.order.open_time, tick.timestamp)
+                                                } else {
+                                                    Decimal::ZERO
+                                                };
+                                                total_swap_pips += swap_pips;
+                                                let net_loss = raw_loss - swap_pips;
+
                                                 sim.order.close_time = Some(tick.timestamp);
-                                                sim.order.realized_pnl = Some(loss_pips);
-                                                running_pips += loss_pips;
+                                                sim.order.realized_pnl = Some(net_loss);
+                                                running_pips += net_loss;
                                                 closed = true;
                                                 break;
                                             } else if tick.bid >= tp {
-                                                let pips = spec.price_diff_to_pips(tp - sim.order.open_price);
+                                                let raw_win = spec.price_diff_to_pips(tp - sim.order.open_price);
+                                                let swap_pips = if self.config.enable_swap {
+                                                    broker_spec.calculate_swap_pips(is_buy, sim.order.open_time, tick.timestamp)
+                                                } else {
+                                                    Decimal::ZERO
+                                                };
+                                                total_swap_pips += swap_pips;
+                                                let net_win = raw_win - swap_pips;
+
                                                 sim.order.close_time = Some(tick.timestamp);
-                                                sim.order.realized_pnl = Some(pips);
-                                                running_pips += pips;
+                                                sim.order.realized_pnl = Some(net_win);
+                                                running_pips += net_win;
                                                 closed = true;
                                                 break;
                                             }
                                         }
                                         SignalAction::SellLimit | SignalAction::SellStop => {
                                             if tick.ask >= sl {
-                                                let loss_pips = if sim.sl_moved_to_breakeven {
+                                                let raw_loss = if sim.sl_moved_to_breakeven {
                                                     Decimal::ZERO
                                                 } else {
                                                     -spec.price_diff_to_pips(sl - sim.order.open_price)
                                                 };
+                                                let swap_pips = if self.config.enable_swap {
+                                                    broker_spec.calculate_swap_pips(is_buy, sim.order.open_time, tick.timestamp)
+                                                } else {
+                                                    Decimal::ZERO
+                                                };
+                                                total_swap_pips += swap_pips;
+                                                let net_loss = raw_loss - swap_pips;
+
                                                 sim.order.close_time = Some(tick.timestamp);
-                                                sim.order.realized_pnl = Some(loss_pips);
-                                                running_pips += loss_pips;
+                                                sim.order.realized_pnl = Some(net_loss);
+                                                running_pips += net_loss;
                                                 closed = true;
                                                 break;
                                             } else if tick.ask <= tp {
-                                                let pips = spec.price_diff_to_pips(sim.order.open_price - tp);
+                                                let raw_win = spec.price_diff_to_pips(sim.order.open_price - tp);
+                                                let swap_pips = if self.config.enable_swap {
+                                                    broker_spec.calculate_swap_pips(is_buy, sim.order.open_time, tick.timestamp)
+                                                } else {
+                                                    Decimal::ZERO
+                                                };
+                                                total_swap_pips += swap_pips;
+                                                let net_win = raw_win - swap_pips;
+
                                                 sim.order.close_time = Some(tick.timestamp);
-                                                sim.order.realized_pnl = Some(pips);
-                                                running_pips += pips;
+                                                sim.order.realized_pnl = Some(net_win);
+                                                running_pips += net_win;
                                                 closed = true;
                                                 break;
                                             }
@@ -206,7 +256,7 @@ impl BacktestService {
                             }
                         }
                     } else {
-                        // === MODE 2: CANDLE-LEVEL FALLBACK RESOLUTION ===
+                        // === MODE 2: CANDLE-LEVEL DIRECTIONAL 4-POINT INTRABAR RESOLUTION ===
                         match sim.status {
                             SimulatedOrderStatus::Pending => {
                                 if current_candle.timestamp >= sim.expires_at {
@@ -237,56 +287,84 @@ impl BacktestService {
                             }
                             SimulatedOrderStatus::Filled { fill_time } => {
                                 let duration_since_fill = current_candle.timestamp - fill_time;
+                                let is_buy = matches!(sim.order.action, SignalAction::BuyLimit | SignalAction::BuyStop);
                                 if duration_since_fill >= max_filled_duration {
+                                    let swap_pips = if self.config.enable_swap {
+                                        broker_spec.calculate_swap_pips(is_buy, sim.order.open_time, current_candle.timestamp)
+                                    } else {
+                                        Decimal::ZERO
+                                    };
+                                    total_swap_pips += swap_pips;
+                                    let net_pips = -swap_pips;
+
                                     sim.order.close_time = Some(current_candle.timestamp);
-                                    sim.order.realized_pnl = Some(Decimal::ZERO);
+                                    sim.order.realized_pnl = Some(net_pips);
+                                    running_pips += net_pips;
                                     closed = true;
                                 } else {
                                     let sl = sim.order.stop_loss;
-                                    match sim.order.action {
-                                        SignalAction::BuyLimit | SignalAction::BuyStop => {
-                                            let sl_hit = current_candle.low <= sl;
-                                            let tp_hit = current_candle.high >= tp;
-                                            if sl_hit {
-                                                let loss_pips = if sim.sl_moved_to_breakeven {
-                                                    Decimal::ZERO
-                                                } else {
-                                                    -spec.price_diff_to_pips(sim.order.open_price - sl)
-                                                };
-                                                sim.order.close_time = Some(current_candle.timestamp);
-                                                sim.order.realized_pnl = Some(loss_pips);
-                                                running_pips += loss_pips;
-                                                closed = true;
-                                            } else if tp_hit {
-                                                let pips = spec.price_diff_to_pips(tp - sim.order.open_price);
-                                                sim.order.close_time = Some(current_candle.timestamp);
-                                                sim.order.realized_pnl = Some(pips);
-                                                running_pips += pips;
-                                                closed = true;
-                                            }
+                                    let is_bullish = current_candle.close >= current_candle.open;
+
+                                    let (sl_hit, tp_hit, raw_loss, raw_win) = if is_buy {
+                                        let sl_hit = current_candle.low <= sl;
+                                        let tp_hit = current_candle.high >= tp;
+                                        let loss = if sim.sl_moved_to_breakeven {
+                                            Decimal::ZERO
+                                        } else {
+                                            -spec.price_diff_to_pips(sim.order.open_price - sl)
+                                        };
+                                        let win = spec.price_diff_to_pips(tp - sim.order.open_price);
+                                        (sl_hit, tp_hit, loss, win)
+                                    } else {
+                                        let sl_hit = current_candle.high + effective_spread >= sl;
+                                        let tp_hit = current_candle.low + effective_spread <= tp;
+                                        let loss = if sim.sl_moved_to_breakeven {
+                                            Decimal::ZERO
+                                        } else {
+                                            -spec.price_diff_to_pips(sl - sim.order.open_price)
+                                        };
+                                        let win = spec.price_diff_to_pips(sim.order.open_price - tp);
+                                        (sl_hit, tp_hit, loss, win)
+                                    };
+
+                                    let hit_decision = if sl_hit && tp_hit {
+                                        // === DIRECTIONAL 4-POINT INTRABAR TRAJECTORY ===
+                                        // Rekonstruksi kronologis harga di dalam candle 1-jam:
+                                        // Pada lilin Bullish (Open -> Low -> High -> Close):
+                                        // Low dikunjungi lebih dulu. Posisi Buy kena SL pada Low pertama. Posisi Sell kena TP pada Low pertama.
+                                        // Pada lilin Bearish (Open -> High -> Low -> Close):
+                                        // High dikunjungi lebih dulu. Posisi Buy kena TP pada High pertama. Posisi Sell kena SL pada High pertama.
+                                        if is_buy {
+                                            if is_bullish { Some(false) } else { Some(true) }
+                                        } else {
+                                            if is_bullish { Some(true) } else { Some(false) }
                                         }
-                                        SignalAction::SellLimit | SignalAction::SellStop => {
-                                            let sl_hit = current_candle.high + effective_spread >= sl;
-                                            let tp_hit = current_candle.low + effective_spread <= tp;
-                                            if sl_hit {
-                                                let loss_pips = if sim.sl_moved_to_breakeven {
-                                                    Decimal::ZERO
-                                                } else {
-                                                    -spec.price_diff_to_pips(sl - sim.order.open_price)
-                                                };
-                                                sim.order.close_time = Some(current_candle.timestamp);
-                                                sim.order.realized_pnl = Some(loss_pips);
-                                                running_pips += loss_pips;
-                                                closed = true;
-                                            } else if tp_hit {
-                                                let pips = spec.price_diff_to_pips(sim.order.open_price - tp);
-                                                sim.order.close_time = Some(current_candle.timestamp);
-                                                sim.order.realized_pnl = Some(pips);
-                                                running_pips += pips;
-                                                closed = true;
-                                            }
-                                        }
-                                        _ => {}
+                                    } else if sl_hit {
+                                        Some(false)
+                                    } else if tp_hit {
+                                        Some(true)
+                                    } else {
+                                        None
+                                    };
+
+                                    if let Some(is_win_hit) = hit_decision {
+                                        let gross_pips = if is_win_hit { raw_win } else { raw_loss };
+                                        let swap_pips = if self.config.enable_swap {
+                                            broker_spec.calculate_swap_pips(
+                                                is_buy,
+                                                sim.order.open_time,
+                                                current_candle.timestamp,
+                                            )
+                                        } else {
+                                            Decimal::ZERO
+                                        };
+                                        total_swap_pips += swap_pips;
+                                        let net_pips = gross_pips - swap_pips;
+
+                                        sim.order.close_time = Some(current_candle.timestamp);
+                                        sim.order.realized_pnl = Some(net_pips);
+                                        running_pips += net_pips;
+                                        closed = true;
                                     }
                                 }
                             }
@@ -365,8 +443,14 @@ impl BacktestService {
                             }
                         });
 
+                        // Broker Stop Level Enforcement (Anti ERR_INVALID_STOPS):
+                        let min_stop_gap = spec.pip_size * Decimal::from(broker_spec.stop_level_pts);
+                        let violates_stop_level = self.config.enforce_stop_levels
+                            && (signal.entry_price - tick.bid).abs() < min_stop_gap;
+
                         if !is_cooldown_active
                             && !violates_gap_rule
+                            && !violates_stop_level
                             && TfComplianceGuard::validate_signal(&signal).is_ok()
                         {
                             last_signal_bar = i;
@@ -651,6 +735,15 @@ impl BacktestService {
             monthly_loss_ratio_percent,
             is_tf_qualified,
             summary: Some(summary),
+            total_swap_deducted_pips: total_swap_pips,
+            execution_model: if tick_walk_count > 0 {
+                format!(
+                    "DUAL_RESOLUTION_HYBRID ({} Ticks Walk + 4-Point Directional)",
+                    tick_walk_count
+                )
+            } else {
+                "DIRECTIONAL_4POINT_INTRABAR_PATHING (Realistic Anti-Bias)".to_string()
+            },
         };
 
         Ok(DetailedBacktestResult {
