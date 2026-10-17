@@ -74,7 +74,7 @@ impl BrokerConnector {
                 }
 
                 let symbol_obj =
-                    Symbol::from_symbol_str(&symbol).ok_or(DomainError::InvalidSymbol(symbol))?;
+                    Symbol::from_symbol_str(&symbol).ok_or(DomainError::InvalidSymbol(symbol.clone()))?;
 
                 // 1. Validasi Integritas Harga
                 DataIntegrityValidator::validate_tick(bid, ask)?;
