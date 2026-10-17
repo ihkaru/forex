@@ -244,8 +244,11 @@ impl MarketIngestionPort for MarketIngestionService {
                     domain::models::PairTier::Tier4 => 4,
                 };
 
+                let raw_ticker = sym.raw_ticker().map(|s| s.to_string());
+
                 results.push(SymbolStatusDto {
                     symbol: sym,
+                    ticker: raw_ticker,
                     tier: tier_num,
                     multiplier: spec.value_multiplier,
                     pip_size: spec.pip_size,
