@@ -34,8 +34,8 @@ impl MarketDataSource {
         let clean = s.trim().to_lowercase();
         match clean.as_str() {
             "dukascopy" | "dukascopy_ecn" | "dukascopyecn" | "ecn" => Ok(Self::DukascopyEcn),
-            "mrg_demo" | "mrg_demo_mt4" | "mrgdemo" | "demo" => Ok(Self::MrgDemoMt4),
-            "mrg_real" | "mrg_real_mt4" | "mrgreal" | "real" => Ok(Self::MrgRealMt4),
+            "mrg_demo" | "mrg_demo_mt4" | "mrgdemomt4" | "mrgdemo" | "demo" => Ok(Self::MrgDemoMt4),
+            "mrg_real" | "mrg_real_mt4" | "mrgrealmt4" | "mrgreal" | "real" => Ok(Self::MrgRealMt4),
             "mrg" | "mrg_mt4" | "mrgmetatrader4" | "mt4" => Ok(Self::MrgDemoMt4),
             "mt5" | "mt5_live" | "mt5brokerlive" | "live" => Ok(Self::Mt5BrokerLive),
             "ctrader" | "ctrader_openapi" | "ctraderopenapi" => Ok(Self::CtraderOpenApi),

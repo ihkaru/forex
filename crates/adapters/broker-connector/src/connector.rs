@@ -151,7 +151,7 @@ impl BrokerConnector {
                 let src = source
                     .as_deref()
                     .and_then(|s| MarketDataSource::from_source_str(s).ok())
-                    .unwrap_or(MarketDataSource::MrgDemoMt4);
+                    .unwrap_or(MarketDataSource::MrgRealMt4);
 
                 let candle = Candle {
                     symbol: symbol_obj.clone(),
@@ -263,7 +263,7 @@ impl BrokerConnector {
 #[async_trait]
 impl MarketDataPort for BrokerConnector {
     fn source(&self) -> MarketDataSource {
-        MarketDataSource::MrgDemoMt4
+        MarketDataSource::MrgRealMt4
     }
 
     async fn get_latest_tick(&self, symbol: &Symbol) -> Result<Tick, DomainError> {
@@ -287,8 +287,8 @@ impl MarketDataPort for BrokerConnector {
     ) -> Result<Vec<Candle>, DomainError> {
         let lock = self.candle_buffer.read().await;
         for src in [
-            MarketDataSource::MrgDemoMt4,
             MarketDataSource::MrgRealMt4,
+            MarketDataSource::MrgDemoMt4,
             MarketDataSource::MrgMetaTrader4,
         ] {
             if let Some(candles) = lock.get(&(symbol.clone(), timeframe, src)) {
@@ -329,13 +329,13 @@ impl MarketDataPort for BrokerConnector {
         } else if let Some(candles) = lock.get(&(
             query.symbol.clone(),
             query.timeframe,
-            MarketDataSource::MrgDemoMt4,
+            MarketDataSource::MrgRealMt4,
         )) {
             candles
         } else if let Some(candles) = lock.get(&(
             query.symbol.clone(),
             query.timeframe,
-            MarketDataSource::MrgRealMt4,
+            MarketDataSource::MrgDemoMt4,
         )) {
             candles
         } else {
