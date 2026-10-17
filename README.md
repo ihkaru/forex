@@ -58,6 +58,13 @@ Panel bawah interaktif (*Docked Bottom Strategy Tester*) yang mencerminkan stand
   - **Hot Ring-Buffer Ingestion**: Bar historis H1 dan live tick diserap ke memory engine dengan *idempotent upsert* sub-millisecond.
 - Panduan lengkap konfigurasi & setup EA: [docs/TAILSCALE_WINDOWS_MT4_STREAMING.md](docs/TAILSCALE_WINDOWS_MT4_STREAMING.md).
 
+### 6. 🔬 Audit Data Riil vs Sintetis, Enriched Candle & Dual-Resolution Backtest Engine (Update Oktober 2026)
+- **Zero Synthetic Bias**: Audit forensik terhadap kesenjangan data demo vs real broker (`MaxrichGroup-Real`), preservasi ticker asli broker (`XAUUSD_MRG`), serta eliminasi *intrabar ambiguity*.
+- **Enriched Market Models**: Penambahan spread riil dinamis (`spread`), volume transaksi riil (`real_volume`), dan spesifikasi kontrak broker lengkap (`BrokerSymbolSpec`).
+- **Dual-Resolution Engine**: Simulasi backtesting otomatis memilih resolusi tick kronologis (*tick-walk*) saat data tick tersedia, dan fallback anggun ke candle bar ber-spread dinamis saat tick belum ada.
+- **TimescaleDB Columnar Tick Storage**: Kompresi Gorilla / Delta-of-Delta untuk data tick riil di database setara efisiensi Parquet/Vortex.
+- 📘 **Laporan Lengkap Audit Forensik**: [docs/DATA_AUDIT_REAL_VS_SYNTHETIC.md](docs/DATA_AUDIT_REAL_VS_SYNTHETIC.md).
+
 ---
 
 ## 🧭 3. Evaluasi Jarak Menuju Tujuan Utama (Gap Analysis)
