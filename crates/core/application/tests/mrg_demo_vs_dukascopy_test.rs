@@ -22,6 +22,8 @@ async fn test_mrg_demo_candles_strictly_isolated_from_dukascopy() {
             low: dec!(4595.0) + dec!(0.5) * rust_decimal::Decimal::from(i),
             close: dec!(4602.0) + dec!(0.5) * rust_decimal::Decimal::from(i),
             volume: dec!(100.0),
+            spread_pts: None,
+            real_volume: None,
             time_gmt: bar_time.timestamp(),
         };
         broker_connector.ingest_socket_message(msg).await.unwrap();
