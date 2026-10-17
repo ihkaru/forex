@@ -122,6 +122,7 @@ impl BacktestService {
                 let mut remaining_orders = Vec::new();
                 for mut sim in active_sim_orders {
                     let mut closed = false;
+                    let mut expired = false;
                     let tp = sim.order.take_profit;
 
                     if !bar_ticks.is_empty() {
@@ -130,6 +131,7 @@ impl BacktestService {
                             match sim.status {
                                 SimulatedOrderStatus::Pending => {
                                     if tick.timestamp >= sim.expires_at {
+                                        expired = true;
                                         break;
                                     }
                                     let is_filled = match sim.order.action {
@@ -151,7 +153,6 @@ impl BacktestService {
                                     if duration >= max_filled_duration {
                                         sim.order.close_time = Some(tick.timestamp);
                                         sim.order.realized_pnl = Some(Decimal::ZERO);
-                                        completed_trades.push(sim.order.clone());
                                         closed = true;
                                         break;
                                     }
@@ -167,7 +168,6 @@ impl BacktestService {
                                                 sim.order.close_time = Some(tick.timestamp);
                                                 sim.order.realized_pnl = Some(loss_pips);
                                                 running_pips += loss_pips;
-                                                completed_trades.push(sim.order.clone());
                                                 closed = true;
                                                 break;
                                             } else if tick.bid >= tp {
@@ -175,7 +175,6 @@ impl BacktestService {
                                                 sim.order.close_time = Some(tick.timestamp);
                                                 sim.order.realized_pnl = Some(pips);
                                                 running_pips += pips;
-                                                completed_trades.push(sim.order.clone());
                                                 closed = true;
                                                 break;
                                             }
@@ -190,7 +189,6 @@ impl BacktestService {
                                                 sim.order.close_time = Some(tick.timestamp);
                                                 sim.order.realized_pnl = Some(loss_pips);
                                                 running_pips += loss_pips;
-                                                completed_trades.push(sim.order.clone());
                                                 closed = true;
                                                 break;
                                             } else if tick.ask <= tp {
@@ -198,7 +196,6 @@ impl BacktestService {
                                                 sim.order.close_time = Some(tick.timestamp);
                                                 sim.order.realized_pnl = Some(pips);
                                                 running_pips += pips;
-                                                completed_trades.push(sim.order.clone());
                                                 closed = true;
                                                 break;
                                             }
@@ -213,28 +210,29 @@ impl BacktestService {
                         match sim.status {
                             SimulatedOrderStatus::Pending => {
                                 if current_candle.timestamp >= sim.expires_at {
-                                    continue;
-                                }
-                                let is_filled = match sim.order.action {
-                                    SignalAction::BuyLimit => {
-                                        current_candle.low + effective_spread <= sim.order.open_price
-                                    }
-                                    SignalAction::SellLimit => {
-                                        current_candle.high >= sim.order.open_price
-                                    }
-                                    SignalAction::BuyStop => {
-                                        current_candle.high + effective_spread >= sim.order.open_price
-                                    }
-                                    SignalAction::SellStop => {
-                                        current_candle.low <= sim.order.open_price
-                                    }
-                                    _ => false,
-                                };
-                                if is_filled {
-                                    sim.status = SimulatedOrderStatus::Filled {
-                                        fill_time: current_candle.timestamp,
+                                    expired = true;
+                                } else {
+                                    let is_filled = match sim.order.action {
+                                        SignalAction::BuyLimit => {
+                                            current_candle.low + effective_spread <= sim.order.open_price
+                                        }
+                                        SignalAction::SellLimit => {
+                                            current_candle.high >= sim.order.open_price
+                                        }
+                                        SignalAction::BuyStop => {
+                                            current_candle.high + effective_spread >= sim.order.open_price
+                                        }
+                                        SignalAction::SellStop => {
+                                            current_candle.low <= sim.order.open_price
+                                        }
+                                        _ => false,
                                     };
-                                    sim.order.open_time = current_candle.timestamp;
+                                    if is_filled {
+                                        sim.status = SimulatedOrderStatus::Filled {
+                                            fill_time: current_candle.timestamp,
+                                        };
+                                        sim.order.open_time = current_candle.timestamp;
+                                    }
                                 }
                             }
                             SimulatedOrderStatus::Filled { fill_time } => {
@@ -242,64 +240,77 @@ impl BacktestService {
                                 if duration_since_fill >= max_filled_duration {
                                     sim.order.close_time = Some(current_candle.timestamp);
                                     sim.order.realized_pnl = Some(Decimal::ZERO);
-                                    completed_trades.push(sim.order);
-                                    continue;
-                                }
-                                let sl = sim.order.stop_loss;
-                                match sim.order.action {
-                                    SignalAction::BuyLimit | SignalAction::BuyStop => {
-                                        let sl_hit = current_candle.low <= sl;
-                                        let tp_hit = current_candle.high >= tp;
-                                        if sl_hit {
-                                            let loss_pips = if sim.sl_moved_to_breakeven {
-                                                Decimal::ZERO
-                                            } else {
-                                                -spec.price_diff_to_pips(sim.order.open_price - sl)
-                                            };
-                                            sim.order.close_time = Some(current_candle.timestamp);
-                                            sim.order.realized_pnl = Some(loss_pips);
-                                            running_pips += loss_pips;
-                                            closed = true;
-                                        } else if tp_hit {
-                                            let pips = spec.price_diff_to_pips(tp - sim.order.open_price);
-                                            sim.order.close_time = Some(current_candle.timestamp);
-                                            sim.order.realized_pnl = Some(pips);
-                                            running_pips += pips;
-                                            closed = true;
+                                    closed = true;
+                                } else {
+                                    let sl = sim.order.stop_loss;
+                                    match sim.order.action {
+                                        SignalAction::BuyLimit | SignalAction::BuyStop => {
+                                            let sl_hit = current_candle.low <= sl;
+                                            let tp_hit = current_candle.high >= tp;
+                                            if sl_hit {
+                                                let loss_pips = if sim.sl_moved_to_breakeven {
+                                                    Decimal::ZERO
+                                                } else {
+                                                    -spec.price_diff_to_pips(sim.order.open_price - sl)
+                                                };
+                                                sim.order.close_time = Some(current_candle.timestamp);
+                                                sim.order.realized_pnl = Some(loss_pips);
+                                                running_pips += loss_pips;
+                                                closed = true;
+                                            } else if tp_hit {
+                                                let pips = spec.price_diff_to_pips(tp - sim.order.open_price);
+                                                sim.order.close_time = Some(current_candle.timestamp);
+                                                sim.order.realized_pnl = Some(pips);
+                                                running_pips += pips;
+                                                closed = true;
+                                            }
                                         }
-                                    }
-                                    SignalAction::SellLimit | SignalAction::SellStop => {
-                                        let sl_hit = current_candle.high + effective_spread >= sl;
-                                        let tp_hit = current_candle.low + effective_spread <= tp;
-                                        if sl_hit {
-                                            let loss_pips = if sim.sl_moved_to_breakeven {
-                                                Decimal::ZERO
-                                            } else {
-                                                -spec.price_diff_to_pips(sl - sim.order.open_price)
-                                            };
-                                            sim.order.close_time = Some(current_candle.timestamp);
-                                            sim.order.realized_pnl = Some(loss_pips);
-                                            running_pips += loss_pips;
-                                            closed = true;
-                                        } else if tp_hit {
-                                            let pips = spec.price_diff_to_pips(sim.order.open_price - tp);
-                                            sim.order.close_time = Some(current_candle.timestamp);
-                                            sim.order.realized_pnl = Some(pips);
-                                            running_pips += pips;
-                                            closed = true;
+                                        SignalAction::SellLimit | SignalAction::SellStop => {
+                                            let sl_hit = current_candle.high + effective_spread >= sl;
+                                            let tp_hit = current_candle.low + effective_spread <= tp;
+                                            if sl_hit {
+                                                let loss_pips = if sim.sl_moved_to_breakeven {
+                                                    Decimal::ZERO
+                                                } else {
+                                                    -spec.price_diff_to_pips(sl - sim.order.open_price)
+                                                };
+                                                sim.order.close_time = Some(current_candle.timestamp);
+                                                sim.order.realized_pnl = Some(loss_pips);
+                                                running_pips += loss_pips;
+                                                closed = true;
+                                            } else if tp_hit {
+                                                let pips = spec.price_diff_to_pips(sim.order.open_price - tp);
+                                                sim.order.close_time = Some(current_candle.timestamp);
+                                                sim.order.realized_pnl = Some(pips);
+                                                running_pips += pips;
+                                                closed = true;
+                                            }
                                         }
+                                        _ => {}
                                     }
-                                    _ => {}
-                                }
-                                if closed {
-                                    completed_trades.push(sim.order);
                                 }
                             }
                         }
                     }
 
-                    if !closed {
+                    if expired {
+                        // Pending order expired before fill - discard
+                        continue;
+                    }
+
+                    if closed {
+                        completed_trades.push(sim.order);
+                    } else {
                         remaining_orders.push(sim);
+                    }
+
+                    // Update Drawdown pelacakan puncak
+                    if running_pips > peak_pips {
+                        peak_pips = running_pips;
+                    }
+                    let current_dd = peak_pips - running_pips;
+                    if current_dd > max_drawdown_pips {
+                        max_drawdown_pips = current_dd;
                     }
                 }
                 active_sim_orders = remaining_orders;
