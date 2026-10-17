@@ -27,6 +27,8 @@ pub struct MarketCandlesQuery {
 pub struct CandleDto {
     pub time: i64,
     pub source: domain::models::MarketDataSource,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub ticker: Option<String>,
     pub open: Decimal,
     pub high: Decimal,
     pub low: Decimal,
@@ -126,11 +128,18 @@ pub async fn market_candles_handler(
             )
         })?;
 
+    let raw_ticker = state
+        .broker_connector
+        .get_raw_symbol(&sym)
+        .await
+        .or_else(|| sym.raw.clone());
+
     let dtos: Vec<CandleDto> = candles
         .iter()
         .map(|c| CandleDto {
             time: c.timestamp.timestamp(),
             source: c.source,
+            ticker: raw_ticker.clone(),
             open: c.open,
             high: c.high,
             low: c.low,
@@ -317,9 +326,11 @@ async fn handle_market_socket(
                             || current_bar.low != last_sent_low
                             || current_bar.volume != last_sent_volume
                         {
+                            let raw_ticker = state.broker_connector.get_raw_symbol(&sym).await.or_else(|| sym.raw.clone());
                             let dto = CandleDto {
                                 time: bar_time,
                                 source: current_bar.source,
+                                ticker: raw_ticker,
                                 open: current_bar.open,
                                 high: current_bar.high,
                                 low: current_bar.low,
@@ -356,4 +367,71 @@ async fn handle_market_socket(
             }
         }
     }
+}
+
+#[derive(Debug, Deserialize)]
+pub struct ResetQuery {
+    pub key: Option<String>,
+}
+
+#[derive(Serialize)]
+pub struct ResetResponse {
+    pub status: String,
+    pub message: String,
+    pub cleared_bars_count: usize,
+    pub timestamp_utc: i64,
+}
+
+/// Endpoint Terproteksi untuk Reset / Purge Seluruh Buffer Candle Pasar
+/// Wajib menyertakan API Key via header `X-Admin-Key`, Bearer token, atau query `?key=`
+pub async fn market_reset_handler(
+    Query(query): Query<ResetQuery>,
+    headers: axum::http::HeaderMap,
+    State(state): State<Arc<AppState>>,
+) -> Result<Json<ResetResponse>, (StatusCode, Json<serde_json::Value>)> {
+    // 1. Ekstrak key otentikasi dari header atau parameter query
+    let auth_header = headers
+        .get("X-Admin-Key")
+        .or_else(|| headers.get("x-admin-key"))
+        .and_then(|v| v.to_str().ok())
+        .map(|s| s.to_string());
+
+    let bearer_token = headers
+        .get(axum::http::header::AUTHORIZATION)
+        .and_then(|v| v.to_str().ok())
+        .and_then(|s| s.strip_prefix("Bearer ").or_else(|| s.strip_prefix("bearer ")))
+        .map(|s| s.trim().to_string());
+
+    let provided_key = auth_header
+        .or(bearer_token)
+        .or(query.key);
+
+    let expected_key = std::env::var("ADMIN_API_KEY")
+        .or_else(|_| std::env::var("AGY_MESH_SECRET"))
+        .unwrap_or_else(|_| "agy-universal-mesh-token-2026".to_string());
+
+    let is_authorized = match provided_key {
+        Some(ref k) => k == &expected_key,
+        None => false,
+    };
+
+    if !is_authorized {
+        return Err((
+            StatusCode::UNAUTHORIZED,
+            Json(serde_json::json!({
+                "error": "Unauthorized",
+                "message": "Kunci otorisasi tidak valid atau tidak disertakan. Sertakan header 'X-Admin-Key' atau parameter query '?key='."
+            })),
+        ));
+    }
+
+    // 2. Eksekusi pembersihan seluruh data live broker connector
+    let cleared_bars = state.broker_connector.clear_all_data().await;
+
+    Ok(Json(ResetResponse {
+        status: "RESET_SUCCESS".to_string(),
+        message: "Seluruh buffer candle pasar live dan antrean tick berhasil dibersihkan.".to_string(),
+        cleared_bars_count: cleared_bars,
+        timestamp_utc: chrono::Utc::now().timestamp(),
+    }))
 }

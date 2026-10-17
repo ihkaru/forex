@@ -13,6 +13,7 @@
 
   interface PairItem {
     symbol: string;
+    ticker?: string;
     base: string;
     quote: string;
     tier: number;
@@ -74,6 +75,7 @@
   }: Props = $props();
 
   let isSymbolDropdownOpen = $state(false);
+  let currentPair = $derived(activePairs.find(p => p.symbol === activeSymbol));
 </script>
 
 <div class="flex flex-wrap items-center justify-between gap-2.5 pb-2.5 border-b border-[#2a2e39] relative z-20">
@@ -87,7 +89,7 @@
       >
         <span class="text-sm">{activeSymbol.startsWith('XAU') ? '🪙' : '🇨🇭'}</span>
         <span class="text-white font-extrabold tracking-wide">
-          {activeSymbol.slice(0, 3)}/{activeSymbol.slice(3)}
+          {currentPair?.ticker || `${activeSymbol.slice(0, 3)}/${activeSymbol.slice(3)}`}
         </span>
 
         {#if isSpecialist || (supportedSymbols && supportedSymbols.length === 1)}
@@ -95,7 +97,6 @@
             ⭐ GOLD SPECIALIST
           </span>
         {:else}
-          {@const currentPair = activePairs.find(p => p.symbol === activeSymbol)}
           <span class="text-[9px] px-1.5 py-0.5 rounded font-bold bg-[#2a2e39] text-[#f5c344] font-mono">
             T{currentPair?.tier ?? 1} ({currentPair?.multiplier.toFixed(1) ?? '2.0'}x)
           </span>
@@ -122,7 +123,7 @@
             >
               <div class="flex items-center gap-2">
                 <span class="text-xs">{pair.symbol.startsWith('XAU') ? '🪙' : '🇨🇭'}</span>
-                <span>{pair.base}/{pair.quote}</span>
+                <span>{pair.ticker || `${pair.base}/${pair.quote}`}</span>
                 {#if pair.symbol === 'XAUUSD'}
                   <span class="text-[9px] px-1 rounded bg-[#f5c344]/20 text-[#f5c344] border border-[#f5c344]/30 font-bold">Gold</span>
                 {/if}

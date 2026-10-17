@@ -186,3 +186,56 @@ async fn test_candle_buffer_upsert_and_bounded_capacity() {
         MAX_CANDLE_CAPACITY
     );
 }
+
+#[tokio::test]
+async fn test_raw_symbol_preservation() {
+    let connector = BrokerConnector::new("MetaTrader4-Socket");
+    let msg = Mt5SocketMessage::Bar {
+        symbol: "XAUUSD_MRG".to_string(),
+        source: Some("MrgRealMt4".to_string()),
+        timeframe: "H1".to_string(),
+        open: dec!(2750.00),
+        high: dec!(2755.00),
+        low: dec!(2748.00),
+        close: dec!(2752.50),
+        volume: dec!(500),
+        time_gmt: 1720000000,
+    };
+
+    connector.ingest_socket_message(msg).await.unwrap();
+
+    let symbol = Symbol::from_symbol_str("XAUUSD_MRG").unwrap();
+    assert_eq!(symbol.base, "XAU");
+    assert_eq!(symbol.quote, "USD");
+    assert_eq!(symbol.raw_ticker(), "XAUUSD_MRG");
+
+    let raw = connector.get_raw_symbol(&symbol).await;
+    assert_eq!(raw, Some("XAUUSD_MRG".to_string()));
+}
+
+#[tokio::test]
+async fn test_clear_all_data() {
+    let connector = BrokerConnector::new("MetaTrader4-Socket");
+    let msg = Mt5SocketMessage::Bar {
+        symbol: "EURUSD".to_string(),
+        source: Some("MrgRealMt4".to_string()),
+        timeframe: "H1".to_string(),
+        open: dec!(1.08000),
+        high: dec!(1.08300),
+        low: dec!(1.07900),
+        close: dec!(1.08250),
+        volume: dec!(100),
+        time_gmt: 1720000000,
+    };
+
+    connector.ingest_socket_message(msg).await.unwrap();
+    let symbol = Symbol::new("EUR", "USD");
+    let candles = connector.get_recent_candles(&symbol, Timeframe::H1, 10).await.unwrap();
+    assert_eq!(candles.len(), 1);
+
+    let cleared = connector.clear_all_data().await;
+    assert_eq!(cleared, 1);
+
+    let query_after = connector.get_recent_candles(&symbol, Timeframe::H1, 10).await;
+    assert!(query_after.is_err(), "Setelah clear_all_data, buffer harus kosong");
+}

@@ -17,15 +17,34 @@
    int closesocket(int s);
 #import
 
-input string InpHost             = "127.0.0.1"; // Host Rust Daemon
-input int    InpPort             = 5555;        // Port TCP Bridge (default 5555)
+input string InpHost             = "100.101.49.42"; // Host Rust Daemon (ThinkStation Tailscale)
+input int    InpPort             = 5555;            // Port TCP Bridge (default 5555)
 input int    InpHistoryLimit     = 500;         // Jumlah candle H1 yang dikirim per simbol
 input bool   InpSyncAllWatchlist = true;        // Sinkronkan seluruh pair di Market Watch (cukup pasang di 1 chart)
 input int    InpTimerSeconds     = 2;           // Frekuensi timer update (detik)
 
+enum ENUM_SOURCE_MODE {
+   SOURCE_REAL = 0, // MrgRealMt4 (Akun Real)
+   SOURCE_DEMO = 1, // MrgDemoMt4 (Akun Demo)
+   SOURCE_AUTO = 2  // Deteksi Otomatis (!IsDemo())
+};
+input ENUM_SOURCE_MODE InpSourceMode = SOURCE_REAL; // Tipe Akun Broker (Default: Akun Real)
+
 int  socket_handle   = -1;
 bool is_connected    = false;
 bool historical_sent = false;
+
+//+------------------------------------------------------------------+
+//| Deteksi Sumber Data Akun (Real vs Demo)                          |
+//+------------------------------------------------------------------+
+string GetSourceString()
+{
+   if(InpSourceMode == SOURCE_REAL) return "MrgRealMt4";
+   if(InpSourceMode == SOURCE_DEMO) return "MrgDemoMt4";
+   // AUTO: Periksa apakah bukan demo dan bukan strategy tester
+   if(!IsDemo() && !IsTesting()) return "MrgRealMt4";
+   return "MrgDemoMt4";
+}
 
 //+------------------------------------------------------------------+
 //| Inisialisasi EA                                                  |
@@ -101,8 +120,7 @@ void SendCurrentTickForSymbol(string sym)
 {
    if(!is_connected || socket_handle < 0) return;
 
-   bool is_real = (AccountInfoInteger(ACCOUNT_TRADE_MODE) == ACCOUNT_TRADE_MODE_REAL);
-   string src = is_real ? "MrgRealMt4" : "MrgDemoMt4";
+   string src = GetSourceString();
 
    double sym_bid = MarketInfo(sym, MODE_BID);
    double sym_ask = MarketInfo(sym, MODE_ASK);
@@ -131,8 +149,7 @@ void SendCurrentBarForSymbol(string sym)
 {
    if(!is_connected || socket_handle < 0) return;
 
-   bool is_real = (AccountInfoInteger(ACCOUNT_TRADE_MODE) == ACCOUNT_TRADE_MODE_REAL);
-   string src = is_real ? "MrgRealMt4" : "MrgDemoMt4";
+   string src = GetSourceString();
 
    datetime bar_time = iTime(sym, PERIOD_H1, 0);
    if(bar_time <= 0) return;
@@ -161,8 +178,7 @@ void SendHistoricalBarsForSymbol(string sym)
    int total_h1_bars = iBars(sym, PERIOD_H1);
    if(total_h1_bars <= 0) return;
    int bars_to_send = MathMin(InpHistoryLimit, total_h1_bars);
-   bool is_real = (AccountInfoInteger(ACCOUNT_TRADE_MODE) == ACCOUNT_TRADE_MODE_REAL);
-   string src = is_real ? "MrgRealMt4" : "MrgDemoMt4";
+   string src = GetSourceString();
 
    Print("📦 Mengirim ", bars_to_send, " bar histori H1 ", sym, " (Source: ", src, " [", AccountServer(), "]) ke Rust Quant Engine...");
 

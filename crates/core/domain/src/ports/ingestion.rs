@@ -34,6 +34,8 @@ pub struct IngestionResult {
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct SymbolStatusDto {
     pub symbol: Symbol,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub ticker: Option<String>,
     pub tier: usize,
     pub multiplier: Decimal,
     pub pip_size: Decimal,

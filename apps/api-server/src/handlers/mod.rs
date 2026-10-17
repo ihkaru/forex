@@ -14,8 +14,8 @@ pub use config::config_handler;
 pub use health::health_handler;
 pub use ingest::{market_ingest_handler, market_symbols_handler};
 pub use market::{
-    eda_handler, market_candles_handler, market_stream_handler, signals_scan_handler,
-    sync_delta_handler,
+    eda_handler, market_candles_handler, market_reset_handler, market_stream_handler,
+    signals_scan_handler, sync_delta_handler,
 };
 pub use monte_carlo::monte_carlo_handler;
 pub use scorecard::scorecard_handler;

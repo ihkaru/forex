@@ -17,6 +17,7 @@ pub struct BrokerConnector {
     pub broker_name: String,
     latest_ticks: Arc<RwLock<HashMap<Symbol, Tick>>>,
     candle_buffer: CandleBufferMap,
+    raw_symbol_map: Arc<RwLock<HashMap<Symbol, String>>>,
 }
 
 impl BrokerConnector {
@@ -25,7 +26,28 @@ impl BrokerConnector {
             broker_name: broker_name.into(),
             latest_ticks: Arc::new(RwLock::new(HashMap::new())),
             candle_buffer: Arc::new(RwLock::new(HashMap::new())),
+            raw_symbol_map: Arc::new(RwLock::new(HashMap::new())),
         }
+    }
+
+    pub async fn get_raw_symbol(&self, symbol: &Symbol) -> Option<String> {
+        let lock = self.raw_symbol_map.read().await;
+        lock.get(symbol).cloned()
+    }
+
+    pub async fn clear_all_data(&self) -> usize {
+        let mut buf_lock = self.candle_buffer.write().await;
+        let count: usize = buf_lock.values().map(|v| v.len()).sum();
+        buf_lock.clear();
+
+        let mut ticks_lock = self.latest_ticks.write().await;
+        ticks_lock.clear();
+
+        let mut raw_lock = self.raw_symbol_map.write().await;
+        raw_lock.clear();
+
+        tracing::info!("🧹 BrokerConnector: Seluruh {} candle dan buffer tick berhasil di-reset", count);
+        count
     }
 
     /// Ingest data mentah dari socket MQL4/MQL5 EA dengan validasi integritas
@@ -86,7 +108,8 @@ impl BrokerConnector {
                         return Ok(());
                     }
                 }
-                lock.insert(symbol_obj, tick);
+                lock.insert(symbol_obj.clone(), tick);
+                self.raw_symbol_map.write().await.insert(symbol_obj, symbol);
             }
             Mt5SocketMessage::Bar {
                 symbol,
@@ -112,7 +135,8 @@ impl BrokerConnector {
                 }
 
                 let symbol_obj =
-                    Symbol::from_symbol_str(&symbol).ok_or(DomainError::InvalidSymbol(symbol))?;
+                    Symbol::from_symbol_str(&symbol).ok_or(DomainError::InvalidSymbol(symbol.clone()))?;
+                self.raw_symbol_map.write().await.insert(symbol_obj.clone(), symbol.clone());
                 let utc_time = DataIntegrityValidator::normalize_to_utc(time_gmt);
                 let tf = match timeframe.to_uppercase().as_str() {
                     "H1" | "1H" | "60" => Timeframe::H1,
