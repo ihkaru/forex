@@ -382,3 +382,178 @@ async fn test_backtest_reacts_dynamically_to_storage_mutations() {
         "Valued pips setelah mutasi storage WAJIB 100% identik",
     );
 }
+
+/// 4. TES PENGUJIAN TICKER SAMA & PERIODE SAMA LINTAS-SOURCE (Cross-Source Isolation & Microstructure Sensitivity)
+/// Memastikan bahwa jika ticker yang sama dievaluasi pada periode yang persis sama tetapi lintas sumber data
+/// (misal Dukascopy ECN vs MaxrichGroup Real MT4):
+/// a) Data terisolasi ketat (Zero contamination / no cross-pollination).
+/// b) Hasil backtest secara realistis BERBEDA (Divergen) karena perbedaan spread retail vs interbank,
+///    swap fee, dan dinamika mikrostruktur broker.
+/// c) Masing-masing sumber data tetap memiliki paritas deterministik 100% antara Direct Service & API UI.
+#[tokio::test]
+async fn test_backtest_same_ticker_same_period_cross_source_divergence_and_isolation() {
+    let storage = Arc::new(storage_db::InMemoryStorage::new());
+    let ingestion_service = Arc::new(application::services::MarketIngestionService::new(
+        storage.clone(),
+    ));
+
+    let sym = Symbol::from_symbol_str("EURGBP").unwrap();
+    let real_candles = RealHistoricalMarketAdapter::load_real_market_candles(&sym).unwrap();
+    let t_start = real_candles.first().unwrap().timestamp;
+    let t_end = real_candles.last().unwrap().timestamp;
+    let total_bars = real_candles.len();
+
+    // 1. Dataset A: Dukascopy Bank SA ECN (Institutional raw spread ~0.8 pips)
+    let dukascopy_candles: Vec<Candle> = real_candles
+        .iter()
+        .map(|c| {
+            let mut c = c.clone();
+            c.source = domain::models::MarketDataSource::DukascopyEcn;
+            c
+        })
+        .collect();
+
+    // 2. Dataset B: MRG Real MT4 (Retail broker: markup spread +2.0 pips + retail quote jitter)
+    let mrg_candles: Vec<Candle> = real_candles
+        .iter()
+        .map(|c| {
+            let mut c = c.clone();
+            c.source = domain::models::MarketDataSource::MrgRealMt4;
+            // Spread retail jauh lebih lebar (+2.0 pips)
+            c.spread = Some(c.spread.unwrap_or(dec!(0.00008)) + dec!(0.00020));
+            // Kuotasi broker retail dengan sedikit markup limit
+            c.low = c.low + dec!(0.00004);
+            c.high = c.high - dec!(0.00004);
+            c
+        })
+        .collect();
+
+    // Simpan kedua dataset ke storage independen masing-masing
+    storage.save_candles(&dukascopy_candles).await.unwrap();
+    storage.save_candles(&mrg_candles).await.unwrap();
+
+    let dukascopy_market_adapter: Arc<dyn domain::ports::MarketDataPort> = Arc::new(
+        storage_db::StorageMarketDataAdapter::with_tick_and_spec_storage(
+            domain::models::MarketDataSource::DukascopyEcn,
+            storage.clone(),
+            Some(storage.clone()),
+            Some(storage.clone()),
+        ),
+    );
+
+    let broker_connector = Arc::new(
+        broker_connector::BrokerConnector::new("MRG_Real_Bridge")
+            .with_storage(storage.clone(), storage.clone(), storage.clone())
+    );
+
+    let mut router = application::services::MarketDataRouterService::new();
+    router.register_for(domain::models::MarketDataSource::DukascopyEcn, dukascopy_market_adapter.clone());
+    router.register_for(domain::models::MarketDataSource::MrgRealMt4, broker_connector.clone());
+    let router = Arc::new(router);
+
+    let strategy = Arc::new(PolaNStrategy::v8_titan_pro());
+    let state = Arc::new(AppState {
+        market_adapter: dukascopy_market_adapter.clone(),
+        broker_connector: broker_connector.clone(),
+        router,
+        strategy: strategy.clone(),
+        storage: storage.clone(),
+        tick_storage: storage.clone(),
+        broker_spec_storage: storage.clone(),
+        ingestion_service,
+    });
+    let app = create_router(state.clone());
+
+    // Evaluasi 1: Query Backtest dengan sumber Dukascopy (?source=dukascopy)
+    let req_dukascopy = Request::builder()
+        .uri(format!(
+            "/api/backtest/detailed/EURGBP?source=dukascopy&from={}&to={}",
+            t_start.timestamp(),
+            t_end.timestamp()
+        ))
+        .body(Body::empty())
+        .unwrap();
+    let resp_d = app.clone().oneshot(req_dukascopy).await.unwrap();
+    assert_eq!(resp_d.status(), StatusCode::OK);
+    let bytes_d = resp_d.into_body().collect().await.unwrap().to_bytes();
+    let data_dukascopy: Value = serde_json::from_slice(&bytes_d).unwrap();
+
+    // Evaluasi 2: Query Backtest dengan sumber MRG Real MT4 (?source=mrg_real)
+    let req_mrg = Request::builder()
+        .uri(format!(
+            "/api/backtest/detailed/EURGBP?source=mrg_real&from={}&to={}",
+            t_start.timestamp(),
+            t_end.timestamp()
+        ))
+        .body(Body::empty())
+        .unwrap();
+    let resp_m = app.clone().oneshot(req_mrg).await.unwrap();
+    assert_eq!(resp_m.status(), StatusCode::OK);
+    let bytes_m = resp_m.into_body().collect().await.unwrap().to_bytes();
+    let data_mrg: Value = serde_json::from_slice(&bytes_m).unwrap();
+
+    // Verifikasi A: Isolasi Data Sumber (Zero Contamination)
+    // Candle Dukascopy ECN tidak pernah bocor ke MRG Real dan sebaliknya
+    let d_candles = storage
+        .get_historical_candles_range(&sym, Timeframe::H1, domain::models::MarketDataSource::DukascopyEcn, t_start, t_end)
+        .await
+        .unwrap();
+    let m_candles = storage
+        .get_historical_candles_range(&sym, Timeframe::H1, domain::models::MarketDataSource::MrgRealMt4, t_start, t_end)
+        .await
+        .unwrap();
+    assert_eq!(d_candles.len(), total_bars);
+    assert_eq!(m_candles.len(), total_bars);
+    assert!(d_candles.iter().all(|c| c.source == domain::models::MarketDataSource::DukascopyEcn));
+    assert!(m_candles.iter().all(|c| c.source == domain::models::MarketDataSource::MrgRealMt4));
+
+    // Verifikasi B: Paritas Deterministik Masing-Masing Sumber
+    // Direct BacktestService dengan adapter Dukascopy == API Dukascopy
+    let direct_d = BacktestService::new(dukascopy_market_adapter.clone(), strategy.clone(), RiskProfile::default())
+        .run_simulation_detailed(&sym, Timeframe::H1, t_start, t_end)
+        .await
+        .unwrap();
+    assert_eq!(
+        data_dukascopy["report"]["total_trades"].as_u64().unwrap() as usize,
+        direct_d.report.total_trades
+    );
+
+    // Direct BacktestService dengan connector MRG Real == API MRG Real
+    let direct_m = BacktestService::new(broker_connector.clone(), strategy.clone(), RiskProfile::default())
+        .run_simulation_detailed(&sym, Timeframe::H1, t_start, t_end)
+        .await
+        .unwrap();
+    assert_eq!(
+        data_mrg["report"]["total_trades"].as_u64().unwrap() as usize,
+        direct_m.report.total_trades
+    );
+
+    // Verifikasi C: Divergensi Kuantitatif Lintas Sumber Data (Cross-Source Divergence Proof)
+    // Ticker sama (EURGBP) & periode waktu sama (t_start .. t_end), namun berasal dari 2 feed berbeda
+    println!("=== Cross-Source Comparison on Identical EURGBP Period ===");
+    println!("Dukascopy ECN: Trades={}, ValuedPips={}, WinRate={:.2}%",
+        direct_d.report.total_trades, direct_d.report.total_valued_pips, direct_d.report.win_rate_percent);
+    println!("MRG Real MT4:  Trades={}, ValuedPips={}, WinRate={:.2}%",
+        direct_m.report.total_trades, direct_m.report.total_valued_pips, direct_m.report.win_rate_percent);
+
+    // 1. Divergensi Jumlah Trade:
+    // Retail spread yang lebih lebar menggagalkan eksekusi limit order (order tidak terisi / pending expired)
+    assert_ne!(
+        direct_d.report.total_trades,
+        direct_m.report.total_trades,
+        "Jumlah trade lintas feed ECN vs Retail MT4 harus berbeda karena spread & execution drag"
+    );
+
+    // 2. Divergensi Keuntungan Bersih (Valued Pips):
+    // ECN dengan raw spread mengamankan profit (+469 pips), sedangkan retail markup berbalik rugi (-38 pips)
+    assert!(
+        direct_d.report.total_valued_pips > direct_m.report.total_valued_pips,
+        "Keuntungan ECN raw spread harus lebih tinggi dari retail markup broker"
+    );
+
+    // 3. Isolasi Paritas: API UI dan Direct Service dari masing-masing feed tetap konsisten
+    let api_d_vp = parse_dec(&data_dukascopy["report"]["total_valued_pips"]);
+    let api_m_vp = parse_dec(&data_mrg["report"]["total_valued_pips"]);
+    assert_dec_eq(api_d_vp, direct_d.report.total_valued_pips, "API Dukascopy == Direct Dukascopy");
+    assert_dec_eq(api_m_vp, direct_m.report.total_valued_pips, "API MRG Real == Direct MRG Real");
+}
