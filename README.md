@@ -50,6 +50,14 @@ Panel bawah interaktif (*Docked Bottom Strategy Tester*) yang mencerminkan stand
 ### 4. ⚡ Seamless Dev Runner (`./dev.sh`)
 - Skrip satu perintah otomatis yang mengompilasi biner Rust, memvalidasi kesehatan data, dan menjalankan REST API port 5000 + Frontend Svelte 5 port 3000 secara bersih tanpa *orphan process*.
 
+### 5. 🌐 Live Market Data Streaming via Windows MetaTrader & Tailscale Mesh
+- Integrasi **Zero-Key TCP Socket Bridge (Port 5555)** yang menghubungkan MetaTrader 4 / 5 di PC Windows eksternal langsung ke backend Rust di Linux server ThinkStation.
+- Pemanfaatan jaringan **Tailscale Mesh VPN** (`100.101.49.42:5555`):
+  - **Zero Port Forwarding**: PC Windows dapat men-stream data pasar dari jaringan mana pun (rumah, kantor, hotspot) tanpa konfigurasi router atau firewall publik.
+  - **Multi-Pair Synchronization**: EA `ForexHexagonBridge.mq4` cukup dipasang di 1 chart untuk men-stream seluruh pair di Market Watch secara real-time.
+  - **Hot Ring-Buffer Ingestion**: Bar historis H1 dan live tick diserap ke memory engine dengan *idempotent upsert* sub-millisecond.
+- Panduan lengkap konfigurasi & setup EA: [docs/TAILSCALE_WINDOWS_MT4_STREAMING.md](docs/TAILSCALE_WINDOWS_MT4_STREAMING.md).
+
 ---
 
 ## 🧭 3. Evaluasi Jarak Menuju Tujuan Utama (Gap Analysis)
@@ -127,7 +135,7 @@ Panel bawah interaktif (*Docked Bottom Strategy Tester*) yang mencerminkan stand
                                     | - notifier-telegram (Multi-Channel)   |
                                     | - storage-db (TimescaleDB / DuckDB)   |
                                     | - dukascopy-rs (Swiss True-Tick)      |
-                                    | - broker-connector (MT5 Socket Bridge)|
+                                    | - broker-connector (MT4/5 Tailscale)  |
                                     +-------------------+-------------------+
 ```
 

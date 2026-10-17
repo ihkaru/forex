@@ -10,12 +10,12 @@ Dokumen ini menyajikan arsitektur lengkap **data pipeline hulu ke hilir** dari p
 flowchart TD
     %% ================= SUBGRAPH: HULU (DATA INGESTION) =================
     subgraph HULU["1. HULU: Market Data Sources & Ingestion"]
-        MT5["MetaTrader 5 Terminal\n(Wine / Windows VM / VPS)"]
-        EA["MQL5 Bridge EA\n(ForexHexagonBridge.mq5)"]
+        MT5["MetaTrader 4 / 5 Terminal\n(Windows PC / Remote Host)"]
+        EA["MQL4/MQL5 Bridge EA\n(ForexHexagonBridge.mq4/.mq5)"]
         DUKA["Dukascopy Repository\n(.bi5 tick data -> Parquet)"]
         
         MT5 -->|"OnTick() & OnBar()"| EA
-        EA -->|"Raw JSON over TCP Socket\n(127.0.0.1:5555)"| BC["Adapter: broker-connector\n(Mt5SocketMessage)"]
+        EA -->|"Raw JSON over TCP Socket via Tailscale / LAN\n(100.101.49.42:5555)"| BC["Adapter: broker-connector\n(Mt5SocketMessage)"]
         DUKA -.->|"Historical Sim/EDA"| DUCK["DuckDB / Parquet Engine"]
     end
 
