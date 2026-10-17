@@ -1,5 +1,4 @@
 use chrono::{DateTime, Datelike, Utc};
-use rust_decimal::Decimal;
 use rust_decimal_macros::dec;
 
 use crate::errors::DomainError;

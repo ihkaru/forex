@@ -1,10 +1,9 @@
-use chrono::Utc;
-use domain::models::{CandleQuery, MarketDataSource, Symbol, Timeframe};
+use domain::models::{Symbol, Timeframe};
 use domain::ports::MarketDataPort;
 use rust_decimal_macros::dec;
 
-use crate::connector::{BrokerConnector, MAX_CANDLE_CAPACITY};
-use crate::messages::Mt5SocketMessage;
+use crate::connector::BrokerConnector;
+use crate::messages::{Mt5SocketMessage, MAX_CANDLE_CAPACITY};
 use crate::validator::DataIntegrityValidator;
 
 #[test]
