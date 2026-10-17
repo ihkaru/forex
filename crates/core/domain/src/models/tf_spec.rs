@@ -8,6 +8,7 @@ pub use super::tf_compliance::TfComplianceGuard;
 pub use super::tf_qualification::{MonthlyQualificationGuard, MonthlyQualificationStatus};
 
 #[cfg(test)]
+#[path = "tf_spec_test.rs"]
 mod tf_spec_test;
 
 /// Klasifikasi Tier Pair Resmi Traders Family (Update 2025/2026)
