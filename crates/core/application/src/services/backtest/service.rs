@@ -96,6 +96,8 @@ impl BacktestService {
         let mut max_drawdown_pips = Decimal::ZERO;
         let mut running_pips = Decimal::ZERO;
         let mut total_swap_pips = Decimal::ZERO;
+        let mut total_commission_pips = Decimal::ZERO;
+        let mut total_slippage_pips = Decimal::ZERO;
         let mut tick_walk_count = 0usize;
 
         let window_size = self.config.lookback_window_bars;
@@ -105,6 +107,11 @@ impl BacktestService {
         let max_filled_duration = chrono::Duration::hours(24);
 
         let mut last_signal_bar: usize = 0;
+
+        // Rolling 7-day chunk cache untuk mereduksi I/O disk/DB hingga >95%
+        let mut tick_window_start = from;
+        let mut tick_window_end = from;
+        let mut cached_ticks: Vec<Tick> = Vec::new();
 
         if historical_candles.len() > window_size {
             for i in window_size..historical_candles.len() {
@@ -118,11 +125,28 @@ impl BacktestService {
                 } else {
                     current_candle.timestamp + chrono::Duration::hours(1)
                 };
-                let bar_ticks = self
-                    .market_data
-                    .get_historical_ticks(symbol, current_candle.timestamp, next_bar_ts)
-                    .await
-                    .unwrap_or_default();
+
+                if current_candle.timestamp >= tick_window_end || current_candle.timestamp < tick_window_start {
+                    tick_window_start = current_candle.timestamp;
+                    tick_window_end = current_candle.timestamp + chrono::Duration::days(7);
+                    cached_ticks = self
+                        .market_data
+                        .get_historical_ticks(symbol, tick_window_start, tick_window_end)
+                        .await
+                        .unwrap_or_default();
+                }
+
+                let bar_ticks: Vec<Tick> = if cached_ticks.is_empty() {
+                    Vec::new()
+                } else {
+                    let start_idx = cached_ticks.partition_point(|t| t.timestamp < current_candle.timestamp);
+                    let end_idx = cached_ticks.partition_point(|t| t.timestamp < next_bar_ts);
+                    if start_idx < end_idx {
+                        cached_ticks[start_idx..end_idx].to_vec()
+                    } else {
+                        Vec::new()
+                    }
+                };
 
                 let effective_spread = current_candle.spread.unwrap_or(spread_offset);
 
@@ -160,6 +184,13 @@ impl BacktestService {
                                 SimulatedOrderStatus::Filled { fill_time } => {
                                     let duration = tick.timestamp - fill_time;
                                     let is_buy = matches!(sim.order.action, SignalAction::BuyLimit | SignalAction::BuyStop);
+                                    let comm_pips = self.config.commission_per_lot_pips * sim.order.volume_lots;
+                                    let slippage_pips = if self.config.enable_slippage {
+                                        self.config.slippage_pips
+                                    } else {
+                                        Decimal::ZERO
+                                    };
+
                                     if duration >= max_filled_duration {
                                         let swap_pips = if self.config.enable_swap {
                                             broker_spec.calculate_swap_pips(is_buy, sim.order.open_time, tick.timestamp)
@@ -167,7 +198,10 @@ impl BacktestService {
                                             Decimal::ZERO
                                         };
                                         total_swap_pips += swap_pips;
-                                        let net_pips = -swap_pips;
+                                        total_commission_pips += comm_pips;
+                                        total_slippage_pips += slippage_pips;
+
+                                        let net_pips = -swap_pips - comm_pips - slippage_pips;
                                         sim.order.close_time = Some(tick.timestamp);
                                         sim.order.realized_pnl = Some(net_pips);
                                         running_pips += net_pips;
@@ -189,8 +223,10 @@ impl BacktestService {
                                                     Decimal::ZERO
                                                 };
                                                 total_swap_pips += swap_pips;
-                                                let net_loss = raw_loss - swap_pips;
+                                                total_commission_pips += comm_pips;
+                                                total_slippage_pips += slippage_pips;
 
+                                                let net_loss = raw_loss - swap_pips - comm_pips - slippage_pips;
                                                 sim.order.close_time = Some(tick.timestamp);
                                                 sim.order.realized_pnl = Some(net_loss);
                                                 running_pips += net_loss;
@@ -204,8 +240,10 @@ impl BacktestService {
                                                     Decimal::ZERO
                                                 };
                                                 total_swap_pips += swap_pips;
-                                                let net_win = raw_win - swap_pips;
+                                                total_commission_pips += comm_pips;
+                                                total_slippage_pips += slippage_pips;
 
+                                                let net_win = raw_win - swap_pips - comm_pips - slippage_pips;
                                                 sim.order.close_time = Some(tick.timestamp);
                                                 sim.order.realized_pnl = Some(net_win);
                                                 running_pips += net_win;
@@ -226,8 +264,10 @@ impl BacktestService {
                                                     Decimal::ZERO
                                                 };
                                                 total_swap_pips += swap_pips;
-                                                let net_loss = raw_loss - swap_pips;
+                                                total_commission_pips += comm_pips;
+                                                total_slippage_pips += slippage_pips;
 
+                                                let net_loss = raw_loss - swap_pips - comm_pips - slippage_pips;
                                                 sim.order.close_time = Some(tick.timestamp);
                                                 sim.order.realized_pnl = Some(net_loss);
                                                 running_pips += net_loss;
@@ -241,8 +281,10 @@ impl BacktestService {
                                                     Decimal::ZERO
                                                 };
                                                 total_swap_pips += swap_pips;
-                                                let net_win = raw_win - swap_pips;
+                                                total_commission_pips += comm_pips;
+                                                total_slippage_pips += slippage_pips;
 
+                                                let net_win = raw_win - swap_pips - comm_pips - slippage_pips;
                                                 sim.order.close_time = Some(tick.timestamp);
                                                 sim.order.realized_pnl = Some(net_win);
                                                 running_pips += net_win;
@@ -282,12 +324,95 @@ impl BacktestService {
                                             fill_time: current_candle.timestamp,
                                         };
                                         sim.order.open_time = current_candle.timestamp;
+
+                                        // Same-bar Intrabar Resolution:
+                                        // Cek apakah bar penjemputan langsung menyentuh SL atau TP
+                                        let is_buy = matches!(sim.order.action, SignalAction::BuyLimit | SignalAction::BuyStop);
+                                        let is_bullish = current_candle.close >= current_candle.open;
+                                        let sl = sim.order.stop_loss;
+                                        let tp = sim.order.take_profit;
+
+                                        let (sl_hit, tp_hit) = match sim.order.action {
+                                            SignalAction::BuyLimit => {
+                                                let sl_h = current_candle.low <= sl;
+                                                let tp_h = if is_bullish {
+                                                    current_candle.high >= tp
+                                                } else {
+                                                    current_candle.close >= tp
+                                                };
+                                                (sl_h, tp_h)
+                                            }
+                                            SignalAction::SellLimit => {
+                                                let sl_h = current_candle.high + effective_spread >= sl;
+                                                let tp_h = if !is_bullish {
+                                                    current_candle.low + effective_spread <= tp
+                                                } else {
+                                                    current_candle.close + effective_spread <= tp
+                                                };
+                                                (sl_h, tp_h)
+                                            }
+                                            SignalAction::BuyStop => {
+                                                let sl_h = current_candle.close <= sl;
+                                                let tp_h = current_candle.high >= tp;
+                                                (sl_h, tp_h)
+                                            }
+                                            SignalAction::SellStop => {
+                                                let sl_h = current_candle.close + effective_spread >= sl;
+                                                let tp_h = current_candle.low + effective_spread <= tp;
+                                                (sl_h, tp_h)
+                                            }
+                                            _ => (false, false),
+                                        };
+
+                                        // Aturan 3 Anti-Bias (Worst-Case Priority: SL first)
+                                        let hit_decision = if sl_hit {
+                                            Some(false)
+                                        } else if tp_hit {
+                                            Some(true)
+                                        } else {
+                                            None
+                                        };
+
+                                        if let Some(is_win_hit) = hit_decision {
+                                            let raw_loss = -spec.price_diff_to_pips(if is_buy {
+                                                sim.order.open_price - sl
+                                            } else {
+                                                sl - sim.order.open_price
+                                            });
+                                            let raw_win = spec.price_diff_to_pips(if is_buy {
+                                                tp - sim.order.open_price
+                                            } else {
+                                                sim.order.open_price - tp
+                                            });
+                                            let gross_pips = if is_win_hit { raw_win } else { raw_loss };
+                                            let comm_pips = self.config.commission_per_lot_pips * sim.order.volume_lots;
+                                            total_commission_pips += comm_pips;
+                                            let slippage_pips = if self.config.enable_slippage {
+                                                self.config.slippage_pips
+                                            } else {
+                                                Decimal::ZERO
+                                            };
+                                            total_slippage_pips += slippage_pips;
+
+                                            let net_pips = gross_pips - comm_pips - slippage_pips;
+                                            sim.order.close_time = Some(current_candle.timestamp);
+                                            sim.order.realized_pnl = Some(net_pips);
+                                            running_pips += net_pips;
+                                            closed = true;
+                                        }
                                     }
                                 }
                             }
                             SimulatedOrderStatus::Filled { fill_time } => {
                                 let duration_since_fill = current_candle.timestamp - fill_time;
                                 let is_buy = matches!(sim.order.action, SignalAction::BuyLimit | SignalAction::BuyStop);
+                                let comm_pips = self.config.commission_per_lot_pips * sim.order.volume_lots;
+                                let slippage_pips = if self.config.enable_slippage {
+                                    self.config.slippage_pips
+                                } else {
+                                    Decimal::ZERO
+                                };
+
                                 if duration_since_fill >= max_filled_duration {
                                     let swap_pips = if self.config.enable_swap {
                                         broker_spec.calculate_swap_pips(is_buy, sim.order.open_time, current_candle.timestamp)
@@ -295,7 +420,9 @@ impl BacktestService {
                                         Decimal::ZERO
                                     };
                                     total_swap_pips += swap_pips;
-                                    let net_pips = -swap_pips;
+                                    total_commission_pips += comm_pips;
+                                    total_slippage_pips += slippage_pips;
+                                    let net_pips = -swap_pips - comm_pips - slippage_pips;
 
                                     sim.order.close_time = Some(current_candle.timestamp);
                                     sim.order.realized_pnl = Some(net_pips);
@@ -303,7 +430,7 @@ impl BacktestService {
                                     closed = true;
                                 } else {
                                     let sl = sim.order.stop_loss;
-                                    let is_bullish = current_candle.close >= current_candle.open;
+                                    let tp = sim.order.take_profit;
 
                                     let (sl_hit, tp_hit, raw_loss, raw_win) = if is_buy {
                                         let sl_hit = current_candle.low <= sl;
@@ -327,18 +454,10 @@ impl BacktestService {
                                         (sl_hit, tp_hit, loss, win)
                                     };
 
+                                    // Aturan 3 Anti-Bias: Intrabar Worst-Case Resolution
+                                    // Jika HIGH menyentuh TP dan LOW menyentuh SL -> SL terpicu lebih dulu!
                                     let hit_decision = if sl_hit && tp_hit {
-                                        // === DIRECTIONAL 4-POINT INTRABAR TRAJECTORY ===
-                                        // Rekonstruksi kronologis harga di dalam candle 1-jam:
-                                        // Pada lilin Bullish (Open -> Low -> High -> Close):
-                                        // Low dikunjungi lebih dulu. Posisi Buy kena SL pada Low pertama. Posisi Sell kena TP pada Low pertama.
-                                        // Pada lilin Bearish (Open -> High -> Low -> Close):
-                                        // High dikunjungi lebih dulu. Posisi Buy kena TP pada High pertama. Posisi Sell kena SL pada High pertama.
-                                        if is_buy {
-                                            if is_bullish { Some(false) } else { Some(true) }
-                                        } else {
-                                            if is_bullish { Some(true) } else { Some(false) }
-                                        }
+                                        Some(false)
                                     } else if sl_hit {
                                         Some(false)
                                     } else if tp_hit {
@@ -359,7 +478,10 @@ impl BacktestService {
                                             Decimal::ZERO
                                         };
                                         total_swap_pips += swap_pips;
-                                        let net_pips = gross_pips - swap_pips;
+                                        total_commission_pips += comm_pips;
+                                        total_slippage_pips += slippage_pips;
+
+                                        let net_pips = gross_pips - swap_pips - comm_pips - slippage_pips;
 
                                         sim.order.close_time = Some(current_candle.timestamp);
                                         sim.order.realized_pnl = Some(net_pips);
@@ -736,6 +858,8 @@ impl BacktestService {
             is_tf_qualified,
             summary: Some(summary),
             total_swap_deducted_pips: total_swap_pips,
+            total_commission_deducted_pips: total_commission_pips,
+            total_slippage_deducted_pips: total_slippage_pips,
             execution_model: if tick_walk_count > 0 {
                 format!(
                     "DUAL_RESOLUTION_HYBRID ({} Ticks Walk + 4-Point Directional)",

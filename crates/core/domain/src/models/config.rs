@@ -174,6 +174,12 @@ pub struct BacktestConfig {
     pub enable_swap: bool,
     #[serde(default)]
     pub enforce_stop_levels: bool,
+    #[serde(default)]
+    pub enable_slippage: bool,
+    #[serde(default)]
+    pub slippage_pips: Decimal,
+    #[serde(default)]
+    pub commission_per_lot_pips: Decimal,
 }
 
 impl Default for BacktestConfig {
@@ -184,6 +190,9 @@ impl Default for BacktestConfig {
             default_lot_size: dec!(1.0),
             enable_swap: true,
             enforce_stop_levels: true,
+            enable_slippage: false,
+            slippage_pips: Decimal::ZERO,
+            commission_per_lot_pips: Decimal::ZERO,
         }
     }
 }

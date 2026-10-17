@@ -65,6 +65,10 @@ pub struct BacktestReport {
     #[serde(default)]
     pub total_swap_deducted_pips: Decimal,
     #[serde(default)]
+    pub total_commission_deducted_pips: Decimal,
+    #[serde(default)]
+    pub total_slippage_deducted_pips: Decimal,
+    #[serde(default)]
     pub execution_model: String,
 }
 

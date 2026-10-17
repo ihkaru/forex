@@ -466,8 +466,22 @@ impl MarketDataPort for BrokerConnector {
             }
         }
 
+        if let Some(ref s) = self.storage {
+            for src in [
+                MarketDataSource::MrgRealMt4,
+                MarketDataSource::MrgDemoMt4,
+                MarketDataSource::MrgMetaTrader4,
+            ] {
+                if let Ok(res) = s.get_historical_candles_range(symbol, timeframe, src, from, to).await {
+                    if !res.is_empty() {
+                        return Ok(res);
+                    }
+                }
+            }
+        }
+
         Err(DomainError::DataUnavailable(format!(
-            "FAIL-FAST: Buffer candle kosong untuk simbol {} timeframe {:?}. Belum ada data bar yang dikirim oleh MT4 EA via TCP socket.",
+            "FAIL-FAST: Buffer candle kosong untuk simbol {} timeframe {:?}. Belum ada data bar yang dikirim oleh MT4 EA via TCP socket atau tersimpan di storage.",
             symbol, timeframe
         )))
     }
@@ -547,12 +561,33 @@ impl MarketDataPort for BrokerConnector {
                 }
             }
         }
+        if let Some(ref ts) = self.tick_storage {
+            for src in [
+                MarketDataSource::MrgRealMt4,
+                MarketDataSource::MrgDemoMt4,
+                MarketDataSource::MrgMetaTrader4,
+            ] {
+                if let Ok(res) = ts.get_ticks(symbol, src, from, to).await {
+                    if !res.is_empty() {
+                        return Ok(res);
+                    }
+                }
+            }
+        }
         Ok(vec![])
     }
 
     async fn get_broker_spec(&self, symbol: &Symbol) -> Option<domain::models::BrokerSymbolSpec> {
         let lock = self.broker_specs.read().await;
-        lock.get(symbol).cloned()
+        if let Some(spec) = lock.get(symbol).cloned() {
+            return Some(spec);
+        }
+        if let Some(ref bss) = self.broker_spec_storage {
+            if let Ok(Some(spec)) = bss.get_broker_spec(symbol).await {
+                return Some(spec);
+            }
+        }
+        None
     }
 }
 

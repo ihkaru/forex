@@ -82,7 +82,7 @@ impl SqliteStorage {
                 bid TEXT NOT NULL,
                 ask TEXT NOT NULL,
                 spread_pts INTEGER,
-                volume TEXT NOT NULL,
+                volume TEXT,
                 PRIMARY KEY (symbol, source, timestamp)
             );
 

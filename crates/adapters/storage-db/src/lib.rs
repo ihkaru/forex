@@ -13,6 +13,9 @@ use domain::ports::{BrokerSpecPort, StoragePort, TickStoragePort};
 pub mod sqlite;
 pub use sqlite::SqliteStorage;
 
+pub mod market_adapter;
+pub use market_adapter::StorageMarketDataAdapter;
+
 // ==============================================================================
 // 1. IN-MEMORY STORAGE (Fast Prototyping & Unit Testing Double)
 // ==============================================================================

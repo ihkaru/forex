@@ -80,6 +80,21 @@ fn resolve_market_data_and_range(
                 .unwrap_or_else(|| to_dt - chrono::Duration::days(45));
             (state.broker_connector.clone(), from_dt, to_dt)
         }
+        Some(src) => {
+            let from_dt = query
+                .from
+                .and_then(|ts| Utc.timestamp_opt(ts, 0).single())
+                .unwrap_or_else(|| Utc.with_ymd_and_hms(2015, 1, 1, 0, 0, 0).unwrap());
+            let to_dt = query
+                .to
+                .and_then(|ts| Utc.timestamp_opt(ts, 0).single())
+                .unwrap_or_else(|| Utc.with_ymd_and_hms(2026, 8, 1, 0, 0, 0).unwrap());
+            let adapter = state
+                .router
+                .get_adapter(src)
+                .unwrap_or_else(|_| state.market_adapter.clone());
+            (adapter, from_dt, to_dt)
+        }
         _ => {
             // Default: Historical ECN long-term data (2015-2026)
             let from_dt = query
