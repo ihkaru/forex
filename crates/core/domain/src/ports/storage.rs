@@ -37,5 +37,8 @@ pub trait StoragePort: Send + Sync {
     ) -> Result<Vec<Candle>, DomainError> {
         Ok(vec![])
     }
+    async fn get_total_candle_count(&self) -> Result<usize, DomainError> {
+        Ok(0)
+    }
     async fn save_order(&self, order: &Order) -> Result<(), DomainError>;
 }

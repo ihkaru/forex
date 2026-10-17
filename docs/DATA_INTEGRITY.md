@@ -5,15 +5,17 @@
 
 ---
 
-## 1. Sumber Data Resmi
+## 1. Sumber Data Resmi & Pipeline Persisten
 
-| Mode | Sumber | Adapter |
+| Mode | Sumber | Adapter & Pipeline |
 |:---|:---|:---|
-| **Backtest (Historical Lab)** | Dukascopy Bank SA — True Tick sejak 2003 | `crates/scrapers/dukascopy-rs` |
-| **Live / Forward Test** | MT5 EA Bridge + cTrader Open API | `crates/adapters/broker-connector` |
+| **Backtest (Historical Lab)** | Dukascopy Bank SA — ECN Historical Data | Di-ingest ke `SqliteStorage` (WAL) via `MarketIngestionService`, dikonsumsi via `StorageMarketDataAdapter` |
+| **Live / Forward Test** | MaxrichGroup MetaTrader 4 (MT4) TCP Bridge (Port 5555) | `broker-connector` dengan dual persistence (in-memory buffer + `SqliteStorage` untuk Bar, Tick, & BrokerSpec) |
+| **Unified Market Access** | Router Multi-Source (`MarketDataRouterService`) | Routing deterministik berdasarkan `MarketDataSource` tanpa silent fallback |
 
-> ⚠️ **PANTANGAN MUTLAK**: DILARANG backtest jangka panjang dengan data riwayat MT5 ritel
+> ⚠️ **PANTANGAN MUTLAK**: DILARANG backtest jangka panjang dengan data riwayat MT4/MT5 ritel
 > (shallow history + pseudo-tick interpolation → curve-fitting bias).
+> Gunakan data Dukascopy ECN yang tersimpan di `SqliteStorage` atau tick riil broker.
 
 ---
 

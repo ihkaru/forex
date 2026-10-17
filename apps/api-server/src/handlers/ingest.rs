@@ -76,10 +76,8 @@ pub async fn market_ingest_handler(
     .await
     {
         Ok(Ok(result)) => {
-            // Live Hot-Reload memori adapter
-            let _ = state.market_adapter.reload_symbol(&sym);
             info!(
-                "Ingesti sukses untuk {}: {} bar tersimpan.",
+                "Ingesti sukses untuk {}: {} bar tersimpan di storage.",
                 sym, result.total_candles
             );
             Ok(Json(result))

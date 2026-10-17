@@ -100,13 +100,16 @@ let engine = SignalEngineService::new(
 
 ---
 
-## 5. Arsitektur Database: Tiered Hybrid Storage
+## 5. Arsitektur Database: Unified Embedded WAL Storage
 
-| Tier | Teknologi | Kapan Digunakan |
+Sistem menggunakan SQLite berkemampuan tinggi dengan mode WAL (`Write-Ahead Logging`), synchronous normal, dan batch transaction atomic:
+
+| Komponen | Implementasi | Fungsi & Karakteristik |
 |:---|:---|:---|
-| **Tier 1** | `InMemoryStorage` | Real-time signal eval, unit test mock |
-| **Tier 2** | `DuckDbAnalyticalEngine` + Parquet | Historical OLAP: backtest 20 tahun |
-| **Tier 3** | `SqlxStorage` (TimescaleDB) | Persistensi sinyal, order broker, TF log |
+| **Production Persistence Engine** | `SqliteStorage` (`storage-db/src/sqlite.rs`) | Mengimplementasikan `StoragePort`, `TickStoragePort`, dan `BrokerSpecPort`. Zero network latency, WAL mode, indexing B-Tree teroptimasi untuk query rentang waktu bar dan tick. |
+| **Market Data Bridge** | `StorageMarketDataAdapter` (`storage-db/src/market_adapter.rs`) | Menyatukan `StoragePort` + `TickStoragePort` + `BrokerSpecPort` menjadi implementasi terpadu `MarketDataPort` untuk `BacktestService`, `Router`, dan API Handlers. |
+| **Testing / Isolation Double** | `InMemoryStorage` (`storage-db/src/lib.rs`) | Penyimpanan in-memory hermetis berbasis `RwLock` untuk unit testing cepat dan terisolasi tanpa file disk. |
+| **Ingestion Pipeline** | `MarketIngestionService` (`application/src/services/ingestion/`) | Idempotent seeding dari file mentah ke database SQLite dan live hot-ingestion via streaming socket. |
 
 ---
 

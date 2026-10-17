@@ -1,5 +1,5 @@
 use api_server::create_router;
-use api_server::state::{AppState, RealHistoricalMarketAdapter};
+use api_server::state::AppState;
 use axum::body::Body;
 use axum::http::{Request, StatusCode};
 use domain::models::PolaNStrategy;
@@ -9,8 +9,30 @@ use serde_json::Value;
 use std::sync::Arc;
 use tower::ServiceExt;
 
-fn build_test_state() -> Arc<AppState> {
-    let market_adapter = Arc::new(RealHistoricalMarketAdapter::new());
+async fn build_test_state() -> Arc<AppState> {
+    let storage = Arc::new(storage_db::InMemoryStorage::new());
+    let ingestion_service = Arc::new(application::services::MarketIngestionService::new(
+        storage.clone(),
+    ));
+
+    let default_pairs = [
+        "EURGBP", "USDCHF", "GBPUSD", "EURUSD", "NZDUSD", "AUDUSD", "XAUUSD", "USDCAD",
+        "USDJPY", "EURJPY", "GBPJPY",
+    ];
+    for p in &default_pairs {
+        if let Some(sym) = domain::models::Symbol::from_symbol_str(p) {
+            let _ = ingestion_service.seed_storage_from_disk(&sym).await;
+        }
+    }
+
+    let market_adapter: Arc<dyn domain::ports::MarketDataPort> = Arc::new(
+        storage_db::StorageMarketDataAdapter::with_tick_and_spec_storage(
+            domain::models::MarketDataSource::DukascopyEcn,
+            storage.clone(),
+            Some(storage.clone()),
+            Some(storage.clone()),
+        ),
+    );
     let broker_connector = Arc::new(broker_connector::BrokerConnector::new("TestBroker"));
     let mut router = application::services::MarketDataRouterService::new();
     router.register(market_adapter.clone());
@@ -18,10 +40,6 @@ fn build_test_state() -> Arc<AppState> {
     let router = Arc::new(router);
 
     let strategy = Arc::new(PolaNStrategy::default());
-    let storage = Arc::new(storage_db::InMemoryStorage::new());
-    let ingestion_service = Arc::new(application::services::MarketIngestionService::new(
-        storage.clone(),
-    ));
     Arc::new(AppState {
         market_adapter,
         broker_connector,
@@ -36,7 +54,7 @@ fn build_test_state() -> Arc<AppState> {
 
 #[tokio::test]
 async fn test_market_candles_api_rejects_request_without_source() {
-    let state = build_test_state();
+    let state = build_test_state().await;
     let app = create_router(state);
 
     let req = Request::builder()
@@ -54,7 +72,7 @@ async fn test_market_candles_api_rejects_request_without_source() {
 
 #[tokio::test]
 async fn test_market_candles_api_returns_real_historical_data() {
-    let state = build_test_state();
+    let state = build_test_state().await;
     let app = create_router(state);
 
     let pairs = ["EURGBP", "USDCHF", "GBPUSD", "EURUSD", "NZDUSD", "AUDUSD"];
@@ -122,7 +140,7 @@ async fn test_market_candles_api_returns_real_historical_data() {
 
 #[tokio::test]
 async fn test_api_server_health_and_scorecard_endpoints() {
-    let state = build_test_state();
+    let state = build_test_state().await;
     let app = create_router(state);
 
     // Health
@@ -152,7 +170,7 @@ async fn test_api_server_health_and_scorecard_endpoints() {
 
 #[tokio::test]
 async fn test_api_server_monte_carlo_endpoint_guarantees_200_ok() {
-    let state = build_test_state();
+    let state = build_test_state().await;
     let app = create_router(state);
 
     let req = Request::builder()
@@ -171,7 +189,7 @@ async fn test_api_server_monte_carlo_endpoint_guarantees_200_ok() {
 
 #[tokio::test]
 async fn test_api_server_detailed_backtest_endpoint() {
-    let state = build_test_state();
+    let state = build_test_state().await;
     let app = create_router(state);
 
     let req = Request::builder()
@@ -190,7 +208,7 @@ async fn test_api_server_detailed_backtest_endpoint() {
 
 #[tokio::test]
 async fn test_api_server_audit_endpoints() {
-    let state = build_test_state();
+    let state = build_test_state().await;
     let app = create_router(state);
 
     // 1. Audit Full
@@ -233,7 +251,7 @@ async fn test_api_server_audit_endpoints() {
 
 #[tokio::test]
 async fn test_market_symbols_and_ingestion_api() {
-    let state = build_test_state();
+    let state = build_test_state().await;
     let app = create_router(state);
 
     // 1. Test GET /api/market/symbols

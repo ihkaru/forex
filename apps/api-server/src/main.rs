@@ -3,7 +3,7 @@ use std::sync::Arc;
 use tracing::{info, Level};
 use tracing_subscriber::FmtSubscriber;
 
-use api_server::state::{AppState, RealHistoricalMarketAdapter};
+use api_server::state::AppState;
 use domain::models::PolaNStrategy;
 
 #[tokio::main]
@@ -36,7 +36,14 @@ async fn main() -> anyhow::Result<()> {
         (sq.clone(), sq.clone(), sq)
     };
 
-    let market_adapter = Arc::new(RealHistoricalMarketAdapter::new());
+    let market_adapter: Arc<dyn domain::ports::MarketDataPort> = Arc::new(
+        storage_db::StorageMarketDataAdapter::with_tick_and_spec_storage(
+            domain::models::MarketDataSource::DukascopyEcn,
+            storage.clone(),
+            Some(tick_storage.clone()),
+            Some(broker_spec_storage.clone()),
+        ),
+    );
     let broker_connector = Arc::new(
         broker_connector::BrokerConnector::new("MRG_MT4_Bridge")
             .with_storage(storage.clone(), tick_storage.clone(), broker_spec_storage.clone())

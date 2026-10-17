@@ -405,6 +405,15 @@ impl StoragePort for SqliteStorage {
         Ok(candles)
     }
 
+    async fn get_total_candle_count(&self) -> Result<usize, DomainError> {
+        let row = sqlx::query("SELECT COUNT(*) as cnt FROM candles;")
+            .fetch_one(&self.pool)
+            .await
+            .map_err(|e| DomainError::AdapterError(format!("SQL count candles: {}", e)))?;
+        let count: i64 = row.try_get("cnt").unwrap_or(0);
+        Ok(count as usize)
+    }
+
     async fn save_order(&self, order: &Order) -> Result<(), DomainError> {
         let query = r#"
             INSERT INTO orders (

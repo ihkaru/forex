@@ -113,6 +113,11 @@ impl StoragePort for InMemoryStorage {
         Ok(filtered)
     }
 
+    async fn get_total_candle_count(&self) -> Result<usize, DomainError> {
+        let list = self.candles.read().await;
+        Ok(list.len())
+    }
+
     async fn save_order(&self, order: &Order) -> Result<(), DomainError> {
         let mut map = self.orders.write().await;
         map.insert(order.id, order.clone());

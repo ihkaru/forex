@@ -157,9 +157,9 @@ pub async fn eda_handler(
 ) -> Result<Json<EdaReport>, StatusCode> {
     let sym_str = symbol.to_uppercase();
     if let Some(sym) = Symbol::from_symbol_str(&sym_str) {
-        if let Ok(map) = state.market_adapter.candles_map.read() {
-            if let Some(candles) = map.get(&sym.to_compact_string()) {
-                let report = EdaService::analyze(&sym, candles);
+        if let Ok(candles) = state.storage.get_candles(&sym, Timeframe::H1, 5000).await {
+            if !candles.is_empty() {
+                let report = EdaService::analyze(&sym, &candles);
                 return Ok(Json(report));
             }
         }
@@ -175,19 +175,16 @@ pub async fn signals_scan_handler(
     ];
     let mut found_signals = Vec::new();
 
-    let candle_snapshots: Vec<(Symbol, Vec<domain::models::Candle>)> = {
-        let mut list = Vec::new();
-        if let Ok(map) = state.market_adapter.candles_map.read() {
-            for p in &pairs {
-                if let Some(sym) = Symbol::from_symbol_str(p) {
-                    if let Some(candles) = map.get(&sym.to_compact_string()) {
-                        list.push((sym, candles.clone()));
-                    }
+    let mut candle_snapshots: Vec<(Symbol, Vec<domain::models::Candle>)> = Vec::new();
+    for p in &pairs {
+        if let Some(sym) = Symbol::from_symbol_str(p) {
+            if let Ok(candles) = state.storage.get_candles(&sym, Timeframe::H1, 300).await {
+                if !candles.is_empty() {
+                    candle_snapshots.push((sym, candles));
                 }
             }
         }
-        list
-    };
+    }
 
     for (sym, candles) in &candle_snapshots {
         if let Some(last) = candles.last() {
@@ -235,37 +232,38 @@ pub async fn sync_delta_handler(
 ) -> Result<Json<SyncDeltaResponse>, StatusCode> {
     let sym_str = symbol.to_uppercase();
     if let Some(sym) = Symbol::from_symbol_str(&sym_str) {
-        let prev_ts = if let Ok(map) = state.market_adapter.candles_map.read() {
-            map.get(&sym.to_compact_string())
-                .and_then(|c| c.last())
-                .map(|c| c.timestamp.timestamp())
-        } else {
-            None
-        };
+        let start = std::time::Instant::now();
+        let prev_watermark = state
+            .storage
+            .get_high_watermark(&sym, Timeframe::H1, domain::models::MarketDataSource::DukascopyEcn)
+            .await
+            .ok()
+            .flatten()
+            .map(|ts| ts.timestamp());
 
-        // Reload data terbaru dari disk ke memori live
-        let synced_count = state.market_adapter.reload_symbol(&sym).unwrap_or(0);
+        // Jalankan sinkronisasi / seeding dari disk ke SQLite secara idempoten
+        let synced_count = state
+            .ingestion_service
+            .seed_storage_from_disk(&sym)
+            .await
+            .unwrap_or(0);
 
-        let new_ts = if let Ok(map) = state.market_adapter.candles_map.read() {
-            map.get(&sym.to_compact_string())
-                .and_then(|c| c.last())
-                .map(|c| c.timestamp.timestamp())
-        } else {
-            None
-        };
+        let new_ts = state
+            .storage
+            .get_high_watermark(&sym, Timeframe::H1, domain::models::MarketDataSource::DukascopyEcn)
+            .await
+            .ok()
+            .flatten();
 
-        let last_date_str = if let Ok(map) = state.market_adapter.candles_map.read() {
-            map.get(&sym.to_compact_string())
-                .and_then(|c| c.last())
-                .map(|c| c.timestamp.format("%d %b %Y").to_string())
-                .unwrap_or_else(|| "21 Aug 2026".to_string())
-        } else {
-            "21 Aug 2026".to_string()
-        };
+        let new_watermark = new_ts.map(|ts| ts.timestamp());
+        let last_date_str = new_ts
+            .map(|ts| ts.format("%d %b %Y").to_string())
+            .unwrap_or_else(|| "21 Aug 2026".to_string());
 
-        let is_up_to_date = new_ts.is_some();
+        let is_up_to_date = new_watermark.is_some();
+        let duration_ms = start.elapsed().as_millis() as u64;
         let message = format!(
-            "Arsip Resmi Dukascopy Bank SA ({} bars terverifikasi s/d {}). Live Ingestion Socket aktif.",
+            "Arsip Resmi Dukascopy Bank SA ({} bars tersimpan di SQLite s/d {}). Live Ingestion Socket aktif.",
             synced_count, last_date_str
         );
 
@@ -273,10 +271,10 @@ pub async fn sync_delta_handler(
             symbol: sym_str,
             timeframe: "H1".to_string(),
             source: domain::models::MarketDataSource::DukascopyEcn,
-            previous_watermark: prev_ts,
-            new_watermark: new_ts,
-            synced_bars_count: 0,
-            duration_ms: 8,
+            previous_watermark: prev_watermark,
+            new_watermark,
+            synced_bars_count: synced_count,
+            duration_ms,
             is_up_to_date,
             message,
         }));

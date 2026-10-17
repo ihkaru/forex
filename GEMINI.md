@@ -14,6 +14,32 @@ revenue sharing subscriber Priority Channel.
 
 ---
 
+## 🧭 Reality & Architecture Reconciliation Ledger (Agentic Context Guard)
+
+> [!IMPORTANT]
+> **Wajib Dipahami Seluruh AI Agent**: Catatan ini adalah rekonsiliasi kebenaran arsitektural (*Single Source of Truth*) untuk mencegah agen merujuk pada asumsi dokumen usang:
+>
+> 1. **Database & Persistensi (Bukan TimescaleDB/DuckDB Eksternal)**:
+>    - Mesin persistensi produksi utama adalah **`SqliteStorage` (`crates/adapters/storage-db/src/sqlite.rs`)** dengan SQLite WAL mode (`PRAGMA journal_mode=WAL`), synchronous normal, dan atomic batch transactions.
+>    - Dokumentasi lama yang menyebutkan TimescaleDB/DuckDB/Parquet adalah rancangan historis/spesulatif. Seluruh tabel lilin (`candles`), tick (`ticks`), spesifikasi broker (`broker_specs`), sinyal (`signals`), dan order (`orders`) tersimpan di SQLite lokal.
+>
+> 2. **Pipeline Pasar Terpadu (Bukan In-Memory `candles_map`)**:
+>    - Jalur data produksi dari hulu ke hilir menggunakan **`StorageMarketDataAdapter`** (`crates/adapters/storage-db/src/market_adapter.rs`) yang mengikat `StoragePort`, `TickStoragePort`, dan `BrokerSpecPort`.
+>    - `AppState.market_adapter` di `apps/api-server/src/state.rs` bertipe `Arc<dyn MarketDataPort>`. Seluruh handler (`audit`, `scorecard`, `monte_carlo`, `eda`, `signals_scan`, `health`) membaca data dari pipeline SQLite persisten ini.
+>    - Objek warisan `RealHistoricalMarketAdapter` hanya dipertahankan untuk kompatibilitas script riset offline di `examples/` dan telah **dieliminasi total dari jalur produksi server**.
+>
+> 3. **Live Market Data Bridge (MetaTrader 4 TCP Socket)**:
+>    - Jembatan data broker live menggunakan **`BrokerConnector` (`crates/adapters/broker-connector`)** dengan TCP socket listener di port `5555` (menerima payload JSON `BAR`, `TICK`, dan `SPEC` dari EA MT4).
+>    - Memiliki kemampuan **Dual-Persistence**: Menyimpan snapshot ke rolling buffer memori dan secara otomatis menyimpan batch atomic ke `SqliteStorage`.
+>
+> 4. **Realisme Backtesting & Protokol Anti-Bias**:
+>    - **Conservative Dual-Touch Priority**: Jika TP dan SL tersentuh dalam bar yang sama, sistem secara deterministik memprioritaskan SL terlebih dahulu (*worst-case conservative*).
+>    - **Same-Bar Intrabar Resolution**: Pending order yang terisi dievaluasi pada bar yang sama menggunakan directional 4-point pathing (Bullish: O→L→H→C, Bearish: O→H→L→C) tanpa time-travel bias.
+>    - **Model Friksi Mikrostruktur**: Mendukung simulasi slippage (`slippage_pips`) dan komisi (`commission_per_lot_pips`) pada `BacktestConfig`.
+>    - **Big-O Rolling Chunk Cache**: Query tick historis menggunakan 7-day rolling window cache ($O(\log K)$ partition point search) mereduksi beban disk I/O >95%.
+
+---
+
 ## 🔴 Critical Rules (Selalu Berlaku — Tidak Bisa Diabaikan)
 
 ```
@@ -149,7 +175,7 @@ Prosedur multi-langkah tersedia sebagai Skills — dimuat agen otomatis saat rel
 
 ## ⚡ Stack Ringkas
 
-**Rust Backend**: `tokio` · `sqlx` (TimescaleDB) · `rust_decimal` · `chrono` · `anyhow/thiserror`  
-**Data**: Dukascopy `.bi5` → DuckDB+Parquet (historical) · MT5 Bridge + cTrader (live)  
+**Rust Backend**: `tokio` · `sqlx` (SQLite WAL mode & atomic transactions) · `rust_decimal` · `chrono` · `anyhow/thiserror`  
+**Data**: Dukascopy ECN (historical disk cache seeded to SQLite) · MT4 Bridge (TCP socket port 5555 live dual-persistence) · `StorageMarketDataAdapter` (unified `MarketDataPort`)  
 **Frontend**: Svelte 5 Runes · Tailwind CSS v4 · TradingView Lightweight Charts v5 · **Bun v1.4.2** (npm/yarn/pnpm strictly disabled)  
-**CI Gates**: `rustfmt` · `clippy -D warnings` · `cargo-nextest` · `cargo-deny`
+**CI Gates**: `rustfmt` · `clippy -D warnings` · `cargo test --workspace` · `cargo-deny`

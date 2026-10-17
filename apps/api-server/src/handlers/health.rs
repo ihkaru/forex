@@ -13,12 +13,7 @@ pub struct HealthResponse {
 }
 
 pub async fn health_handler(State(state): State<Arc<AppState>>) -> Json<HealthResponse> {
-    let total_candles: usize = state
-        .market_adapter
-        .candles_map
-        .read()
-        .map(|m| m.values().map(|v| v.len()).sum())
-        .unwrap_or(0);
+    let total_candles = state.storage.get_total_candle_count().await.unwrap_or(0);
     Json(HealthResponse {
         status: "ONLINE",
         mt5_bridge_latency_ms: 0.4,

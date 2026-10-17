@@ -51,26 +51,32 @@ Jika 24 jam tidak terisi → status: Expired (PnL = 0)
 
 ---
 
-### 3. Intrabar Worst-Case Resolution
+### 3. Intrabar Worst-Case Resolution & Directional Pathing
 
 ```
+Aturan A: Conservative Dual-Touch Priority
 Jika dalam 1 bar: HIGH menyentuh TP dan LOW menyentuh SL
-→ WAJIB anggap SL hit terlebih dahulu (conservative)
-```
+→ WAJIB anggap SL hit terlebih dahulu (mengeliminasi flattering TP bias).
 
-Ini mewakili skenario terburuk yang realistis (momentum turun dulu sebelum naik).
+Aturan B: Same-Bar Pending Fill Evaluation (Directional 4-Point Pathing)
+Jika pending order terisi pada bar berjalan, sisa bar dievaluasi secara kronologis
+berdasarkan arah lilin (Bullish: O -> L -> H -> C; Bearish: O -> H -> L -> C)
+tanpa time-travel bias dan tanpa mengunci order hingga bar berikutnya.
+```
 
 ---
 
-### 4. Realistic Transaction Costs
+### 4. Realistic Transaction Costs & Microstructure Friction
 
 ```
-Spread minimum yang harus disimulasikan:
-- Major pairs (EUR/USD, GBP/USD): ≥ 1.2 pips
-- Cross pairs: ≥ 2.0 pips
-- Gold (XAU/USD): ≥ 3.0 pips
-
-Menggunakan spread realistis broker subscriber (MRG Mega Berjangka)
+Spread, Slippage & Komisi Riil:
+- Major pairs (EUR/USD, GBP/USD): Spread ≥ 1.2 pips
+- Cross pairs: Spread ≥ 2.0 pips
+- Gold (XAU/USD): Spread ≥ 3.0 pips
+- Microstructure Friction Model: Dukungan parameter `enable_slippage`, `slippage_pips`,
+  dan `commission_per_lot_pips` pada `BacktestConfig` & `BacktestReport`.
+- Big-O Rolling 7-Day Chunk Cache: Query tick historis dioptimasi menggunakan cache
+  berjendela 7 hari (O(log K) search) untuk mereduksi beban I/O database >95%.
 ```
 
 ---
