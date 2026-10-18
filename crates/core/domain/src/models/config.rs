@@ -182,6 +182,38 @@ pub struct BacktestConfig {
     pub commission_per_lot_pips: Decimal,
 }
 
+impl BacktestConfig {
+    /// Konfigurasi murni tanpa friksi transaksi (untuk baseline unit test sinyal geometris)
+    pub fn raw_zero_friction() -> Self {
+        Self {
+            simulation_spread_pips: dec!(1.2),
+            lookback_window_bars: 50,
+            default_lot_size: dec!(1.0),
+            enable_swap: false,
+            enforce_stop_levels: false,
+            enable_slippage: false,
+            slippage_pips: Decimal::ZERO,
+            commission_per_lot_pips: Decimal::ZERO,
+        }
+    }
+
+    /// Konfigurasi Konservatif Realistis (Worst-Case Scenario Protocol):
+    /// Mengaktifkan swap overnight, stop levels, slippage 0.5 pips, dan komisi broker 0.7 pips/lot
+    /// agar simulasi forward dan dashboard UI selalu mengasumsikan biaya friksi terburuk.
+    pub fn conservative() -> Self {
+        Self {
+            simulation_spread_pips: dec!(1.2),
+            lookback_window_bars: 50,
+            default_lot_size: dec!(1.0),
+            enable_swap: true,
+            enforce_stop_levels: true,
+            enable_slippage: true,
+            slippage_pips: dec!(0.5),
+            commission_per_lot_pips: dec!(0.7),
+        }
+    }
+}
+
 impl Default for BacktestConfig {
     fn default() -> Self {
         Self {

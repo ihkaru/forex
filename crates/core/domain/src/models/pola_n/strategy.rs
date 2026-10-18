@@ -168,6 +168,24 @@ impl PolaNStrategy {
         strat
     }
 
+    /// Versi Generasi 9: Titan Ultra Retail-Resilient (+R:R 1.25, Buffer 3.0 pips, Multi-Session)
+    /// Dirancang khusus agar tahan banting terhadap spread markup broker retail (+1.5 - 2.5 pips)
+    /// dengan target R:R 1:1.25 dan buffer struktural 3.0 pips untuk kompensasi biaya eksekusi.
+    pub fn v9_titan_ultra() -> Self {
+        let mut strat = Self::with_params("TF-PolaN-TitanUltra-v9", 4, 3, dec!(0.00030), dec!(1.25));
+        strat.formation_engine.entry_offset = dec!(0.25);
+        strat.formation_engine.min_retracement = dec!(0.18);
+        strat.formation_engine.max_retracement = dec!(0.85);
+        strat.enable_session_filter = false; // 24/5 full liquidity capture
+        strat.enable_candle_filter = true;
+        strat.enable_ema_filter = true;
+        strat.enable_slope_filter = true;
+        strat.enable_rsi_filter = false;
+        strat.enable_chop_filter = false;
+        strat.enable_adx_filter = false;
+        strat
+    }
+
     pub fn with_params(
         name: impl Into<String>,
         left_bars: usize,

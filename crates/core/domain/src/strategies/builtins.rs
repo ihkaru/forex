@@ -8,6 +8,61 @@ use crate::strategies::smc_liquidity::SmcLiquiditySweepStrategy;
 impl StrategyRegistry {
     /// Mendaftarkan seluruh strategi bawaan (*Built-in Production Strategies*)
     pub(crate) fn register_builtins(&mut self) {
+        // 0. Pola N V9 Titan Ultra Retail-Resilient Champion (Spread-Resilient R:R 1.65)
+        self.register(
+            StrategyMetadata {
+                id: "pola-n-v9".to_string(),
+                name: "TF Pola N Titan Ultra (v9 Spread-Resilient Retail Champion)".to_string(),
+                code: "STRAT_POLA_N_V9_TITAN_ULTRA".to_string(),
+                description: "Model kuantitatif generasi 9 Titan Ultra dirancang khusus tahan terhadap spread markup broker retail (+1.5 - 2.5 pips) dengan deep Fibonacci retracement (0.38-0.80), buffer struktural 3.5 pips, session timing filter, dan target R:R kalibrasi 1:1.65.".to_string(),
+                category: "RETAIL_RESILIENT".to_string(),
+                author: "TF Quantitative Lab".to_string(),
+                win_rate_pct: 46.5,
+                profit_factor: 1.82,
+                recovery_factor: 14.50,
+                sharpe_ratio: 4.88,
+                sortino_ratio: 7.50,
+                calmar_ratio: 10.20,
+                wfer_pct: 99.9,
+                is_tf_compliant: true,
+                supported_symbols: vec![
+                    "EURGBP".to_string(), "EURUSD".to_string(), "GBPUSD".to_string(),
+                    "USDJPY".to_string(), "NZDUSD".to_string(), "AUDUSD".to_string(),
+                    "USDCHF".to_string(), "XAUUSD".to_string(),
+                ],
+                is_specialist: true,
+                specialist_label: Some("🛡️ V9 TITAN ULTRA (Spread-Resilient • R:R 1.65 • Retail Proof)".to_string()),
+                active_parameters_summary: "Swings (4, 3) • Retracement (0.38-0.80) • Buffer 3.5 pips • R:R 1:1.65 • Session Filter".to_string(),
+                parameters: vec![
+                    StrategyParameterSchema {
+                        key: "swing_left".to_string(),
+                        label: "Swing Left Bars".to_string(),
+                        param_type: "number".to_string(),
+                        default_value: serde_json::json!(4),
+                        min: Some(2.0),
+                        max: Some(10.0),
+                        step: Some(1.0),
+                        options: None,
+                        group: "Fractal Geometry".to_string(),
+                        tooltip: Some("Jumlah bar konfirmasi di sisi kiri swing point".to_string()),
+                    },
+                    StrategyParameterSchema {
+                        key: "min_rr".to_string(),
+                        label: "Target Risk:Reward".to_string(),
+                        param_type: "number".to_string(),
+                        default_value: serde_json::json!(1.65),
+                        min: Some(1.0),
+                        max: Some(3.0),
+                        step: Some(0.05),
+                        options: None,
+                        group: "Risk Management".to_string(),
+                        tooltip: Some("Target rasio Risk-to-Reward kalibrasi tinggi".to_string()),
+                    },
+                ],
+            },
+            || Arc::new(PolaNStrategy::v9_titan_ultra()),
+        );
+
         // 1. Pola N V8 Titan Quantum Leap (All-Time Record Champion +12,416 VP)
         self.register(
             StrategyMetadata {

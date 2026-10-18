@@ -67,7 +67,7 @@ async fn build_test_state() -> Arc<AppState> {
     let router = Arc::new(router);
 
     // Gunakan strategi kuantitatif resmi terstandarisasi (V8 Titan Pro)
-    let strategy = Arc::new(PolaNStrategy::v8_titan_pro());
+    let strategy = Arc::new(PolaNStrategy::v9_titan_ultra());
     Arc::new(AppState {
         market_adapter,
         broker_connector,
@@ -93,10 +93,11 @@ async fn test_backtest_cross_surface_determinism_parity() {
     let to_dt = Utc.with_ymd_and_hms(2024, 1, 1, 0, 0, 0).unwrap();
 
     // Jalur A: Evaluasi Langsung via Application Service Layer (Direct BacktestService)
-    let direct_service = BacktestService::new(
+    let direct_service = BacktestService::with_config(
         state.market_adapter.clone(),
         state.strategy.clone(),
         RiskProfile::default(),
+        domain::models::BacktestConfig::conservative(),
     );
     let direct_detailed = direct_service
         .run_simulation_detailed(&sym, Timeframe::H1, from_dt, to_dt)
@@ -234,10 +235,11 @@ async fn test_backtest_results_change_dynamically_when_data_changes() {
 
     // Dan untuk Periode 2, uji paritas determinisme antara Direct Service dan API UI
     let sym = Symbol::from_symbol_str("EURUSD").unwrap();
-    let direct_service = BacktestService::new(
+    let direct_service = BacktestService::with_config(
         state.market_adapter.clone(),
         state.strategy.clone(),
         RiskProfile::default(),
+        domain::models::BacktestConfig::conservative(),
     );
     let from_dt = Utc.timestamp_opt(t2_from, 0).single().unwrap();
     let to_dt = Utc.timestamp_opt(t2_to, 0).single().unwrap();
@@ -303,7 +305,7 @@ async fn test_backtest_reacts_dynamically_to_storage_mutations() {
     let mut router = application::services::MarketDataRouterService::new();
     router.register(market_adapter.clone());
     let router = Arc::new(router);
-    let strategy = Arc::new(PolaNStrategy::v8_titan_pro());
+    let strategy = Arc::new(PolaNStrategy::v9_titan_ultra());
 
     let state = Arc::new(AppState {
         market_adapter,
@@ -361,10 +363,11 @@ async fn test_backtest_reacts_dynamically_to_storage_mutations() {
     );
 
     // Paritas UI & Direct Service pada data hasil mutasi
-    let direct_service = BacktestService::new(
+    let direct_service = BacktestService::with_config(
         state.market_adapter.clone(),
         state.strategy.clone(),
         RiskProfile::default(),
+        domain::models::BacktestConfig::conservative(),
     );
     let direct_res2 = direct_service
         .run_simulation_detailed(&sym, Timeframe::H1, t_start_2023, t_end_2024)
@@ -451,7 +454,7 @@ async fn test_backtest_same_ticker_same_period_cross_source_divergence_and_isola
     router.register_for(domain::models::MarketDataSource::MrgRealMt4, broker_connector.clone());
     let router = Arc::new(router);
 
-    let strategy = Arc::new(PolaNStrategy::v8_titan_pro());
+    let strategy = Arc::new(PolaNStrategy::v9_titan_ultra());
     let state = Arc::new(AppState {
         market_adapter: dukascopy_market_adapter.clone(),
         broker_connector: broker_connector.clone(),
@@ -509,20 +512,30 @@ async fn test_backtest_same_ticker_same_period_cross_source_divergence_and_isola
 
     // Verifikasi B: Paritas Deterministik Masing-Masing Sumber
     // Direct BacktestService dengan adapter Dukascopy == API Dukascopy
-    let direct_d = BacktestService::new(dukascopy_market_adapter.clone(), strategy.clone(), RiskProfile::default())
-        .run_simulation_detailed(&sym, Timeframe::H1, t_start, t_end)
-        .await
-        .unwrap();
+    let direct_d = BacktestService::with_config(
+        dukascopy_market_adapter.clone(),
+        strategy.clone(),
+        RiskProfile::default(),
+        domain::models::BacktestConfig::conservative(),
+    )
+    .run_simulation_detailed(&sym, Timeframe::H1, t_start, t_end)
+    .await
+    .unwrap();
     assert_eq!(
         data_dukascopy["report"]["total_trades"].as_u64().unwrap() as usize,
         direct_d.report.total_trades
     );
 
     // Direct BacktestService dengan connector MRG Real == API MRG Real
-    let direct_m = BacktestService::new(broker_connector.clone(), strategy.clone(), RiskProfile::default())
-        .run_simulation_detailed(&sym, Timeframe::H1, t_start, t_end)
-        .await
-        .unwrap();
+    let direct_m = BacktestService::with_config(
+        broker_connector.clone(),
+        strategy.clone(),
+        RiskProfile::default(),
+        domain::models::BacktestConfig::conservative(),
+    )
+    .run_simulation_detailed(&sym, Timeframe::H1, t_start, t_end)
+    .await
+    .unwrap();
     assert_eq!(
         data_mrg["report"]["total_trades"].as_u64().unwrap() as usize,
         direct_m.report.total_trades

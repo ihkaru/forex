@@ -95,8 +95,8 @@ fn resolve_market_data_and_range(
                 .unwrap_or_else(|_| state.market_adapter.clone());
             (adapter, from_dt, to_dt)
         }
-        _ => {
-            // Default: Historical ECN long-term data (2015-2026)
+        None => {
+            // Default Baseline: Historical ECN long-term data (2015-2026)
             let from_dt = query
                 .from
                 .and_then(|ts| Utc.timestamp_opt(ts, 0).single())
@@ -124,10 +124,11 @@ pub async fn backtest_handler(
 
     let (market_data, from_dt, to_dt) = resolve_market_data_and_range(&state, &query);
     let strategy = resolve_strategy(query.strategy.as_deref());
-    let service = BacktestService::new(
+    let service = BacktestService::with_config(
         market_data,
         strategy,
         RiskProfile::default(),
+        domain::models::BacktestConfig::conservative(),
     );
 
     for p in &pairs {
@@ -151,7 +152,7 @@ pub async fn backtest_handler(
     };
 
     let total_swap_deducted: Decimal = reports.iter().map(|r| r.total_swap_deducted_pips).sum();
-    let src_label = query.source.clone().unwrap_or_else(|| "dukascopy".to_string());
+    let src_label = query.source.clone().unwrap_or_else(|| "mrg_real".to_string());
 
     Json(BacktestApiResponse {
         reports,
@@ -183,10 +184,11 @@ pub async fn backtest_trades_handler(
     if let Some(sym) = Symbol::from_symbol_str(&sym_str) {
         let (market_data, from_dt, to_dt) = resolve_market_data_and_range(&state, &query);
         let strategy = resolve_strategy(query.strategy.as_deref());
-        let service = BacktestService::new(
+        let service = BacktestService::with_config(
             market_data,
             strategy,
             RiskProfile::default(),
+            domain::models::BacktestConfig::conservative(),
         );
         let spec = TfPairSpec::from_symbol(&sym);
 
@@ -244,10 +246,11 @@ pub async fn backtest_detailed_handler(
     if let Some(sym) = Symbol::from_symbol_str(&sym_str) {
         let (market_data, from_dt, to_dt) = resolve_market_data_and_range(&state, &query);
         let strategy = resolve_strategy(query.strategy.as_deref());
-        let service = BacktestService::new(
+        let service = BacktestService::with_config(
             market_data,
             strategy,
             RiskProfile::default(),
+            domain::models::BacktestConfig::conservative(),
         );
         let spec = TfPairSpec::from_symbol(&sym);
 
@@ -291,7 +294,7 @@ pub async fn backtest_detailed_handler(
                 })
                 .collect();
 
-            let src_label = query.source.clone().unwrap_or_else(|| "dukascopy".to_string());
+            let src_label = query.source.clone().unwrap_or_else(|| "mrg_real".to_string());
 
             return Ok(Json(DetailedBacktestApiResponse {
                 report: detailed.report,

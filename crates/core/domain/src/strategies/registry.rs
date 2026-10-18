@@ -94,9 +94,9 @@ impl StrategyRegistry {
                 return strat;
             }
         }
-        // Fallback default: Pola N V8 Titan Pro
-        self.create("pola-n-v8")
-            .unwrap_or_else(|| Arc::new(PolaNStrategy::v8_titan_pro()))
+        // Fallback default: Pola N V9 Titan Ultra
+        self.create("pola-n-v9")
+            .unwrap_or_else(|| Arc::new(PolaNStrategy::v9_titan_ultra()))
     }
 
     /// Mengembalikan seluruh metadata strategi yang terdaftar untuk API/UI
