@@ -124,6 +124,28 @@ impl TfPairSpec {
         }
     }
 
+    /// Estimasi spread konservatif terburuk berdasarkan instrumen di broker retail (MRG/TF):
+    /// - Major USD Pairs (EURUSD, AUDUSD, GBPUSD, NZDUSD): 2.2 pips
+    /// - Minor / USD Pairs (USDCHF, USDJPY, USDCAD): 2.5 pips
+    /// - Cross Currency Pairs (AUDCAD, AUDCHF, AUDJPY, CADJPY, CHFJPY, EURGBP, EURJPY, EURNZD, GBPJPY, NZDJPY): 5.5 pips
+    /// - Emas (XAUUSD): 8.0 pips ($0.80)
+    pub fn worst_case_spread_pips(&self) -> Decimal {
+        let compact = self.symbol.to_compact_string();
+        match compact.as_str() {
+            "XAUUSD" => dec!(8.0),
+            "AUDCAD" | "AUDCHF" | "AUDJPY" | "CADJPY" | "CHFJPY" | "EURGBP" | "EURJPY"
+            | "EURNZD" | "GBPJPY" | "NZDJPY" => dec!(5.5),
+            "USDCHF" | "USDJPY" | "USDCAD" => dec!(2.5),
+            "EURUSD" | "AUDUSD" | "GBPUSD" | "NZDUSD" => dec!(2.2),
+            _ => match self.tier {
+                PairTier::Tier4 => dec!(8.0),
+                PairTier::Tier3 => dec!(5.5),
+                PairTier::Tier2 => dec!(3.5),
+                PairTier::Tier1 => dec!(2.2),
+            },
+        }
+    }
+
     /// Konversi selisih harga menjadi pips
     pub fn price_diff_to_pips(&self, price_diff: Decimal) -> Decimal {
         if self.pip_size.is_zero() {

@@ -217,6 +217,15 @@ impl BacktestConfig {
     pub fn traders_family_worst_case() -> Self {
         Self::conservative()
     }
+
+    /// Menentukan spread efektif dengan mempertimbangkan tier instrumen jika mode konservatif aktif
+    pub fn resolve_spread_pips(&self, spec: &crate::models::TfPairSpec) -> Decimal {
+        if self.enable_slippage || self.enforce_stop_levels {
+            self.simulation_spread_pips.max(spec.worst_case_spread_pips())
+        } else {
+            self.simulation_spread_pips
+        }
+    }
 }
 
 impl Default for BacktestConfig {
