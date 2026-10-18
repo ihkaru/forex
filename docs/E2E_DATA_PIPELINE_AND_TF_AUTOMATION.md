@@ -12,11 +12,12 @@ flowchart TD
     subgraph HULU["1. HULU: Market Data Sources & Ingestion"]
         MT5["MetaTrader 4 / 5 Terminal\n(Windows PC / Remote Host)"]
         EA["MQL4/MQL5 Bridge EA\n(ForexHexagonBridge.mq4/.mq5)"]
-        DUKA["Dukascopy Repository\n(.bi5 tick data -> Parquet)"]
+        DUKA["Dukascopy Repository\n(Historical CSV / .bi5 Seeder)"]
+        ING["MarketIngestionService\n(Idempotent Seeder)"]
         
-        MT5 -->|"OnTick() & OnBar()"| EA
-        EA -->|"Raw JSON over TCP Socket via Tailscale / LAN\n(100.101.49.42:5555)"| BC["Adapter: broker-connector\n(Mt5SocketMessage)"]
-        DUKA -.->|"Historical Sim/EDA"| DUCK["DuckDB / Parquet Engine"]
+        MT5 -->|"OnTick(), OnBar(), OnSpec()"| EA
+        EA -->|"Raw JSON over TCP Socket via Tailscale / LAN\n(100.101.49.42:5555)"| BC["Adapter: broker-connector\n(Dual Persistence: Buffer + SQLite)"]
+        DUKA -->|"Atomic Batch Seeding"| ING
     end
 
     %% ================= SUBGRAPH: ENGINE (SANITISASI & QUANT) =================
@@ -49,7 +50,9 @@ flowchart TD
 
     %% ================= SUBGRAPH: PERSISTENCE & AUDIT =================
     subgraph AUDIT["3. AUDIT & PERSISTENCE"]
-        DB[(TimescaleDB / SQLite\nSqlxStorage)]
+        DB[(Embedded SQLite WAL Storage\nSqliteStorage)]
+        ING -->|"Persist Candles/Ticks"| DB
+        BC -->|"Persist Live Bars/Ticks/Specs"| DB
         TF_CHECK -->|"Passed Signal"| DB
     end
 

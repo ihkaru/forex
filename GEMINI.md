@@ -37,6 +37,16 @@ revenue sharing subscriber Priority Channel.
 >    - **Same-Bar Intrabar Resolution**: Pending order yang terisi dievaluasi pada bar yang sama menggunakan directional 4-point pathing (Bullish: O→L→H→C, Bearish: O→H→L→C) tanpa time-travel bias.
 >    - **Model Friksi Mikrostruktur**: Mendukung simulasi slippage (`slippage_pips`) dan komisi (`commission_per_lot_pips`) pada `BacktestConfig`.
 >    - **Big-O Rolling Chunk Cache**: Query tick historis menggunakan 7-day rolling window cache ($O(\log K)$ partition point search) mereduksi beban disk I/O >95%.
+>
+> 5. **Isolasi Data Multi-Sumber & Divergensi Lintas-Feed (Cross-Source Determinism)**:
+>    - Lilin dan tick dipartisi secara ketat berdasarkan kunci komposit: `(symbol, timeframe, timestamp, source)`. Tidak ada kontaminasi silang (*zero cross-contamination*) antara feed ECN institusional (`DukascopyEcn`) dan feed broker retail (`MrgRealMt4`).
+>    - Pengujian instrumen dan periode waktu yang sama lintas sumber data secara deterministik menghasilkan metrik berbeda (misal 133 trades / +469 VP pada Dukascopy vs 119 trades / -38 VP pada MRG) akibat markup spread retail (+2.0 pips) dan execution drag. Paritas antara UI REST API dan Direct Service Layer tetap 100% konsisten untuk masing-masing sumber data.
+>
+> 6. **Status Rekonsiliasi Dokumen Detail**:
+>    - [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md): Layer persistensi diselaraskan ke `storage-db/ (SQLite WAL)`.
+>    - [`docs/DATA_AUDIT_REAL_VS_SYNTHETIC.md`](docs/DATA_AUDIT_REAL_VS_SYNTHETIC.md): Bagian D diselaraskan ke `SqliteStorage` (WAL mode), TimescaleDB dicatat sebagai skema migrasi opsional masa lalu.
+>    - [`docs/E2E_DATA_PIPELINE_AND_TF_AUTOMATION.md`](docs/E2E_DATA_PIPELINE_AND_TF_AUTOMATION.md): Diagram pipeline diselaraskan ke `MarketIngestionService` dan `SqliteStorage` (mengeliminasi rujukan DuckDB/Parquet eksternal).
+>    - [`docs/DATA_INTEGRITY.md`](docs/DATA_INTEGRITY.md) & [`docs/ANTI_BIAS_BACKTEST.md`](docs/ANTI_BIAS_BACKTEST.md): 100% selaras dengan implementasi production active.
 
 ---
 

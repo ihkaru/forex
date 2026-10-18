@@ -22,7 +22,7 @@ Lapisan sistem dari dalam ke luar:
 │  └── services/ (SignalEngineService, Backtest)  │
 ├─────────────────────────────────────────────────┤
 │  crates/adapters/             ← I/O Konkret     │
-│  ├── storage-db/              (TimescaleDB)     │
+│  ├── storage-db/              (SQLite WAL)      │
 │  ├── publisher-traderfamily/  (TF API)          │
 │  ├── broker-connector/        (MT5/cTrader)     │
 │  └── notifier-telegram/                         │

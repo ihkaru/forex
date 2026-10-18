@@ -79,11 +79,11 @@ Engine [`BacktestService`](../crates/core/application/src/services/backtest/serv
 2. **Mode 2: Candle-Level Fallback Resolution**:
    Jika data tick belum ada (misal data 10 tahun Dukascopy), engine mundur secara anggun ke evaluasi bar H1 dengan `effective_spread` dinamis (menggunakan `candle.spread` jika tersedia, atau spread offset konservatif).
 
-### D. Penyimpanan Tick Berperforma Tinggi (TimescaleDB Gorilla Compression)
-Skrip migrasi database [`002_enriched_candles_ticks_specs.sql`](../crates/adapters/storage-db/migrations/002_enriched_candles_ticks_specs.sql):
-- Mengonversi tabel `ticks` menjadi hypertable TimescaleDB.
-- Menerapkan algoritma kompresi **Gorilla / Delta-of-Delta** untuk timestamp dan harga `Bid`/`Ask`.
-- Mereduksi konsumsi disk hingga 90-95%, menyamai efisiensi format columnar Parquet/Vortex.
+### D. Penyimpanan Pasar Terpadu (Unified Embedded SQLite WAL Storage)
+Arsitektur persistensi produksi utama menggunakan [`SqliteStorage`](../crates/adapters/storage-db/src/sqlite.rs):
+- **Embedded & Zero-Network Latency**: Menggunakan driver SQLite dengan mode WAL (`PRAGMA journal_mode=WAL`), indexing B-Tree teroptimasi untuk query rentang `(symbol, timeframe, timestamp, source)`.
+- **Atomic Batch Ingestion**: Ingestion ratusan ribu candle dan tick dalam batch transaksi atomic tanpa membebani disk I/O.
+- **Skrip Migrasi Opsional Postgres/TimescaleDB**: Skrip [`002_enriched_candles_ticks_specs.sql`](../crates/adapters/storage-db/migrations/002_enriched_candles_ticks_specs.sql) tetap tersedia sebagai skema referensi opsional jika di masa mendatang diekspansi ke PostgreSQL/TimescaleDB eksternal.
 
 ### E. Preservasi Ticker Asli Broker & Pembersihan Aman
 - Ticker asli broker (misal `XAUUSD_MRG`) dipreservasi dalam parsing raw bridge.
