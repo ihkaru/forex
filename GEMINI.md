@@ -35,7 +35,7 @@ revenue sharing subscriber Priority Channel.
 > 4. **Realisme Backtesting & Protokol Anti-Bias**:
 >    - **Conservative Dual-Touch Priority**: Jika TP dan SL tersentuh dalam bar yang sama, sistem secara deterministik memprioritaskan SL terlebih dahulu (*worst-case conservative*).
 >    - **Same-Bar Intrabar Resolution**: Pending order yang terisi dievaluasi pada bar yang sama menggunakan directional 4-point pathing (Bullish: O→L→H→C, Bearish: O→H→L→C) tanpa time-travel bias.
->    - **Model Friksi Mikrostruktur**: Mendukung simulasi slippage (`slippage_pips`) dan komisi (`commission_per_lot_pips`) pada `BacktestConfig`.
+>    - **Model Friksi Mikrostruktur (Traders Family & MRG Worst-Case Stress Test)**: Dikalibrasi spesifik ke skenario friksi terburuk ekosistem Traders Family / broker B-Book: `simulation_spread_pips: 2.2`, `commission_per_lot_pips: 1.0` ($10/lot), `slippage_pips: 1.0`, swap overnight aktif (`-7.0` points / `-0.7` pips/malam + 3x Rabu), dan Stop Level Enforcement terkonversi akurat via `points_to_pips` (25 points = 2.5 pips).
 >    - **Big-O Rolling Chunk Cache**: Query tick historis menggunakan 7-day rolling window cache ($O(\log K)$ partition point search) mereduksi beban disk I/O >95%.
 >
 > 5. **Isolasi Data Multi-Sumber & Divergensi Lintas-Feed (Cross-Source Determinism)**:

@@ -566,7 +566,8 @@ impl BacktestService {
                         });
 
                         // Broker Stop Level Enforcement (Anti ERR_INVALID_STOPS):
-                        let min_stop_gap = spec.pip_size * Decimal::from(broker_spec.stop_level_pts);
+                        let min_stop_pips = broker_spec.points_to_pips(broker_spec.stop_level_pts);
+                        let min_stop_gap = spec.pip_size * min_stop_pips;
                         let violates_stop_level = self.config.enforce_stop_levels
                             && (signal.entry_price - tick.bid).abs() < min_stop_gap;
 

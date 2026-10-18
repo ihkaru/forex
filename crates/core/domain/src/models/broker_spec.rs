@@ -34,11 +34,11 @@ impl Default for BrokerSymbolSpec {
             tick_value: dec!(1.0),
             tick_size: dec!(0.00001),
             contract_size: dec!(100000.0),
-            swap_long: Decimal::ZERO,
-            swap_short: Decimal::ZERO,
+            swap_long: dec!(-7.0),  // Estimasi konservatif broker retail: -0.7 pips/malam
+            swap_short: dec!(-7.0), // Estimasi konservatif broker retail: -0.7 pips/malam
             swap_rollover_3days: 3,
-            stop_level_pts: 10,
-            freeze_level_pts: 0,
+            stop_level_pts: 25,     // Broker retail stop level: 2.5 pips
+            freeze_level_pts: 10,   // Broker retail freeze level: 1.0 pip
             min_lot: dec!(0.01),
             lot_step: dec!(0.01),
             max_lot: dec!(100.0),
@@ -81,11 +81,11 @@ impl BrokerSymbolSpec {
                 tick_value: dec!(0.68),
                 tick_size: dec!(0.001),
                 contract_size: dec!(100000.0),
-                swap_long: Decimal::ZERO,
-                swap_short: Decimal::ZERO,
+                swap_long: dec!(-7.0),
+                swap_short: dec!(-7.0),
                 swap_rollover_3days: 3,
-                stop_level_pts: 15,
-                freeze_level_pts: 0,
+                stop_level_pts: 25,
+                freeze_level_pts: 10,
                 min_lot: dec!(0.01),
                 lot_step: dec!(0.01),
                 max_lot: dec!(100.0),

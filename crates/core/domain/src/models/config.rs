@@ -197,20 +197,25 @@ impl BacktestConfig {
         }
     }
 
-    /// Konfigurasi Konservatif Realistis (Worst-Case Scenario Protocol):
-    /// Mengaktifkan swap overnight, stop levels, slippage 0.5 pips, dan komisi broker 0.7 pips/lot
-    /// agar simulasi forward dan dashboard UI selalu mengasumsikan biaya friksi terburuk.
+    /// Konfigurasi Konservatif Realistis (Traders Family & MRG Mega Berjangka Worst-Case Protocol):
+    /// Mengaktifkan swap overnight, stop levels, slippage 1.0 pip, komisi broker 1.0 pip/lot ($10/lot),
+    /// dan spread markup 2.2 pips agar simulasi forward dan dashboard UI selalu mengasumsikan biaya friksi terburuk.
     pub fn conservative() -> Self {
         Self {
-            simulation_spread_pips: dec!(1.2),
+            simulation_spread_pips: dec!(2.2),
             lookback_window_bars: 50,
             default_lot_size: dec!(1.0),
             enable_swap: true,
             enforce_stop_levels: true,
             enable_slippage: true,
-            slippage_pips: dec!(0.5),
-            commission_per_lot_pips: dec!(0.7),
+            slippage_pips: dec!(1.0),
+            commission_per_lot_pips: dec!(1.0),
         }
+    }
+
+    /// Alias eksplisit untuk model simulasi biaya terburuk Traders Family
+    pub fn traders_family_worst_case() -> Self {
+        Self::conservative()
     }
 }
 
