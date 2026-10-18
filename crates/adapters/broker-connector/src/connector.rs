@@ -217,8 +217,10 @@ impl BrokerConnector {
                     .unwrap_or(MarketDataSource::MrgRealMt4);
 
                 let spread_dec = spread_pts.map(|pts| {
-                    let point_mult = if symbol_obj.quote == "JPY" || symbol_obj.base.contains("XAU") {
+                    let point_mult = if symbol_obj.base.contains("XAU") {
                         rust_decimal_macros::dec!(0.01)
+                    } else if symbol_obj.quote == "JPY" {
+                        rust_decimal_macros::dec!(0.001)
                     } else {
                         rust_decimal_macros::dec!(0.00001)
                     };
