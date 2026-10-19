@@ -178,19 +178,22 @@
 
         if (candles.length > 0) {
           const lastCandle = candles[candles.length - 1];
-          if (liveCandle.time === lastCandle.time) {
+          const isSameHour = Math.floor(liveCandle.time / 3600) === Math.floor(lastCandle.time / 3600);
+          if (liveCandle.time === lastCandle.time || isSameHour) {
             const updated: Candle = {
               ...lastCandle,
               open: liveCandle.open ?? lastCandle.open,
               high: Math.max(lastCandle.high, liveCandle.high),
               low: Math.min(lastCandle.low, liveCandle.low),
               close: liveCandle.close,
-              volume: liveCandle.volume ?? lastCandle.volume,
+              volume: Math.max(lastCandle.volume, liveCandle.volume ?? lastCandle.volume),
             };
             candles = [...candles.slice(0, -1), updated];
           } else if (liveCandle.time > lastCandle.time) {
             candles = [...candles, liveCandle];
           }
+        } else {
+          candles = [liveCandle];
         }
       }
     } catch (e) {

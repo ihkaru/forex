@@ -149,6 +149,12 @@
       <span>H1</span>
     </div>
 
+    <!-- Live Price Pill -->
+    <div class="px-2.5 py-1 rounded-lg text-xs font-mono font-bold bg-[#131722] text-[#00E676] border border-[#00E676]/30 shadow-sm flex items-center gap-1.5" title="Live Market Price (Real-Time Tick)">
+      <span class="w-1.5 h-1.5 rounded-full bg-[#00E676] animate-ping"></span>
+      <span>{currentPrice.toFixed(activeSymbol.includes('XAU') ? 2 : (activeSymbol.includes('JPY') ? 3 : 5))}</span>
+    </div>
+
     <!-- Data Source Triple Switcher (Dukascopy vs MT4 Live Demo vs MT4 Real) -->
     <div class="flex items-center bg-[#131722] p-0.5 rounded-lg border border-[#2a2e39] text-[10px] font-mono">
       <button
