@@ -164,6 +164,21 @@ impl BrokerConnector {
                 }
                 drop(tb_lock);
 
+                // Live tick updates forming H1 candle close/high/low in real-time
+                let mut cb_lock = self.candle_buffer.write().await;
+                if let Some(deque) = cb_lock.get_mut(&(symbol_obj.clone(), Timeframe::H1, src)) {
+                    if let Some(current_bar) = deque.back_mut() {
+                        current_bar.close = tick.bid;
+                        if tick.bid > current_bar.high {
+                            current_bar.high = tick.bid;
+                        }
+                        if tick.bid < current_bar.low {
+                            current_bar.low = tick.bid;
+                        }
+                    }
+                }
+                drop(cb_lock);
+
                 if let Some(ref ts) = self.tick_storage {
                     if let Err(e) = ts.save_ticks(&[tick.clone()]).await {
                         tracing::warn!("⚠️ Gagal persist live tick ke storage: {}", e);

@@ -190,7 +190,7 @@ void SendCurrentBarForSymbol(string sym)
    long   bar_vol    = iVolume(sym, PERIOD_H1, 0);
    int    spread_pts = (int)MarketInfo(sym, MODE_SPREAD);
 
-   long server_offset = (long)(TimeCurrent() - TimeGMT());
+   long server_offset = (long)(MathRound((double)(TimeCurrent() - TimeGMT()) / 3600.0) * 3600);
    long bar_gmt       = (long)bar_time - server_offset;
 
    string json = StringFormat(
@@ -214,7 +214,7 @@ void SendHistoricalBarsForSymbol(string sym)
    if(total_h1_bars <= 0) return;
    int bars_to_send = MathMin(InpHistoryLimit, total_h1_bars);
    string src = GetSourceString();
-   long server_offset = (long)(TimeCurrent() - TimeGMT());
+   long server_offset = (long)(MathRound((double)(TimeCurrent() - TimeGMT()) / 3600.0) * 3600);
 
    // Kirim spesifikasi kontrak broker terlebih dahulu
    SendBrokerSpecForSymbol(sym);
